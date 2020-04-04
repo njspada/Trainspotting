@@ -35,9 +35,10 @@ for row in open(model_path + "coco_labels.txt"):
 # create lists of objects of interest
 vehicles = range(1,9)
 
-detection_start = ""
-detection_end = ""
-detectList = []
+FPS = 120
+detect_interval_threshold = FPS * 3
+nondetect_interval_threshold = FPS * 60 * 30
+required_confidence = 0.35 # boo, trains are hard I guess
 
 # Specify paths
 output_path = "/mnt/p1/output/"
@@ -92,16 +93,8 @@ def get_image_from_camera(video_capture):
     frame = Image.fromarray(frame)
     return frame
 
-#def save_detect(image_file_path, time_stamp, image, results):
-
-# def log_detect_list(log_file_name, detect_list, detection_start, detection_end):
-#     entry = ['_'.join(detect_list), detection_start, detection_end]
-#     record = '.'.join(entry) + '\n'
-#     record = record + "\n"
-#     with open(log_file_name, 'a') as the_file:
-#         the_file.write(record)
-
-def log(now_ymd, time_stamp, results): # now_ymd = datetime.NOW().strftime("%Y-%m-%d")
+def log(now_ymd, time_stamp, results, image): # now_ymd = datetime.NOW().strftime("%Y-%m-%d")
+	save_image(img_path + now_ymd + '/', time_stamp, image)
 	with open(log_path + now_ymd + '.log', 'a') as log_file:
 		log_file.write(time_stamp + '\n')
 		for result in results:
@@ -112,10 +105,6 @@ def log(now_ymd, time_stamp, results): # now_ymd = datetime.NOW().strftime("%Y-%
 def train_detect():
     detects = 0 # keep track of train detection frames
     nondetects = 0 # keep track of frames without trains, check for false negatives
-    FPS = 120
-    detect_interval_threshold = FPS * 3
-    nondetect_interval_threshold = FPS * 60 * 30
-    required_confidence = 0.35 # boo, trains are hard I guess
     cap = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
     if not cap.isOpened(): print("Unable to open camera.")
     while cap.isOpened():
@@ -126,25 +115,16 @@ def train_detect():
                                         relative_coord=False)
         if any(r.label_id in vehicles for r in results):
             # Vehicle has been detected
-            #detection_start = time_stamp if detects == 0 else detection_start
             if detects == detect_interval_threshold:
-                save_image(img_path + 'detect_', time_stamp, img)
-                log(now_ymd, time_stamp, results)
+                log(now_ymd, time_stamp, results, image)
                 detects = 0
             detects += 1
             nondetects = 0
         else: # No vehicles detected
             nondetects += 1
             detects = 0
-            # if detects > 0:
-            #     #fname = log_path + now_ymd + ".log"
-            #     #log_detect_list(fname, detectList, detection_start, time_stamp)
-            #     # Clear detection list and reset counter
-            #     #detectList = []
-            #     detects = 0
             if nondetects == nondetect_interval_threshold:
-                save_image(img_path + 'nondetect_', time_stamp, img)
-                log(now_ymd, time_stamp, [])
+                log(now_ymd, time_stamp, [], image)
                 nondetects = 0        
         keyCode = cv2.waitKey(1) & 0xFF
         if keyCode == ord("q"): break 
