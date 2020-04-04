@@ -109,7 +109,7 @@ def train_detect():
     if not cap.isOpened(): print("Unable to open camera.")
     while cap.isOpened():
         time_stamp, now_ymd = get_time_stamp_ymd()
-        frame = get_image_from_camera(cap)
+        image = get_image_from_camera(cap)
         results = model.DetectWithImage(frame, threshold=required_confidence,
                                         keep_aspect_ratio=True,
                                         relative_coord=False)
