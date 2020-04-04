@@ -16,8 +16,8 @@ from PIL import Image
 
 
 # specify models etc.
-modelPath = "/usr/local/controller/tools/edgetpu_models/"
-model = modelPath + "mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
+model_path = "/usr/local/controller/tools/edgetpu_models/"
+model = model_path + "mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
 print("[INFO] loading Coral model...")
 model = DetectionEngine(model)
 
@@ -27,7 +27,7 @@ print("[INFO] parsing class labels...")
 labels = {}
  
 # loop over the class labels file
-for row in open(modelPath + "coco_labels.txt"):
+for row in open(model_path + "coco_labels.txt"):
 	# unpack the row and update the labels dictionary
 	(classID, label) = row.strip().split(maxsplit=1)
 	labels[int(classID)] = label.strip()
@@ -35,14 +35,14 @@ for row in open(modelPath + "coco_labels.txt"):
 # create lists of objects of interest
 vehicles = range(1,9)
 
-detectionStart = ""
-detectionEnd = ""
+detection_start = ""
+detection_end = ""
 detectList = []
 
 # Specify paths
-outputPath = "/mnt/p1/output/"
-logPath = outputPath + "camera_"
-imgPath = outputPath + "images/"
+output_path = "/mnt/p1/output/"
+log_path = output_path + "logs/"
+img_path = output_path + "images/"
 
 # gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
 # Defaults to 1280x720 @ 30fps
@@ -75,11 +75,12 @@ def gstreamer_pipeline(
         )
     )
 
-def save_image(image_path, timestamp, image):
-    cv2.imwrite(image_path + timestamp + '.jpg', image)
+def save_image(image_path, time_stamp, image):
+    cv2.imwrite(image_path + time_stamp + '.jpg', image)
 
-def get_timestamp_iso():
-    return datetime.now().isoformat()
+def get_time_stamp_ymd():
+	now = datetime.now()
+    return now.isoformat(), .strftime("%Y-%m-%d")
 
 def get_image_from_camera(video_capture):
     _, frame = cap.read()
@@ -91,48 +92,59 @@ def get_image_from_camera(video_capture):
     frame = Image.fromarray(frame)
     return frame
 
-#def save_detect(image_file_path, timestamp, image, results):
+#def save_detect(image_file_path, time_stamp, image, results):
 
-def log_detect_list(log_file_name, detect_list, detection_start, detection_end):
-    entry = ['_'.join(detect_list), detection_start, detection_end]
-    record = '.'.join(entry) + '\n'
-    record = record + "\n"
-    with open(log_file_name, 'a') as the_file:
-        the_file.write(record)
+# def log_detect_list(log_file_name, detect_list, detection_start, detection_end):
+#     entry = ['_'.join(detect_list), detection_start, detection_end]
+#     record = '.'.join(entry) + '\n'
+#     record = record + "\n"
+#     with open(log_file_name, 'a') as the_file:
+#         the_file.write(record)
+
+def log(now_ymd, time_stamp, results): # now_ymd = datetime.NOW().strftime("%Y-%m-%d")
+	with open(log_path + now_ymd + '.log', 'a') as log_file:
+		log_file.write(time_stamp + '\n')
+		for result in results:
+			result = result.label_id + ' ' + ' '.join([value for value in result
+				.bounding_box.flatten().astype("int")])
+			log_file.write(result + '\n')
 
 def train_detect():
     detects = 0 # keep track of train detection frames
     nondetects = 0 # keep track of frames without trains, check for false negatives
     FPS = 120
-    detect_interval = FPS * 3
-    nondetect_threshold_interval = FPS * 60 * 30
+    detect_interval_threshold = FPS * 3
+    nondetect_interval_threshold = FPS * 60 * 30
     required_confidence = 0.35 # boo, trains are hard I guess
     cap = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
     if not cap.isOpened(): print("Unable to open camera.")
     while cap.isOpened():
-        timeStamp = get_timestamp_iso()
+        time_stamp, now_ymd = get_time_stamp_ymd()
         frame = get_image_from_camera(cap)
-        # make predictions on the input frame
         results = model.DetectWithImage(frame, threshold=required_confidence,
                                         keep_aspect_ratio=True,
                                         relative_coord=False)
         if any(r.label_id in vehicles for r in results):
             # Vehicle has been detected
-            detectionStart = timeStamp if detects == 0 else detectionStart
-            if detects % detect_interval == 0:
-                save_image(imgPath + 'detect_', timeStamp, img)
+            #detection_start = time_stamp if detects == 0 else detection_start
+            if detects == detect_interval_threshold:
+                save_image(img_path + 'detect_', time_stamp, img)
+                log(now_ymd, time_stamp, results)
+                detects = 0
             detects += 1
             nondetects = 0
         else: # No vehicles detected
             nondetects += 1
-            if detects > 0:
-                fname = logPath + NOW.strftime("%Y-%m-%d") + ".log"
-                log_detect_list(fname, detectList, detectionStart, timeStamp)
-                # Clear detection list and reset counter
-                detectList = []
-                detects = 0
-            if nondetects == nondetect_threshold_interval:
-                save_image(imgPath + 'nondetect_', timeStamp, img)
+            detects = 0
+            # if detects > 0:
+            #     #fname = log_path + now_ymd + ".log"
+            #     #log_detect_list(fname, detectList, detection_start, time_stamp)
+            #     # Clear detection list and reset counter
+            #     #detectList = []
+            #     detects = 0
+            if nondetects == nondetect_interval_threshold:
+                save_image(img_path + 'nondetect_', time_stamp, img)
+                log(now_ymd, time_stamp, [])
                 nondetects = 0        
         keyCode = cv2.waitKey(1) & 0xFF
         if keyCode == ord("q"): break 
