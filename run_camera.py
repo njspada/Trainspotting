@@ -80,7 +80,7 @@ def save_image(image_path, time_stamp, image):
 
 def get_time_stamp_ymd():
 	now = datetime.now()
-    return now.isoformat(), .strftime("%Y-%m-%d")
+	return now.isoformat(), now.strftime("%Y-%m-%d")
 
 def get_image_from_camera(video_capture):
     _, frame = cap.read()
