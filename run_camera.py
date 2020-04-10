@@ -13,6 +13,7 @@ import imutils
 from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
+import sys
 
 
 # specify models etc.
@@ -41,7 +42,11 @@ nondetect_interval_threshold = FPS * 60 * 30
 required_confidence = 0.35 # boo, trains are hard I guess
 
 # Specify paths
-output_path = "/mnt/p1/output/"
+#output_path = "/mnt/p1/output/"
+if(len(sys.argv) == 1):
+    print("Provide output path!")
+    exit()
+output_path = sys.argv[1]
 log_path = output_path + "logs/"
 img_path = output_path + "images/"
 
