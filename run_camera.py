@@ -16,8 +16,13 @@ from PIL import Image
 import sys
 
 
+if(len(sys.argv) != 3):
+    print("Usage: run_camera \{output_path} \{model_path}")
+    exit()
+
 # specify models etc.
-model_path = "/usr/local/controller/tools/edgetpu_models/"
+#model_path = "/usr/local/controller/tools/edgetpu_models/"
+model_path = sys.argv[2]
 model = model_path + "mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
 print("[INFO] loading Coral model...")
 model = DetectionEngine(model)
@@ -43,9 +48,6 @@ required_confidence = 0.35 # boo, trains are hard I guess
 
 # Specify paths
 #output_path = "/mnt/p1/output/"
-if(len(sys.argv) == 1):
-    print("Provide output path!")
-    exit()
 output_path = sys.argv[1]
 log_path = output_path + "logs/"
 img_path = output_path + "images/"
