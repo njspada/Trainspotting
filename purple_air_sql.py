@@ -9,6 +9,7 @@ if cnx:
 
 def write_to_db(timestamp, dataline):
     # timestamp must be "Y-m-d H:i:s"
+    cnx = database_config.connection()
     timestamp = timestamp.strftime("%Y-%m-%d %H:%i:%s")
     names = ['datetime', 'datetime2', 'mac', 'firmware', 'hardware',
                   'tempF', 'rh', 'dewptF', 'pres', 'adc', 'mem', 'rssi',
@@ -31,7 +32,8 @@ def write_to_db(timestamp, dataline):
             "(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p2.5, p5, p10)"
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
     try:
-      cnx.cursor().execute(query, selected)
+      cursor = cnx.cursor()
+      cursor.execute(query, selected)
     except mysql.connector.Error as err:
       print(err)
     else:
