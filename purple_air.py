@@ -98,6 +98,7 @@ class PurpleAir(object):
         parsed_line = reader.__next__()
         # should be 36 columns in a data line
         if not len(parsed_line) == 36:
+            print(len(parsed_line))
             return False
         # for a spot check, check that the second column is a (possibly badly formatted) MAC address
         #  note: the device ID is the MAC address but missing the 0's
