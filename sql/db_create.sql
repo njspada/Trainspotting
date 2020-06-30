@@ -19,3 +19,5 @@ CREATE TABLE `purple_air` (
   `p5` float NOT NULL,
   `p10` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Purple Air Data';
+
+
