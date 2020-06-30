@@ -30,6 +30,9 @@ def write_to_db(timestamp, dataline):
     query = ("INSERT INTO purple_air "
             "(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p2.5, p5, p10)"
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    cnx.cursor().execute(query, selected)
-    cnx.commit()
-
+    try:
+      cnx.cursor().execute(query, selected)
+    except mysql.connector.Error as err:
+      print(err)
+    else:
+      cnx.commit()
