@@ -127,7 +127,7 @@ class PurpleAir(object):
         ''' Looks for devices that use the same driver as the purple air serial to usb chip. '''
         usb_module_path = '/sys/bus/usb/drivers/ch341/'
         #/sys/bus/usb/drivers/ch341/1-1.4:1.0/ttyUSB0
-        wildcard_path = '1-1.*/tty*'
+        wildcard_path = '1-*/tty*'
         paths = glob(usb_module_path + wildcard_path)
         # if we found something, print it out
         if paths:
