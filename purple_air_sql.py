@@ -32,8 +32,8 @@ def write_to_db(timestamp, dataline):
     s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10']
     selected = [pa[s_name] for s_name in s_names]
     query = ("INSERT INTO purple_air " + 
-            "(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p2.5, p5, p10) " + 
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);")
+            "(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p1, p2.5, p5, p10) " + 
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);")
     try:
       cursor = cnx.cursor()
       cursor.execute(query, selected)
