@@ -1,4 +1,7 @@
 import database_config
+import mysql.connector
+import sys
+from mysql.connector import errorcode
 
 cnx = database_config.connection()
 
