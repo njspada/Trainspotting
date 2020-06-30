@@ -158,6 +158,7 @@ def loop(purpleair, output_folder_path, upload_data):
             filename = 'purpleair_{}.log'.format(now.strftime('%Y-%m-%d'))
             fullpath = os.path.join(output_folder_path, filename)
             with open(fullpath, "a") as fh:
+                print('trying to push to db')
                 fh.write('{},{}\n'.format(now, dataline))
                 database.write_to_db(now, dataline)
             print() # add extra space
