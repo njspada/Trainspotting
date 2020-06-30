@@ -13,7 +13,7 @@ if cnx:
 def write_to_db(timestamp, dataline):
     # timestamp must be "Y-m-d H:i:s"
     cnx = database_config.connection()
-    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%s")
+    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
     names = ['datetime', 'datetime2', 'mac', 'firmware', 'hardware',
                   'tempF', 'rh', 'dewptF', 'pres', 'adc', 'mem', 'rssi',
                   'uptime',
