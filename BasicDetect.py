@@ -24,7 +24,7 @@ trains = (467, 548, 566, 706, 821)
 cars = (437, 469, 570, 752, 818, 867)
 
 # create the camera and display
-width, height = (1280, 720)
+width, height = (300, 300)
 font = jetson.utils.cudaFont()
 camera = jetson.utils.gstCamera(width, height, "0")
 camera.Open()

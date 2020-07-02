@@ -49,3 +49,5 @@ $ sudo chmod a+w /usr/share/edgetpu/examples
 
 models and label files stored in /usr/share/edgetpu/examples/models
 
+$ sudo reboot now
+
