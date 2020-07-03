@@ -94,6 +94,8 @@ while display.IsOpen():
     # render the image
     #display.RenderOnce(img, width, height)
     cv2.imshow('image', cvimage)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
     # synchronize with the GPU
     if len(detects) > 0:
