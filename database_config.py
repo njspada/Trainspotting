@@ -6,7 +6,7 @@ from mysql.connector import errorcode
 
 def connection():
     user = 'dhawal'
-    password = 'vD1vD2vD3'
+    password = 'april+1Hitmonlee'
     database = 'trainspotting'
 
     try:
