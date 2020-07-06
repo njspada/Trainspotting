@@ -40,7 +40,7 @@ def gstreamer_pipeline(
 def display_image(IMAGE, BOX, LABEL, SCORE):
 	draw = ImageDraw.Draw(IMAGE)
 	draw.rectangle(BOX, outline='red', width = 5)
-	(startX, startY, endX, endY) = box
+	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
 	fnt = ImageFont.truetype('/System/Library/Fonts/SFNSMono.ttf', 40)
