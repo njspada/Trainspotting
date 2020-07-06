@@ -62,7 +62,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().isoformat()
 		for detect in detections:
-			box = detect.bounding_box.flatten().tolist()
+			box = detect.bounding_box.flatten().astype("int")
 			coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 			dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 			print(dataline) # here we insert into database
