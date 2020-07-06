@@ -62,7 +62,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 			print(dataline) # here we insert into database
 			if DEBUG:
-				display_image(image, box, LABELS[detect.label_id], detect.score)
+				display_image(detect_candidate, box, LABELS[detect.label_id], detect.score)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
