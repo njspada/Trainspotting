@@ -20,4 +20,6 @@ CREATE TABLE `purple_air` (
   `p10` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Purple Air Data';
 
+CREATE TABLE `trainspotting`.`camera_detects` ( `timestamp` TIMESTAMP NOT NULL , `conf` FLOAT NOT NULL , `label` VARCHAR(25) NOT NULL , `x0` INT NOT NULL , `y0` INT NOT NULL , `x1` INT NOT NULL , `y1` INT NOT NULL , `filename` INT NOT NULL ) ENGINE = InnoDB COMMENT = 'Store output from run_camera.py';
+
 
