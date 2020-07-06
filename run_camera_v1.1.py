@@ -53,7 +53,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		image = imutils.resize(image, height = 300, width=300)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
-		detections = ENGINE.detect_with_image(frame, top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().isoformat()
 		for detect in detections:
 			box = detect.bounding_box.flatten().tolist()
