@@ -46,8 +46,6 @@ def display_image(IMAGE, BOX, LABEL, SCORE):
 	#font = ImageFont.truetype("sans-serif.ttf", 16)
 	draw.text((startX,y), text, font=fnt, fill=(0, 255, 0))
 	cv2.imshow('image', IMAGE)
-	if cv2.waitKey(1) & 0xFF == ord('q'):
-		break
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
@@ -64,6 +62,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			print(dataline) # here we insert into database
 			if DEBUG:
 				display_image(image, box, LABELS[detect.label_id], detect.score)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 
 
 
