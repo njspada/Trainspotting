@@ -38,15 +38,18 @@ def gstreamer_pipeline(
 	)
 
 def display_image(IMAGE, BOX, LABEL, SCORE):
-	draw = ImageDraw.Draw(IMAGE)
-	draw.rectangle(BOX, outline='red', width = 5)
+	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+	#draw = ImageDraw.Draw(IMAGE)
+	#draw.rectangle(BOX, outline='red', width = 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
 	#fnt = ImageFont.truetype('/System/Library/Fonts/SFNSMono.ttf', 40)
 	#font = ImageFont.truetype("sans-serif.ttf", 16)
 	#draw.text((startX,y), text, font=fnt, fill=(0, 255, 0))
-	draw.text((startX,y), text, fill=(0, 255, 0))
+	font = cv2.FONT_HERSHEY_SIMPLEX
+	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+	#draw.text((startX,y), text, fill=(0, 255, 0))
 	cv2.imshow('image', IMAGE)
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
@@ -63,7 +66,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 			print(dataline) # here we insert into database
 			if DEBUG:
-				display_image(detect_candidate, box, LABELS[detect.label_id], detect.score)
+				display_image(image, box, LABELS[detect.label_id], detect.score)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
