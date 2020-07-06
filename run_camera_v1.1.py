@@ -9,6 +9,12 @@ import cv2
 import imutils
 import numpy
 from datetime import datetime
+import database_config
+
+cnx = database_config.connection()
+if not cnx:
+	print('Failed to connect to MySQL database!')
+	exit()
 
 def gstreamer_pipeline(
 	capture_width=1280,
@@ -38,20 +44,26 @@ def gstreamer_pipeline(
 	)
 
 def display_image(IMAGE, BOX, LABEL, SCORE):
-	print(BOX)
 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
-	#draw = ImageDraw.Draw(IMAGE)
-	#draw.rectangle(BOX, outline='red', width = 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
-	#fnt = ImageFont.truetype('/System/Library/Fonts/SFNSMono.ttf', 40)
-	#font = ImageFont.truetype("sans-serif.ttf", 16)
-	#draw.text((startX,y), text, font=fnt, fill=(0, 255, 0))
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
-	#draw.text((startX,y), text, fill=(0, 255, 0))
 	cv2.imshow('image', IMAGE)
+
+def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+	query = """INSERT INTO camera_detects  
+				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
+				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
+	try:
+		cursor = cnx.cursor()
+		cursor.execute(query, DATA)
+	except mysql.connector.Error as err:
+		print(err)
+	else:
+		cnx.commit()
+
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
@@ -60,13 +72,17 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
-		timestamp = datetime.now().isoformat()
+		timestamp = datetime.now().isoformat().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
 			box = detect.bounding_box.flatten().astype("int")
-			coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
-			dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
-			print(dataline) # here we insert into database
+			(startX, startY, endX, endY) = box
+			filename = timestamp + '.jpg'
+			DATA = [timestamp, detect.score, LABELS[detect.label_id], startX, startY, endX, endY, filename]
+			write_to_db(DATA)
 			if DEBUG:
+				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
+				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
+				print(dataline)
 				display_image(image, box, LABELS[detect.label_id], detect.score)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
@@ -76,7 +92,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 if __name__ == "__main__":
 	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
 	PARSER.add_argument('-m', '--model', action='store', default='/usr/local/controller/tools/edgetpu_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
-	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file. Default")
+	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file.")
+	PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 	ARGS = PARSER.parse_args()
 	# Load the DetectionEngine
