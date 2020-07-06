@@ -21,8 +21,8 @@ if not cnx:
 def gstreamer_pipeline(
 	capture_width=1280,
 	capture_height=720,
-	display_width=800,
-	display_height=600,
+	display_width=1280,
+	display_height=720,
 	framerate=21,
 	flip_method=0,
 	):
