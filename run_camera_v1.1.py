@@ -79,7 +79,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			box = detect.bounding_box.flatten().astype("int")
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
-			DATA = [timestamp, detect.score, LABELS[detect.label_id], startX, startY, endX, endY, filename]
+			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], startX, startY, endX, endY, filename]
 			write_to_db(DATA)
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
