@@ -41,3 +41,18 @@ def write_to_db(timestamp, dataline):
       print(err)
     else:
       cnx.commit()
+
+def get_latest_data():
+    database_config.connection()
+    query = """SELECT * 
+                FROM purple_air
+                ORDER BY datetime DESC
+                LIMIT 1""";
+    try:
+      cursor = cnx.cursor()
+      cursor.execute(query)
+    except mysql.connector.Error as err:
+      print(err)
+    else:
+      row = cursor.fetchone()
+      return row
