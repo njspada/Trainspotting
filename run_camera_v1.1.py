@@ -10,6 +10,8 @@ import imutils
 import numpy
 from datetime import datetime
 import database_config
+import mysql.connector
+from mysql.connector import errorcode
 
 cnx = database_config.connection()
 if not cnx:
