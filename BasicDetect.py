@@ -65,7 +65,7 @@ while display.IsOpen():
 
     # capture image for detections
     #img, width, height = camera.CaptureRGBA(zeroCopy=1)
-    ret, img = cap.read()
+    #ret, img = cap.read()
     #img_conv = capsule2img((img, width, height))
     #img_conv = Image.frombytes('RGBA', (width, height), img_conv, 'raw')
     #img_conv = img_conv.resize((300,300))
