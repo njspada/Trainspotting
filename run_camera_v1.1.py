@@ -43,9 +43,10 @@ def display_image(IMAGE, BOX, LABEL, SCORE):
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
-	fnt = ImageFont.truetype('/System/Library/Fonts/SFNSMono.ttf', 40)
+	#fnt = ImageFont.truetype('/System/Library/Fonts/SFNSMono.ttf', 40)
 	#font = ImageFont.truetype("sans-serif.ttf", 16)
-	draw.text((startX,y), text, font=fnt, fill=(0, 255, 0))
+	#draw.text((startX,y), text, font=fnt, fill=(0, 255, 0))
+	draw.text((startX,y), text, fill=(0, 255, 0))
 	cv2.imshow('image', IMAGE)
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
