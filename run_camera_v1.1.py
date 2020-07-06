@@ -38,6 +38,7 @@ def gstreamer_pipeline(
 	)
 
 def display_image(IMAGE, BOX, LABEL, SCORE):
+	print(BOX)
 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
 	#draw = ImageDraw.Draw(IMAGE)
 	#draw.rectangle(BOX, outline='red', width = 5)
