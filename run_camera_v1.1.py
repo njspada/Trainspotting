@@ -8,6 +8,7 @@ from PIL import ImageFont
 import cv2
 import imutils
 import numpy
+from datetime import datetime
 
 def gstreamer_pipeline(
 	capture_width=1280,
