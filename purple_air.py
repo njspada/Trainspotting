@@ -21,6 +21,7 @@ import csv
 import re
 from glob import glob
 from datetime import datetime
+import purple_air_sql as database
 
 class PurpleAir(object):
     def __init__(self, device_name):
@@ -96,7 +97,8 @@ class PurpleAir(object):
         reader = csv.reader([dataline])
         parsed_line = reader.__next__()
         # should be 36 columns in a data line
-        if not len(parsed_line) == 36:
+        if not len(parsed_line) == 41:
+            #print(len(parsed_line))
             return False
         # for a spot check, check that the second column is a (possibly badly formatted) MAC address
         #  note: the device ID is the MAC address but missing the 0's
@@ -126,7 +128,7 @@ class PurpleAir(object):
         ''' Looks for devices that use the same driver as the purple air serial to usb chip. '''
         usb_module_path = '/sys/bus/usb/drivers/ch341/'
         #/sys/bus/usb/drivers/ch341/1-1.4:1.0/ttyUSB0
-        wildcard_path = '1-1.*/tty*'
+        wildcard_path = '1-*/tty*'
         paths = glob(usb_module_path + wildcard_path)
         # if we found something, print it out
         if paths:
@@ -157,7 +159,9 @@ def loop(purpleair, output_folder_path, upload_data):
             filename = 'purpleair_{}.log'.format(now.strftime('%Y-%m-%d'))
             fullpath = os.path.join(output_folder_path, filename)
             with open(fullpath, "a") as fh:
+                print('trying to push to db')
                 fh.write('{},{}\n'.format(now, dataline))
+                database.write_to_db(now, dataline)
             print() # add extra space
         elif PurpleAir.dataline_is_url(dataline) and upload_data:
             purpleair.upload_url_dataline(dataline)
