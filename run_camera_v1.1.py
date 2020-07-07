@@ -73,7 +73,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
 		_, image = STREAM.read()
-		image = imutils.resize(image, height = 600, width=600)
+		image = imutils.resize(image, height = 1280, width=720)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
