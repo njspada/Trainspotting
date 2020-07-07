@@ -57,5 +57,5 @@ def get_latest_data():
     except mysql.connector.Error as err:
       print(err)
     else:
-      row = cursor.fetchone()
+      row = dict(zip(cursor.column_names, cursor.fetchone()))
       return row
