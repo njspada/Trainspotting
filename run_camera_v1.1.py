@@ -90,6 +90,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print('timestamp acquire')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+		print(str(len(detections)) + ' detects')
 		for detect in detections:
 			box = detect.bounding_box.flatten().astype("int")
 			(startX, startY, endX, endY) = box
