@@ -76,7 +76,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 
 
 
-def loop(STREAM, ENGINE, LABELS, DEBUG, OUTPUT):
+def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
 		_, image = STREAM.read()
 		image = imutils.resize(image, height = 300, width=300)
