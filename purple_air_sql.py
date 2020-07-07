@@ -5,6 +5,9 @@ from mysql.connector import errorcode
 
 cnx = database_config.connection()
 
+s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10']
+name_dict = {pair for pair in enumerate(s_names)}
+
 if cnx:
     print('successfully connected to database')
 
@@ -29,7 +32,7 @@ def write_to_db(timestamp, dataline):
     values = dataline.split(',')
     values.insert(0, timestamp)
     pa = dict(zip(names,values))
-    s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10']
+    
     selected = [pa[s_name] for s_name in s_names]
     query = """INSERT INTO purple_air  
             (datetime, `pm2.5`, `pm1`, `pm10`, `p0.3`, `p0.5`, `p1`, `p2.5`, `p5`, `p10`) 
