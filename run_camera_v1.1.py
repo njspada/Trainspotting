@@ -13,7 +13,7 @@ import database_config
 import mysql.connector
 from mysql.connector import errorcode
 import purple_air_sql as pa
-import met_sql.py as met
+import met_sql as met
 
 cnx = database_config.connection()
 if not cnx:
