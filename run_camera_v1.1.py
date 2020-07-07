@@ -104,7 +104,7 @@ if __name__ == "__main__":
 	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
 	PARSER.add_argument('-m', '--model', action='store', default='/usr/local/controller/tools/edgetpu_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
 	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file.")
-	PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
+	#PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 	ARGS = PARSER.parse_args()
 	# Load the DetectionEngine
