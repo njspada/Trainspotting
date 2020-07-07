@@ -4,10 +4,10 @@ from mysql.connector import errorcode
 
 #print(len(sys.argv))
 
-def connection():
+def connection(database='trainspotting'):
     user = 'dhawal'
     password = 'april+1Hitmonlee'
-    database = 'trainspotting'
+    #database = 'trainspotting'
 
     try:
         cnx = mysql.connector.connect(user=user, password=password, host='127.0.0.1', database=database)

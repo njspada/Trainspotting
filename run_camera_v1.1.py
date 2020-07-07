@@ -13,6 +13,7 @@ import database_config
 import mysql.connector
 from mysql.connector import errorcode
 import purple_air_sql as pa
+import met_sql.py as met
 
 cnx = database_config.connection()
 if not cnx:
@@ -54,7 +55,10 @@ def display_image(IMAGE, BOX, LABEL, SCORE):
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
 	pa_data = pa.get_latest_data()
-	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 1, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	met_data = met.get_latest_data()
+	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'wgDir=' + str(if met_data['windGustDir'] met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
 
 def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
