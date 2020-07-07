@@ -78,22 +78,30 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
+		print('read begin')
 		_, image = STREAM.read()
+		print('resize begin')
 		image = imutils.resize(image, height = 300, width=300)
+		print('convert color begin')
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		print('from array begin')
 		detect_candidate = Image.fromarray(image)
+		print('detect begin')
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		print('timestamp acquire')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
 			box = detect.bounding_box.flatten().astype("int")
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
+			print('write to db begin')
 			write_to_db(DATA)
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
-				print(dataline)
+				#print(dataline)
+				print('display image begin')
 				display_image(image, box, LABELS[detect.label_id], detect.score)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
