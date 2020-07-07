@@ -21,10 +21,10 @@ if not cnx:
 	exit()
 
 def gstreamer_pipeline(
-	capture_width=1280,
-	capture_height=720,
-	display_width=1280,
-	display_height=720,
+	capture_width=3264,
+	capture_height=2464,
+	display_width=3264,
+	display_height=2464,
 	framerate=21,
 	flip_method=0,
 	):
@@ -79,7 +79,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	while STREAM.isOpened():
 		_, image = STREAM.read()
-		image = imutils.resize(image, height = 1280, width=720)
+		image = imutils.resize(image, height = 3264, width=2464)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
