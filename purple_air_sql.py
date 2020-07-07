@@ -46,7 +46,7 @@ def write_to_db(timestamp, dataline):
       cnx.commit()
 
 def get_latest_data():
-    database_config.connection()
+    cnx = database_config.connection()
     query = """SELECT * 
                 FROM purple_air
                 ORDER BY datetime DESC
