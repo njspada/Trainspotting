@@ -74,10 +74,12 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 		cnx.commit()
 
 
-def loop(STREAM, ENGINE, LABELS, DEBUG):
+
+
+def loop(STREAM, ENGINE, LABELS, DEBUG, OUTPUT):
 	while STREAM.isOpened():
 		_, image = STREAM.read()
-		image = imutils.resize(image, height = 1280, width=720)
+		image = imutils.resize(image, height = 300, width=300)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
