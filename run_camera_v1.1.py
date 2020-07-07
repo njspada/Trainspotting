@@ -54,7 +54,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE):
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
 	pa_data = pa.get_latest_data()
-	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data[pa.name_dict['pm2.5']]), (20,20), font, 1, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 1, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
 
 def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
