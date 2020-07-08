@@ -17,8 +17,8 @@ import met_sql as met
 
 import time
 
-# import jetson.inference
-# import jetson.utils
+import jetson.inference
+import jetson.utils
 
 cnx = database_config.connection()
 if not cnx:
