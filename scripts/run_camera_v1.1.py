@@ -83,7 +83,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 
 
 def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
-	start_t = time.time()
+	frame_times = []
 	while True:
 		start_t = time.time()
 		# capture the image
