@@ -96,7 +96,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 		cnx.commit()
 
 
-def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
+def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
 	frame_times = []
 	while True:
 		start_t = time.time()
@@ -206,7 +206,7 @@ if __name__ == "__main__":
 	try:
 		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
 		if ARGS.jetsonutils:
-			loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
+			loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug, DISPLAY)
 		else:
 			loop(STREAM, ENGINE, LABELS, ARGS.debug)
 	except KeyboardInterrupt:
