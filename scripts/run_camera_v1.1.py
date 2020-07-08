@@ -26,8 +26,8 @@ if not cnx:
 	exit()
 
 def gstreamer_pipeline(
-	capture_width=1280,
-	capture_height=720,
+	capture_width=300,
+	capture_height=300,
 	display_width=300,
 	display_height=300,
 	framerate=21,
