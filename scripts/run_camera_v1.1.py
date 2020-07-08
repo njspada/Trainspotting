@@ -94,6 +94,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		aimage = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
 		detect_candidate = Image.fromarray(aimage)
 		print(detect_candidate)
+		break
 		exit()
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
