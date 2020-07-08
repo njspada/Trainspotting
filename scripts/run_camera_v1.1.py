@@ -105,7 +105,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		jetson.utils.cudaDeviceSynchronize ()
 		image = jetson.utils.cudaToNumpy (img, width, height, 4)
 		image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-		image = imutils.resize(aimage, height = 300, width=300)
+		image = imutils.resize(image, height = 300, width=300)
 		# print(image)
 		# break
 		# exit()
