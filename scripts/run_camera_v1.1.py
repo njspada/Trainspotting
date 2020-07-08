@@ -183,7 +183,7 @@ if __name__ == "__main__":
 		exit()
 	# Setup image capture stream
 	STREAM = 0
-	if ARGS.jetsonutils:
+	if not ARGS.jetsonutils:
 		STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
 	else:
 		STREAM = jetson.utils.gstCamera(1280, 720, "0")
