@@ -1,0 +1,8 @@
+[Unit]
+Description=Daemon for running purple air script
+After=multi-user.target
+[Service]
+Type=simple
+ExecStart=/usr/local/controller/setup/purple_air/run_purple_air.sh
+[Install]
+WantedBy=default.target
