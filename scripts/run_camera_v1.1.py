@@ -103,8 +103,8 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
 		# capture the image
 		img, width, height = STREAM.CaptureRGBA(zeroCopy=True)
 		jetson.utils.cudaDeviceSynchronize ()
-		img = jetson.utils.cudaRGBA32toRGB8(img, width, height)
-		jetson.utils.cudaDeviceSynchronize ()
+		#img = jetson.utils.cudaRGBA32toRGB8(img, width, height)
+		#jetson.utils.cudaDeviceSynchronize ()
 		#img = jetson.utils.cudaResize(img, width, height, )
 		image = jetson.utils.cudaToNumpy (img, width, height, 4)
 		jetson.utils.cudaDeviceSynchronize ()
