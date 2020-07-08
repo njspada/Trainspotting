@@ -175,10 +175,10 @@ if __name__ == "__main__":
 		print("Failed to load labels file")
 		exit()
 	# Setup image capture stream
-	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
+	# STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
 	# create the camera and display
 	# FONT = jetson.utils.cudaFont()
-	# STREAM = jetson.utils.gstCamera(1280, 720, 0)
+	STREAM = jetson.utils.gstCamera(1280, 720, 0)
 	# DISPLAY = jetson.utils.glDisplay()
 
 	try:
