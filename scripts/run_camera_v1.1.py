@@ -103,9 +103,13 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
 		# capture the image
 		img, width, height = STREAM.CaptureRGBA(zeroCopy=True)
 		jetson.utils.cudaDeviceSynchronize ()
+		img = jetson.utils.cudaRGBA32toRGB8(img, width, height)
+		jetson.utils.cudaDeviceSynchronize ()
+		#img = jetson.utils.cudaResize(img, width, height, )
 		image = jetson.utils.cudaToNumpy (img, width, height, 4)
+		jetson.utils.cudaDeviceSynchronize ()
 		image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-		image = imutils.resize(image, height = 300, width=300)
+		#image = imutils.resize(image, height = 300, width=300)
 		# print(image)
 		# break
 		# exit()
@@ -197,7 +201,7 @@ if __name__ == "__main__":
 	if not ARGS.jetsonutils:
 		STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
 	else:
-		STREAM = jetson.utils.gstCamera(1280, 720, "0")
+		STREAM = jetson.utils.gstCamera(300, 300, "0")
 	# create the camera and display
 	# FONT = jetson.utils.cudaFont()
 	# STREAM = jetson.utils.gstCamera(1280, 720, "0")
