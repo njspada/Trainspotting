@@ -28,8 +28,8 @@ if not cnx:
 def gstreamer_pipeline(
 	capture_width=1280,
 	capture_height=720,
-	display_width=1280,
-	display_height=720,
+	display_width=300,
+	display_height=300,
 	framerate=21,
 	flip_method=0,
 	):
@@ -115,7 +115,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 
 		# run logic here
 		_, image = STREAM.read()
-		image = imutils.resize(image, height = 1280, width=720)
+		image = imutils.resize(image, height = 300, width=300)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
