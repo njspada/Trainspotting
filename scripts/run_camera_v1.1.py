@@ -152,6 +152,8 @@ if __name__ == "__main__":
 	PARSER.add_argument('-H', '--height', action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 	ARGS = PARSER.parse_args()
+	ARGS.width = int(ARGS.width)
+	ARGS.height = int(ARGS.height)
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
