@@ -90,10 +90,11 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		image, width, height = STREAM.CaptureRGBA(zeroCopy=True)
 		jetson.utils.cudaDeviceSynchronize ()
 		image = jetson.utils.cudaToNumpy (image, width, height, 4)
+		image = image.astype("int")
 		image = imutils.resize(image, height = 300, width=300)
-		print(image)
-		break
-		exit()
+		# print(image)
+		# break
+		# exit()
 		aimage = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
 		detect_candidate = Image.fromarray(aimage)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
@@ -131,9 +132,9 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		#image = imutils.resize(image, height = 300, width=300)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
-		print(image)
-		break
-		exit()
+		# print(image)
+		# break
+		# exit()
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
