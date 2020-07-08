@@ -106,14 +106,14 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
 		#img = jetson.utils.cudaRGBA32toRGB8(img, width, height)
 		#jetson.utils.cudaDeviceSynchronize ()
 		#img = jetson.utils.cudaResize(img, width, height, )
-		image = jetson.utils.cudaToNumpy (img, width, height, 4)
+		img = jetson.utils.cudaToNumpy (img, width, height, 4)
 		#jetson.utils.cudaDeviceSynchronize ()
-		image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+		img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 		#image = imutils.resize(image, height = 300, width=300)
 		# print(image)
 		# break
 		# exit()
-		detect_candidate = Image.fromarray(image.astype(numpy.uint8))
+		detect_candidate = Image.fromarray(img.astype(numpy.uint8))
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -133,7 +133,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 				print(dataline)
-				display_image(image, box, LABELS[detect.label_id], detect.score, fps)
+				display_image(img, box, LABELS[detect.label_id], detect.score, fps)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
