@@ -131,6 +131,9 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		#image = imutils.resize(image, height = 300, width=300)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
+		print(detect_candidate)
+		break
+		exit()
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -164,6 +167,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-W', '--width', action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
+	PARSER.add_argument('-j', '--jetsonutils', action='store_true', default=False, help="Use jetson utils")
 	ARGS = PARSER.parse_args()
 	ARGS.width = int(ARGS.width)
 	ARGS.height = int(ARGS.height)
@@ -178,7 +182,11 @@ if __name__ == "__main__":
 		print("Failed to load labels file")
 		exit()
 	# Setup image capture stream
-	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
+	STREAM = 0
+	if ARGS.jetsonutils:
+		STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
+	else:
+		STREAM = jetson.utils.gstCamera(1280, 720, "0")
 	# create the camera and display
 	# FONT = jetson.utils.cudaFont()
 	# STREAM = jetson.utils.gstCamera(1280, 720, "0")
@@ -186,7 +194,7 @@ if __name__ == "__main__":
 
 	try:
 		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
-		loop(STREAM, ENGINE, LABELS, ARGS.debug)
+		ARGS.jetsonutils if loop(STREAM, ENGINE, LABELS, ARGS.debug) else loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
 	except KeyboardInterrupt:
 		print("Program killed")
 
