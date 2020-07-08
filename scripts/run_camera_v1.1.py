@@ -93,6 +93,8 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		image = imutils.resize(image, height = 300, width=300)
 		aimage = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
 		detect_candidate = Image.fromarray(aimage)
+		print(detect_candidate)
+		exit()
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -175,15 +177,15 @@ if __name__ == "__main__":
 		print("Failed to load labels file")
 		exit()
 	# Setup image capture stream
-	# STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
+	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
 	# create the camera and display
 	# FONT = jetson.utils.cudaFont()
-	STREAM = jetson.utils.gstCamera(1280, 720, "0")
+	# STREAM = jetson.utils.gstCamera(1280, 720, "0")
 	# DISPLAY = jetson.utils.glDisplay()
 
 	try:
-		loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
-		# loop(STREAM, ENGINE, LABELS, ARGS.debug)
+		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
+		loop(STREAM, ENGINE, LABELS, ARGS.debug)
 	except KeyboardInterrupt:
 		print("Program killed")
 
