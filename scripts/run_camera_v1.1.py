@@ -15,6 +15,9 @@ from mysql.connector import errorcode
 import purple_air_sql as pa
 import met_sql as met
 
+# import jetson.inference
+# import jetson.utils
+
 cnx = database_config.connection()
 if not cnx:
 	print('Failed to connect to MySQL database!')
@@ -47,7 +50,7 @@ def gstreamer_pipeline(
 		)
 	)
 
-def display_image(IMAGE, BOX, LABEL, SCORE):
+def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
@@ -59,7 +62,11 @@ def display_image(IMAGE, BOX, LABEL, SCORE):
 	met_data = met.get_latest_data()
 	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,80), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
+
+# def display_image_jetson(IMAGE, BOX, LABEL, SCORE, DISPLAY, FONT):
+
 
 def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	query = """INSERT INTO camera_detects  
@@ -74,10 +81,37 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 		cnx.commit()
 
 
+# def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY, FONT):
+# 	while DISPLAY.IsOpen():
+# 		# capture the image
+# 		img, width, height = camera.CaptureRGBA()
+
+# 		# classify the image
+# 		class_idx, confidence = net.Classify(img, width, height)
+
+# 		# find the object description
+# 		class_desc = net.GetClassDesc(class_idx)
+
+# 		# overlay the result on the image	
+# 		font.OverlayText(img, width, height, "{:05.2f}% {:s}".format(confidence * 100, class_desc), 5, 5, font.White, font.Gray40)
+		
+# 		# render the image
+# 		DISPLAY.RenderOnce(img, width, height)
+
+# 		# update the title bar
+# 		DISPLAY.SetTitle("{:s} | Network {:.0f} FPS".format(net.GetNetworkName(), net.GetNetworkFPS()))
+
+# 		# print out performance info
+# 		net.PrintProfilerTimes()
 
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
+	frame_times = []
 	while STREAM.isOpened():
+		start_t = time.time()
+		#game loop begins here
+
+		# run logic here
 		_, image = STREAM.read()
 		image = imutils.resize(image, height = 1280, width=720)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -92,10 +126,16 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			write_to_db(DATA)
 			if DEBUG:
+				end_t = time.time()
+				time_taken = end_t - start_t
+				start_t = end_t
+				frame_times.append(time_taken)
+				frame_times = frame_times[-20:]
+				fps = len(frame_times) / sum(frame_times)
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 				print(dataline)
-				display_image(image, box, LABELS[detect.label_id], detect.score)
+				display_image(image, box, LABELS[detect.label_id], detect.score, fps)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
@@ -120,8 +160,14 @@ if __name__ == "__main__":
 		exit()
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
+	# create the camera and display
+	# FONT = jetson.utils.cudaFont()
+	# STREAM = jetson.utils.gstCamera(1280, 720, 0)
+	# DISPLAY = jetson.utils.glDisplay()
+
 	try:
-		loop(STREAM, ENGINE, LABELS, ARGS.debug)
+		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug, DISPLAY, FONT)
+		loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
 	except KeyboardInterrupt:
 		print("Program killed")
 
