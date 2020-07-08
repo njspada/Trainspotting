@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
 	try:
 		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
-		ARGS.jetsonutils if loop(STREAM, ENGINE, LABELS, ARGS.debug) else loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
+		loop(STREAM, ENGINE, LABELS, ARGS.debug) if ARGS.jetsonutils else loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
 	except KeyboardInterrupt:
 		print("Program killed")
 
