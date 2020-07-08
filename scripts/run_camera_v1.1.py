@@ -67,6 +67,20 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
 
+def display_image_jetson(IMAGE, BOX, LABEL, SCORE, FPS, DSIPLAY):
+	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+	(startX, startY, endX, endY) = BOX
+	y = startY - 40 if startY - 40 > 40 else startY + 40
+	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
+	font = cv2.FONT_HERSHEY_SIMPLEX
+	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+	pa_data = pa.get_latest_data()
+	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	met_data = met.get_latest_data()
+	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.imshow('image', IMAGE)
 
 
 def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
@@ -90,12 +104,12 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		img, width, height = STREAM.CaptureRGBA(zeroCopy=True)
 		jetson.utils.cudaDeviceSynchronize ()
 		image = jetson.utils.cudaToNumpy (img, width, height, 4)
-		aimage = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-		aimage = imutils.resize(aimage, height = 300, width=300)
+		image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+		image = imutils.resize(aimage, height = 300, width=300)
 		# print(image)
 		# break
 		# exit()
-		detect_candidate = Image.fromarray(aimage.astype(numpy.uint8))
+		detect_candidate = Image.fromarray(image.astype(numpy.uint8))
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -115,7 +129,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 				print(dataline)
-				display_image(aimage, box, LABELS[detect.label_id], detect.score, fps)
+				display_image(image, box, LABELS[detect.label_id], detect.score, fps)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
@@ -187,7 +201,7 @@ if __name__ == "__main__":
 	# create the camera and display
 	# FONT = jetson.utils.cudaFont()
 	# STREAM = jetson.utils.gstCamera(1280, 720, "0")
-	# DISPLAY = jetson.utils.glDisplay()
+	DISPLAY = jetson.utils.glDisplay()
 
 	try:
 		# loop_jetson(STREAM, ENGINE, LABELS, ARGS.debug)
