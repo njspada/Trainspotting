@@ -15,6 +15,8 @@ from mysql.connector import errorcode
 import purple_air_sql as pa
 import met_sql as met
 
+import time
+
 # import jetson.inference
 # import jetson.utils
 
