@@ -115,7 +115,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 				print(dataline)
-				display_image(aimage, box, LABELS[detect.label_id], detect.score, fps)
+				display_image(detect_candidate, box, LABELS[detect.label_id], detect.score, fps)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
