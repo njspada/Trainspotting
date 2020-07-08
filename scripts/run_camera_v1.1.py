@@ -84,7 +84,7 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 
 def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 	start_t = time.time()
-	while DISPLAY.IsOpen():
+	while True:
 		start_t = time.time()
 		# capture the image
 		image, width, height = camera.CaptureRGBA(zeroCopy=true)
