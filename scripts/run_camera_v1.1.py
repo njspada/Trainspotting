@@ -95,7 +95,7 @@ def loop_jetson(STREAM, ENGINE, LABELS, DEBUG):
 		# break
 		# exit()
 		aimage = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-		detect_candidate = Image.fromarray(aimage.astype("int"))
+		detect_candidate = Image.fromarray(aimage.astype(numpy.unint8))
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
