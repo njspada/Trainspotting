@@ -181,6 +181,7 @@ if __name__ == "__main__":
 	#PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
 	PARSER.add_argument('-W', '--width', action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', action='store', default=300, help="Capture Height")
+	PARSER.add_argument('-F', '--fps', action='store', default=20, help="Capture FPS")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 	PARSER.add_argument('-j', '--jetsonutils', action='store_true', default=False, help="Use jetson utils")
 	ARGS = PARSER.parse_args()
@@ -199,7 +200,7 @@ if __name__ == "__main__":
 	# Setup image capture stream
 	STREAM = 0
 	if not ARGS.jetsonutils:
-		STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height), cv2.CAP_GSTREAMER)
+		STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 	else:
 		STREAM = jetson.utils.gstCamera(300, 300, "0")
 	# create the camera and display
