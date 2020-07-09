@@ -16,7 +16,7 @@ import purple_air_sql as pa
 import met_sql as met
 
 import time
-import asyncio
+import threading
 
 # import jetson.inference
 # import jetson.utils
@@ -25,8 +25,6 @@ cnx = database_config.connection()
 if not cnx:
 	print('Failed to connect to MySQL database!')
 	exit()
-
-asyncloop = asyncio.get_event_loop()
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -164,9 +162,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-			#write_to_db(DATA)
-			asyncloop.create_task(write_to_db(DATA))
-			#asyncio.run_coroutine_threadsafe(coro, asyncloop)
+			threading.Thread(target=write_to_db, args=(DATA,)).start()
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
