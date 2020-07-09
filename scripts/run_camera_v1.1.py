@@ -87,6 +87,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 
 
 async def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+	print('writing to db')
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
@@ -164,8 +165,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			#write_to_db(DATA)
-			coro = asyncio.create_task(write_to_db(DATA))
-			asyncio.run_coroutine_threadsafe(coro, asyncloop)
+			asyncloop.create_task(write_to_db(DATA))
+			#asyncio.run_coroutine_threadsafe(coro, asyncloop)
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
