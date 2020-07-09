@@ -105,6 +105,10 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 		return
 
 #def detected(IMAGE, DETECTIONS):
+
+def save_image(IMAGE, FILENAME):
+	output_path = "/home/coal/Desktop/output/"
+	cv2.imwrite(IMAGE, output_path+FILENAME)
 	
 def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
 	global DATA_ARR
@@ -118,9 +122,10 @@ def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
 		t = threading.Thread(target=write_to_db, args=(DATA_ARR,))
 		t.start()
 		DATA_ARR = []
+	t = threading.Thread(target=save_image, args=(IMAGE, filename,))
+	t.start()
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
-	global DATA_ARR
 	while STREAM.isOpened():
 		fps = get_fps()
 		print('fps = ' + str(fps))
@@ -138,7 +143,7 @@ if __name__ == "__main__":
 	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
 	PARSER.add_argument('-m', '--model', action='store', default='/usr/local/controller/tools/edgetpu_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
 	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file.")
-	#PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
+	PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/', help="Path to output directory.")
 	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=20, help="Capture FPS")
