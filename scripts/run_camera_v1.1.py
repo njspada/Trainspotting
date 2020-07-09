@@ -89,7 +89,7 @@ def get_fps() -> float: # returns (fps,start_t)
 	time_taken = end_t - start_t
 	frame_times.append(time_taken)
 	frame_times = frame_times[-20:]
-	fps = len(frame_times) / sum(frame_times)
+	fps = 20 / sum(frame_times)
 	start_t = time.time()
 	return fps
 
