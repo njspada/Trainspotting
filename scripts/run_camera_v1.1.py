@@ -187,6 +187,7 @@ if __name__ == "__main__":
 	ARGS = PARSER.parse_args()
 	ARGS.width = int(ARGS.width)
 	ARGS.height = int(ARGS.height)
+	ARGS.fps = int(ARGS.fps)
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
