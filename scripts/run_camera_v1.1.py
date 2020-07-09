@@ -108,7 +108,7 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 
 def save_image(IMAGE, FILENAME):
 	output_path = "/home/coal/Desktop/output/"
-	cv2.imwrite(IMAGE, output_path+FILENAME)
+	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
 def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
 	global DATA_ARR
