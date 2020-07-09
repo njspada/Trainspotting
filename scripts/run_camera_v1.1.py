@@ -129,7 +129,7 @@ def store_train_detects(DETECT_LIST):
 	l = int(len(DETECT_LIST)/10)
 	for i in range(0, l):
 		t0 = threading.Thread(target=store_a_train_detect, args=(*DETECT_LIST[i*10],))
-		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*10][0], DETECT_LIST[i*10][3] + 'jpg',))
+		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*10][0], DETECT_LIST[i*10][3] + '.jpg',))
 		t0.start()
 		t1.start()
 
