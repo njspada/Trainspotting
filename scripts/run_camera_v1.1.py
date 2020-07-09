@@ -24,6 +24,7 @@ frame_times = []
 last_time = time.time()
 
 DATA_ARR = []
+LABELS = []
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -52,6 +53,7 @@ def gstreamer_pipeline(
 		)
 	)
 
+# for debuggin
 def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
 	(startX, startY, endX, endY) = BOX
@@ -67,7 +69,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
 
-
+# for production
 def write_to_db(DATA_ARR): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	print('writing to db')
 	CNX = database_config.connection()
@@ -85,6 +87,7 @@ def write_to_db(DATA_ARR): # DATA = list{'timestamp':datetime.now(), 'conf':floa
 	else:
 		CNX.commit()
 
+# for debugging
 def get_fps() -> float: # returns (fps,start_t)
 	global frame_times
 	global start_t
@@ -96,7 +99,7 @@ def get_fps() -> float: # returns (fps,start_t)
 	start_t = time.time()
 	return fps
 
-def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
+def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP):
 	coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
 	dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
 	print(dataline)
@@ -104,45 +107,62 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
-#def detected(IMAGE, DETECTIONS):
-
 def save_image(IMAGE, FILENAME):
 	output_path = "/home/coal/Desktop/output/"
 	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
-def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
+def store_a_train_detect(IMAGE, DETECT, LABELS, MySQLF, TIMESTAMP):
 	global DATA_ARR
-	timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+	global LABELS
 	box = DETECT.bounding_box.flatten().astype("int")
 	(startX, startY, endX, endY) = box
 	filename = timestamp + '.jpg'
-	DATA = [timestamp, float(DETECT.score), 'train', int(startX), int(startY), int(endX), int(endY), filename]
+	DATA = [timestamp, float(DETECT.score), LABELS[DETECT.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 	DATA_ARR.append(DATA)
 	if len(DATA_ARR) >= MySQLF:
 		t = threading.Thread(target=write_to_db, args=(DATA_ARR,))
 		t.start()
 		DATA_ARR = []
-	t = threading.Thread(target=save_image, args=(IMAGE, filename,))
-	t.start()
 
-def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
+def store_train_detects(DETECT_LIST):
+	print('storing train detects')
+	for i in range(0, len(DETECT_LIST)/10):
+		t0 = Threading.Thread(target=store_a_train_detect, args=(*DETECT_LIST[i*10]))
+		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*10][0], DETECT_LIST[i*10][3] + 'jpg',))
+		t0.start()
+		t1.start()
+
+def loop(STREAM, ENGINE, DEBUG, MySQLF):
+	is_train_event = False
+	detect_list = []
 	while STREAM.isOpened():
 		fps = get_fps()
 		print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
 			if detect.label_id == 6: # 6 = train
-				store_train_detect(image, detect, LABELS, MySQLF)
+				detect_list.append([image, detect, MySQLF, timestamp])
+				if not is_train_event: # start of new train event
+					print('starting new train event')
+					is_train_event = True
+			else:
+				if is_train_event: # end of train event
+					print('ending train event')
+					is_train_event = False
+					t = threading.Thread(target =store_train_detects, args=(detect_list,))
+					t.start()
+					detect_list = []
 			if DEBUG:
-				debug(detect, LABELS, detect.bounding_box.flatten().astype("int"), fps, image, datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
+				debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
 
 
 
 if __name__ == "__main__":
 	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
-	PARSER.add_argument('-m', '--model', action='store', default='/usr/local/controller/tools/edgetpu_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
-	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file.")
+	PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
+	PARSER.add_argument('-l', '--label', action='store', default='/usr/share/edgetpu/examples/models/coco_labels.txt', help="Path to labels text file.")
 	PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/', help="Path to output directory.")
 	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
@@ -157,6 +177,7 @@ if __name__ == "__main__":
 		print("Failed to load detection engine.")
 		exit()
 	# Read labels file
+	global LABELS
 	LABELS = dataset_utils.read_label_file(ARGS.label)
 	if not LABELS:
 		print("Failed to load labels file")
@@ -165,7 +186,7 @@ if __name__ == "__main__":
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
 	try:
-		loop(STREAM, ENGINE, LABELS, ARGS.debug, ARGS.mysql_frequency)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
