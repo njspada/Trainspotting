@@ -150,6 +150,12 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		end_t = time.time()
+		time_taken = end_t - start_t
+		start_t = end_t
+		frame_times.append(time_taken)
+		frame_times = frame_times[-20:]
+		fps = len(frame_times) / sum(frame_times)
 		print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
@@ -159,12 +165,6 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			write_to_db(DATA)
 			if DEBUG:
-				end_t = time.time()
-				time_taken = end_t - start_t
-				start_t = end_t
-				frame_times.append(time_taken)
-				frame_times = frame_times[-20:]
-				fps = len(frame_times) / sum(frame_times)
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
 				print(dataline)
