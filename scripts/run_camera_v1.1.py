@@ -177,7 +177,7 @@ if __name__ == "__main__":
 		print("Failed to load detection engine.")
 		exit()
 	# Read labels file
-	global LABELS
+	#global LABELS
 	LABELS = dataset_utils.read_label_file(ARGS.label)
 	if not LABELS:
 		print("Failed to load labels file")
