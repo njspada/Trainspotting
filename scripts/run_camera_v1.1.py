@@ -80,7 +80,7 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 		CNX.commit()
 
 
-def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = []):
+def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = [], MySQLF):
 	frame_times = []
 	start_t = time.time()
 	while STREAM.isOpened():
@@ -100,12 +100,10 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = []):
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			DATA_ARR.append(DATA)
-			if len(DATA_ARR) == 100:
+			if len(DATA_ARR) == MySQLF:
 				t = threading.Thread(target=write_to_db, args=(DATA_ARR, cnx,))
 				t.start()
 				DATA_ARR = []
-			# if DEBUG:
-			# 	t.join()
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
@@ -122,15 +120,16 @@ if __name__ == "__main__":
 	PARSER.add_argument('-m', '--model', action='store', default='/usr/local/controller/tools/edgetpu_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
 	PARSER.add_argument('-l', '--label', action='store', default='/usr/local/controller/tools/edgetpu_models/coco_labels.txt', help="Path to labels text file.")
 	#PARSER.add_argument('-o', '--output_dir', action='store', default='output/', help="Path to output directory.")
-	PARSER.add_argument('-W', '--width', action='store', default=300, help="Capture Width")
-	PARSER.add_argument('-H', '--height', action='store', default=300, help="Capture Height")
-	PARSER.add_argument('-F', '--fps', action='store', default=20, help="Capture FPS")
+	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
+	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
+	PARSER.add_argument('-F', '--fps', action='store', type=int, default=20, help="Capture FPS")
+	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
-	ARGS.width = int(ARGS.width)
-	ARGS.height = int(ARGS.height)
-	ARGS.fps = int(ARGS.fps)
+	# ARGS.width = int(ARGS.width)
+	# ARGS.height = int(ARGS.height)
+	# ARGS.fps = int(ARGS.fps)
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
@@ -145,7 +144,9 @@ if __name__ == "__main__":
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
 	try:
-		loop(STREAM, ENGINE, LABELS, ARGS.debug)
+		loop(STREAM, ENGINE, LABELS, ARGS.debug, [], ARGS.mysql_frequency)
+		STREAM.release()
+		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
 		print("Program killed")
 
