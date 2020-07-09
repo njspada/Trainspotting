@@ -26,6 +26,8 @@ if not cnx:
 start_t = time.time()
 frame_times = []
 
+last_time = time.time()
+
 DATA_ARR = []
 
 def gstreamer_pipeline(
@@ -105,8 +107,19 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 		return
 
 #def detected(IMAGE, DETECTIONS):
-
-
+	
+def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
+	global DATA_ARR
+	timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+	box = DETECT.bounding_box.flatten().astype("int")
+	(startX, startY, endX, endY) = box
+	filename = timestamp + '.jpg'
+	DATA = [timestamp, float(DETECT.score), 'train', int(startX), int(startY), int(endX), int(endY), filename]
+	DATA_ARR.append(DATA)
+	if len(DATA_ARR) == MySQLF:
+		t = threading.Thread(target=write_to_db, args=(cnx,))
+		t.start()
+		DATA_ARR = []
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
 	global DATA_ARR
@@ -115,21 +128,11 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
 		print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
-		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
-			box = detect.bounding_box.flatten().astype("int")
-			(startX, startY, endX, endY) = box
-			filename = timestamp + '.jpg'
-			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-			DATA_ARR.append(DATA)
-			if len(DATA_ARR) == MySQLF:
-				t = threading.Thread(target=write_to_db, args=(cnx,))
-				t.start()
-				DATA_ARR = []
+			if detect.label_id == 6: # 6 = train
+				store_train_detect(image, detect, LABELS, MySQLF)
 			if DEBUG:
-				debug(detect, LABELS, box, fps, image, timestamp)
-				# if cv2.waitKey(1) & 0xFF == ord('q'):
-				# 	break
+				debug(detect, LABELS, detect.bounding_box.flatten().astype("int"), fps, image, datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
 
 
 
