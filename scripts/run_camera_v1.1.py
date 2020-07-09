@@ -140,8 +140,8 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 
 def loop(STREAM, ENGINE, LABELS, DEBUG):
 	frame_times = []
+	start_t = time.time()
 	while STREAM.isOpened():
-		start_t = time.time()
 		end_t = time.time()
 		time_taken = end_t - start_t
 		start_t = end_t
