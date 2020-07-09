@@ -160,7 +160,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-			write_to_db(DATA)
+			#write_to_db(DATA)
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
