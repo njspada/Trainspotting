@@ -3,10 +3,8 @@ import configparser
 from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
 import cv2
-import imutils
+#from imutils.video import VideoStream
 import numpy
 from datetime import datetime
 import database_config
@@ -139,7 +137,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF):
 	empty_frames = 0
 	while STREAM.isOpened():
 		fps = get_fps()
-		#print('fps = ' + str(fps))
+		print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
