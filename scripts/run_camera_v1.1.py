@@ -26,6 +26,8 @@ if not cnx:
 start_t = time.time()
 frame_times = []
 
+DATA_ARR = []
+
 def gstreamer_pipeline(
 	capture_width=300,
 	capture_height=300,
@@ -69,8 +71,9 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.imshow('image', IMAGE)
 
 
-def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+def write_to_db(CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	print('writing to db')
+	global DATA_ARR
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
@@ -101,10 +104,15 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
+#def detected(IMAGE, DETECTIONS):
 
-def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
+
+
+def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
+	global DATA_ARR
 	while STREAM.isOpened():
 		fps = get_fps()
+		print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -115,10 +123,9 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			DATA_ARR.append(DATA)
 			if len(DATA_ARR) == MySQLF:
-				t = threading.Thread(target=write_to_db, args=(DATA_ARR, cnx,))
+				t = threading.Thread(target=write_to_db, args=(cnx,))
 				t.start()
 				DATA_ARR = []
-			print('fps = ' + str(fps))
 			if DEBUG:
 				debug(detect, LABELS, box, fps, image, timestamp)
 				# if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -152,7 +159,7 @@ if __name__ == "__main__":
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
 	try:
-		loop(STREAM, ENGINE, LABELS, ARGS.debug, [], ARGS.mysql_frequency)
+		loop(STREAM, ENGINE, LABELS, ARGS.debug, ARGS.mysql_frequency)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
