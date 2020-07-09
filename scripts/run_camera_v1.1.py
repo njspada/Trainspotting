@@ -86,7 +86,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 # 	cv2.imshow('image', IMAGE)
 
 
-def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+def write_to_db(DATA, CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	# DATA_ARR.append(DATA)
 	# if len(DATA_ARR) == 100:
 	print('writing to db')
@@ -94,12 +94,12 @@ def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, '
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
 	try:
-		cursor = cnx.cursor()
+		cursor = CNX.cursor()
 		cursor.execute(query, DATA_ARR)
 	except mysql.connector.Error as err:
 		print(err)
 	else:
-		cnx.commit()
+		CNX.commit()
 
 
 # def loop_jetson(STREAM, ENGINE, LABELS, DEBUG, DISPLAY):
@@ -166,7 +166,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-			t = threading.Thread(target=write_to_db, args=(DATA,))
+			t = threading.Thread(target=write_to_db, args=(DATA, cnx,))
 			t.start()
 			if DEBUG:
 				t.join()
