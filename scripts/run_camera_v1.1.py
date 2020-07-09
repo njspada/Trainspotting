@@ -80,7 +80,7 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 		CNX.commit()
 
 
-def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = [], MySQLF):
+def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 	frame_times = []
 	start_t = time.time()
 	while STREAM.isOpened():
