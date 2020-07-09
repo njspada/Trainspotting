@@ -86,6 +86,7 @@ def write_to_db(CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'l
 		print(err)
 	else:
 		CNX.commit()
+		DATA_ARR = []
 
 def get_fps() -> float: # returns (fps,start_t)
 	global frame_times
@@ -116,10 +117,10 @@ def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
 	filename = timestamp + '.jpg'
 	DATA = [timestamp, float(DETECT.score), 'train', int(startX), int(startY), int(endX), int(endY), filename]
 	DATA_ARR.append(DATA)
-	if len(DATA_ARR) == MySQLF:
+	if len(DATA_ARR) >= MySQLF:
 		t = threading.Thread(target=write_to_db, args=(cnx,))
 		t.start()
-		DATA_ARR = []
+		#DATA_ARR = []
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
 	global DATA_ARR
