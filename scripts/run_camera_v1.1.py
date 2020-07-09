@@ -26,8 +26,6 @@ if not cnx:
 	print('Failed to connect to MySQL database!')
 	exit()
 
-DATA_ARR = []
-
 def gstreamer_pipeline(
 	capture_width=300,
 	capture_height=300,
@@ -143,7 +141,7 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 # 					break
 
 
-def loop(STREAM, ENGINE, LABELS, DEBUG):
+def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = []):
 	frame_times = []
 	start_t = time.time()
 	while STREAM.isOpened():
