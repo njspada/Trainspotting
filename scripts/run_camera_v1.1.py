@@ -83,6 +83,8 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 		CNX.commit()
 
 def get_fps() -> float: # returns (fps,start_t)
+	global frame_times
+	global start_t
 	end_t = time.time()
 	time_taken = end_t - start_t
 	frame_times.append(time_taken)
