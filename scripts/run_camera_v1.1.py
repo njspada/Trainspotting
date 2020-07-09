@@ -91,8 +91,7 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
 	try:
 		cursor = CNX.cursor()
-		cursor.execute(query, DATA_ARR)
-		DATA_ARR = []
+		cursor.executemany(query, DATA_ARR)
 	except mysql.connector.Error as err:
 		print(err)
 	else:
