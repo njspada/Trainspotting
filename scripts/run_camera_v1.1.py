@@ -84,14 +84,15 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 # 	cv2.imshow('image', IMAGE)
 
 
-def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+def write_to_db(DATA, CNX): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	print('writing to db')
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
 	try:
 		cursor = CNX.cursor()
-		cursor.executemany(query, DATA_ARR)
+		#cursor.executemany(query, DATA_ARR)
+		cursor.execute(query, DATA)
 	except mysql.connector.Error as err:
 		print(err)
 	else:
@@ -162,13 +163,13 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = []):
 			(startX, startY, endX, endY) = box
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-			DATA_ARR.append(DATA)
-			if len(DATA_ARR) == 100:
-				t = threading.Thread(target=write_to_db, args=(DATA_ARR, cnx,))
-				t.start()
-				DATA_ARR = []
-			if DEBUG:
-				t.join()
+			#DATA_ARR.append(DATA)
+			#if len(DATA_ARR) == 100:
+			t = threading.Thread(target=write_to_db, args=(DATA, cnx,))
+			t.start()
+			DATA_ARR = []
+			#if DEBUG:
+			#	t.join()
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
