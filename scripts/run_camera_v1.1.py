@@ -68,13 +68,12 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.imshow('image', IMAGE)
 
 
-def write_to_db(): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+def write_to_db(DATA_ARR): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	print('writing to db')
 	CNX = database_config.connection()
 	if not CNX:
 		print('Failed to connect to MySQL database!')
 	exit()
-	global DATA_ARR
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
@@ -85,7 +84,6 @@ def write_to_db(): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'labe
 		print(err)
 	else:
 		CNX.commit()
-		DATA_ARR = []
 
 def get_fps() -> float: # returns (fps,start_t)
 	global frame_times
@@ -117,9 +115,9 @@ def store_train_detect(IMAGE, DETECT, LABELS, MySQLF):
 	DATA = [timestamp, float(DETECT.score), 'train', int(startX), int(startY), int(endX), int(endY), filename]
 	DATA_ARR.append(DATA)
 	if len(DATA_ARR) >= MySQLF:
-		t = threading.Thread(target=write_to_db)
+		t = threading.Thread(target=write_to_db, args=(DATA_ARR,))
 		t.start()
-		#DATA_ARR = []
+		DATA_ARR = []
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, MySQLF):
 	global DATA_ARR
