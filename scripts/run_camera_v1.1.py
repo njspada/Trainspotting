@@ -91,8 +91,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR = []):
 		frame_times = frame_times[-20:]
 		fps = len(frame_times) / sum(frame_times)
 		_, image = STREAM.read()
-		image = Image.fromarray(image)
-		detections = ENGINE.detect_with_image(image, top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		#detect_candidate = Image.fromarray(image)
+		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
 			box = detect.bounding_box.flatten().astype("int")
