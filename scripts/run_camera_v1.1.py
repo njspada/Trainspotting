@@ -23,6 +23,9 @@ if not cnx:
 	print('Failed to connect to MySQL database!')
 	exit()
 
+start_t = time.time()
+frame_times = []
+
 def gstreamer_pipeline(
 	capture_width=300,
 	capture_height=300,
@@ -79,17 +82,27 @@ def write_to_db(DATA_ARR, CNX): # DATA = list{'timestamp':datetime.now(), 'conf'
 	else:
 		CNX.commit()
 
+def get_fps() -> float: # returns (fps,start_t)
+	end_t = time.time()
+	time_taken = end_t - start_t
+	frame_times.append(time_taken)
+	frame_times = frame_times[-20:]
+	fps = len(frame_times) / sum(frame_times)
+	start_t = time.time()
+	return fps
+
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 	frame_times = []
 	start_t = time.time()
 	while STREAM.isOpened():
-		end_t = time.time()
-		time_taken = end_t - start_t
-		start_t = end_t
-		frame_times.append(time_taken)
-		frame_times = frame_times[-20:]
-		fps = len(frame_times) / sum(frame_times)
+		# end_t = time.time()
+		# time_taken = end_t - start_t
+		# start_t = end_t
+		# frame_times.append(time_taken)
+		# frame_times = frame_times[-20:]
+		# fps = len(frame_times) / sum(frame_times)
+		fps = get_fps()
 		_, image = STREAM.read()
 		#detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
@@ -127,9 +140,6 @@ if __name__ == "__main__":
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
-	# ARGS.width = int(ARGS.width)
-	# ARGS.height = int(ARGS.height)
-	# ARGS.fps = int(ARGS.fps)
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
@@ -145,10 +155,10 @@ if __name__ == "__main__":
 
 	try:
 		loop(STREAM, ENGINE, LABELS, ARGS.debug, [], ARGS.mysql_frequency)
-		STREAM.release()
-		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
 		print("Program killed")
+	STREAM.release()
+	cv2.destroyAllWindows()
 
 
 
