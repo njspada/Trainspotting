@@ -116,8 +116,8 @@ def store_a_train_detect(IMAGE, DETECT, MySQLF, TIMESTAMP):
 	global LABELS
 	box = DETECT.bounding_box.flatten().astype("int")
 	(startX, startY, endX, endY) = box
-	filename = timestamp + '.jpg'
-	DATA = [timestamp, float(DETECT.score), LABELS[DETECT.label_id], int(startX), int(startY), int(endX), int(endY), filename]
+	filename = TIMESTAMP + '.jpg'
+	DATA = [TIMESTAMP, float(DETECT.score), LABELS[DETECT.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 	DATA_ARR.append(DATA)
 	if len(DATA_ARR) >= MySQLF:
 		t = threading.Thread(target=write_to_db, args=(DATA_ARR,))
