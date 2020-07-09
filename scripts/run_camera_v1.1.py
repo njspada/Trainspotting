@@ -26,6 +26,8 @@ if not cnx:
 	print('Failed to connect to MySQL database!')
 	exit()
 
+DATA_ARR = []
+
 def gstreamer_pipeline(
 	capture_width=300,
 	capture_height=300,
@@ -84,14 +86,16 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 # 	cv2.imshow('image', IMAGE)
 
 
-async def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+	# DATA_ARR.append(DATA)
+	# if len(DATA_ARR) == 100:
 	print('writing to db')
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
 	try:
 		cursor = cnx.cursor()
-		cursor.execute(query, DATA)
+		cursor.execute(query, DATA_ARR)
 	except mysql.connector.Error as err:
 		print(err)
 	else:
