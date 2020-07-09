@@ -153,7 +153,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(detect_candidate, top_k=3, keep_aspect_ratio=True, relative_coord=False)
-		print(str(len(detections)) + ' detects')
+		#print(str(len(detections)) + ' detects')
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
 			box = detect.bounding_box.flatten().astype("int")
@@ -161,10 +161,11 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			write_to_db(DATA)
+			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
 				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
-				#print(dataline)
+				print(dataline)
 				display_image(image, box, LABELS[detect.label_id], detect.score, fps)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
