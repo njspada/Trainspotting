@@ -16,6 +16,7 @@ import purple_air_sql as pa
 import met_sql as met
 
 import time
+import asyncio
 
 # import jetson.inference
 # import jetson.utils
@@ -24,6 +25,8 @@ cnx = database_config.connection()
 if not cnx:
 	print('Failed to connect to MySQL database!')
 	exit()
+
+asyncloop = asyncio.get_event_loop()
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -83,7 +86,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 # 	cv2.imshow('image', IMAGE)
 
 
-def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
+async def write_to_db(DATA): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
 	query = """INSERT INTO camera_detects  
 				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
@@ -161,6 +164,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG):
 			filename = timestamp + '.jpg'
 			DATA = [timestamp, float(detect.score), LABELS[detect.label_id], int(startX), int(startY), int(endX), int(endY), filename]
 			#write_to_db(DATA)
+			coro = asyncio.create_task(write_to_db(DATA))
+			asyncio.run_coroutine_threadsafe(coro, asyncloop)
 			print('fps = ' + str(fps))
 			if DEBUG:
 				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
