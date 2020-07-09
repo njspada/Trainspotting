@@ -151,10 +151,12 @@ if __name__ == "__main__":
 
 	try:
 		loop(STREAM, ENGINE, LABELS, ARGS.debug, [], ARGS.mysql_frequency)
+		STREAM.release()
+		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
 		print("Program killed")
-	STREAM.release()
-	cv2.destroyAllWindows()
+		STREAM.release()
+		cv2.destroyAllWindows()
 
 
 
