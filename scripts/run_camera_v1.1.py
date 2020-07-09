@@ -111,7 +111,7 @@ def save_image(IMAGE, FILENAME):
 	output_path = "/home/coal/Desktop/output/"
 	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
-def store_a_train_detect(IMAGE, DETECT, LABELS, MySQLF, TIMESTAMP):
+def store_a_train_detect(IMAGE, DETECT, MySQLF, TIMESTAMP):
 	global DATA_ARR
 	global LABELS
 	box = DETECT.bounding_box.flatten().astype("int")
