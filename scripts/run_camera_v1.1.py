@@ -98,6 +98,8 @@ def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
 	dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
 	print(dataline)
 	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS)
+	if cv2.waitKey(1) & 0xFF == ord('q'):
+		return
 
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
@@ -119,8 +121,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 			print('fps = ' + str(fps))
 			if DEBUG:
 				debug(detect, LABELS, box, fps, image, timestamp)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-					break
+				# if cv2.waitKey(1) & 0xFF == ord('q'):
+				# 	break
 
 
 
