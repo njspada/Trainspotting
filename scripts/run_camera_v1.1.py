@@ -119,8 +119,8 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 			print('fps = ' + str(fps))
 			if DEBUG:
 				debug(detect, LABELS, box, fps, image, timestamp)
-				# if cv2.waitKey(1) & 0xFF == ord('q'):
-				# 	break
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 
 
 
