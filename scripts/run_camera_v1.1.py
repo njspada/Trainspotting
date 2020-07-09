@@ -136,9 +136,10 @@ def store_train_detects(DETECT_LIST):
 def loop(STREAM, ENGINE, DEBUG, MySQLF):
 	is_train_event = False
 	detect_list = []
+	empty_frames = 0
 	while STREAM.isOpened():
 		fps = get_fps()
-		print('fps = ' + str(fps))
+		#print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -146,10 +147,13 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF):
 			if detect.label_id == 6: # 6 = train
 				detect_list.append([image, detect, MySQLF, timestamp])
 				if not is_train_event: # start of new train event
+					print('empty frames = ' + str(empty_frames))
 					print('starting new train event')
+					empty_frames = 0
 					is_train_event = True
 			else:
 				if is_train_event: # end of train event
+					empty_frames += 1
 					print('ending train event')
 					is_train_event = False
 					t = threading.Thread(target =store_train_detects, args=(detect_list,))
