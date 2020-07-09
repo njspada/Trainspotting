@@ -93,20 +93,17 @@ def get_fps() -> float: # returns (fps,start_t)
 	start_t = time.time()
 	return fps
 
+def debug(DETECT, LABELS, BOX, FPS, IMAGE, TIMESTAMP):
+	coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
+	dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
+	print(dataline)
+	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS)
+
 
 def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
-	frame_times = []
-	start_t = time.time()
 	while STREAM.isOpened():
-		# end_t = time.time()
-		# time_taken = end_t - start_t
-		# start_t = end_t
-		# frame_times.append(time_taken)
-		# frame_times = frame_times[-20:]
-		# fps = len(frame_times) / sum(frame_times)
 		fps = get_fps()
 		_, image = STREAM.read()
-		#detect_candidate = Image.fromarray(image)
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		for detect in detections:
@@ -121,10 +118,7 @@ def loop(STREAM, ENGINE, LABELS, DEBUG, DATA_ARR, MySQLF):
 				DATA_ARR = []
 			print('fps = ' + str(fps))
 			if DEBUG:
-				coords = dict(zip(['startX', 'startY', 'endX', 'endY'], box))
-				dataline = str(timestamp) + ', ' + LABELS[detect.label_id] + ', conf = ' + str(detect.score) + ', coords = ' + str(coords) + '\n'
-				print(dataline)
-				display_image(image, box, LABELS[detect.label_id], detect.score, fps)
+				debug(detect, LABELS, box, fps, image, timestamp)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 
