@@ -10,6 +10,7 @@ import time
 import cv2
 from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
+from PIL import Image
 
 # construct the argument parse and parse the arguments
 # ap = argparse.ArgumentParser()
