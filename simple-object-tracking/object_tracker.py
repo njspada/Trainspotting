@@ -94,6 +94,8 @@ while True:
 			# compute the (x, y)-coordinates of the bounding box for
 			# the object, then update the bounding box rectangles list
 			#box = detections[0, 0, i, 3:7] * np.array([W, H, W, H])
+		if detections[i].score < 0.35:
+			continue
 		box = detections[i].bounding_box.flatten().astype("int")
 		rects.append(box)
 
