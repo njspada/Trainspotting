@@ -163,6 +163,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 				else:
 					empty_frames += 1
 			else:
+				print('empty_frames = ' + str(empty_frames))
 				was_train_event = True
 				empty_frames += 1
 		if DEBUG:
