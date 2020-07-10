@@ -25,6 +25,7 @@ last_time = time.time()
 
 DATA_ARR = []
 LABELS = []
+COLLECT_FREQUENCY = 10
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -132,7 +133,8 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 		#event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
 		event_id = cursor.lastrowid
 		mkdir('/home/coal/Desktop/output/' + str(event_id))
-	l = int(len(DETECT_LIST)/10)
+		global COLLECT_FREQUENCY
+	l = int(len(DETECT_LIST)/COLLECT_FREQUENCY)
 	for i in range(0,l):
 		filename = str(event_id) + '/' + str(DETECT_LIST[i*10][2]) + '.jpg'
 		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*10][1], filename, event_id,))
@@ -184,24 +186,25 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 
 if __name__ == "__main__":
 	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
-	PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
+	PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
 	PARSER.add_argument('-l', '--label', action='store', default='/usr/share/edgetpu/examples/models/coco_labels.txt', help="Path to labels text file.")
 	PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/', help="Path to output directory.")
 	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
-	PARSER.add_argument('-F', '--fps', action='store', type=int, default=20, help="Capture FPS")
+	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
 	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
-	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=100, help="Length of empty frame buffer.")
+	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
+	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
+	COLLECT_FREQUENCY = ARGS.collect_frequency
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
 		print("Failed to load detection engine.")
 		exit()
 	# Read labels file
-	#global LABELS
 	LABELS = dataset_utils.read_label_file(ARGS.label)
 	if not LABELS:
 		print("Failed to load labels file")
