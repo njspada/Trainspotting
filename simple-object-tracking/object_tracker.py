@@ -77,10 +77,10 @@ while True:
 	# construct a blob from the frame, pass it through the network,
 	# obtain our output predictions, and initialize the list of
 	# bounding box rectangles
-	blob = cv2.dnn.blobFromImage(frame, 1.0, (W, H),
-		(104.0, 177.0, 123.0))
-	net.setInput(blob)
-	detections = net.forward()
+	# blob = cv2.dnn.blobFromImage(frame, 1.0, (W, H),
+	# 	(104.0, 177.0, 123.0))
+	# net.setInput(blob)
+	# detections = net.forward()
 	rects = []
 
 	detections = net.detect_with_image(Image.fromarray(frame), top_k=3, keep_aspect_ratio=True, relative_coord=False)
