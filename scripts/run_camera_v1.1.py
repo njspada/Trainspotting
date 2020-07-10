@@ -88,13 +88,14 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP):
 		return
 
 def save_image(IMAGE, FILENAME):
+	print('saving image')
 	output_path = "/home/coal/Desktop/output/"
 	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
 def store_a_train_detect(DETECTS, FILENAME, EVENT_ID):
 	global LABELS
 	print(DETECTS[0].bounding_box.flatten().astype("int"))
-	DATA = [[EVENT_ID, FILENAME, d.bounding_box.flatten().astype("int"), LABELS[d.label_id], d.score] for d in DETECTS]
+	DATA = [[EVENT_ID, FILENAME, str(d.bounding_box.flatten().astype("int")), LABELS[d.label_id], d.score] for d in DETECTS]
 	CNX = database_config.connection()
 	if not CNX:
 		print('Failed to connect to MySQL database!')
