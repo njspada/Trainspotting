@@ -154,7 +154,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 			if empty_frames > EMPTY_FRAMES: # hit non train frames limit
 				was_train_event = False
 				if len(detect_list) > 0: # at least one train event, store it
-					empty_frames = 0
+					empty_frames += 1
 					print('ending train event')
 					was_train_event = False
 					t = threading.Thread(target =store_train_detects, args=(detect_list,))
@@ -162,9 +162,11 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 					detect_list = []
 				else:
 					empty_frames += 1
-			else:
+			elif was_train_event:
 				print('empty_frames = ' + str(empty_frames))
-				was_train_event = True
+				#was_train_event = True
+				empty_frames += 1
+			else:
 				empty_frames += 1
 		if DEBUG:
 			for detect in detections:
