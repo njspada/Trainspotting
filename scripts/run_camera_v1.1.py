@@ -131,8 +131,8 @@ def store_train_detects(DETECT_LIST):
 		t0.start()
 		t1.start()
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, ARGS.empty_frames):
-	print('empty trains = ' + str(ARGS.empty_frames))
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
+	print('empty trains = ' + str(EMPTY_FRAMES))
 	was_train_event = False
 	detect_list = []
 	empty_frames = 0
@@ -151,7 +151,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, ARGS.empty_frames):
 					empty_frames = 0
 					was_train_event = True
 			else:
-				if was_train_event and empty_frames > ARGS.empty_frames: # end of train event
+				if was_train_event and empty_frames > EMPTY_FRAMES: # end of train event
 					empty_frames += 1
 					print('ending train event')
 					was_train_event = False
