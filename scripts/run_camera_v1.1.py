@@ -145,7 +145,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, ARGS.empty_frames):
 			if detect.label_id == 6: # 6 = train
 				detect_list.append([image, detect, MySQLF, timestamp])
 				if not was_train_event: # start of new train event
-					print('empty frames = ' + str(empty_frames))
+					#print('empty frames = ' + str(empty_frames))
 					print('starting new train event')
 					empty_frames = 0
 					was_train_event = True
@@ -158,7 +158,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, ARGS.empty_frames):
 					t.start()
 					detect_list = []
 				elif was_train_event:
-					empty_frames += 0
+					print('empty frames = ' + str(empty_frames))
+					empty_frames += 1
 				else:
 					empty_frames = 0
 
