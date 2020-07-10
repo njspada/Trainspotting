@@ -67,24 +67,6 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('image', IMAGE)
 
-# for production
-def write_to_db(DATA_ARR): # DATA = list{'timestamp':datetime.now(), 'conf':float, 'label': str, 'x0': int, 'y0', 'x1', 'y1', 'filename':str}
-	print('writing to db')
-	CNX = database_config.connection()
-	if not CNX:
-		print('Failed to connect to MySQL database!')
-		exit()
-	query = """INSERT INTO camera_detects  
-				(timestamp, conf, label, `x0`, `y0`, `x1`, `y1`, filename) 
-				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
-	try:
-		cursor = CNX.cursor()
-		cursor.executemany(query, DATA_ARR)
-	except mysql.connector.Error as err:
-		print(err)
-	else:
-		CNX.commit()
-
 # for debugging
 def get_fps() -> float: # returns (fps,start_t)
 	global frame_times
@@ -109,25 +91,47 @@ def save_image(IMAGE, FILENAME):
 	output_path = "/home/coal/Desktop/output/"
 	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
-def store_a_train_detect(IMAGE, DETECT, MySQLF, TIMESTAMP):
-	global DATA_ARR
+def store_a_train_detect(DETECTS, FILENAME, EVENT_ID):
 	global LABELS
-	box = DETECT.bounding_box.flatten().astype("int")
-	(startX, startY, endX, endY) = box
-	filename = TIMESTAMP + '.jpg'
-	DATA = [TIMESTAMP, float(DETECT.score), LABELS[DETECT.label_id], int(startX), int(startY), int(endX), int(endY), filename]
-	DATA_ARR.append(DATA)
-	if len(DATA_ARR) >= MySQLF:
-		t = threading.Thread(target=write_to_db, args=(DATA_ARR,))
-		t.start()
-		DATA_ARR = []
+	print(DETECTS[0].bounding_box.flatten().astype("int"))
+	DATA = [[EVENT_ID, FILENAME, d.bounding_box.flatten().astype("int"), LABELS[d.label_id], d.score] for d in DETECTS]
+	CNX = database_config.connection()
+	if not CNX:
+		print('Failed to connect to MySQL database!')
+		exit()
+	query = """INSERT INTO images  
+				(event_id, filename, `box`, label, conf) 
+				VALUES (%s,%s,%s,%s,%s);""";
+	try:
+		cursor = CNX.cursor()
+		cursor.executemany(query, DATA)
+	except mysql.connector.Error as err:
+		print(err)
+	else:
+		CNX.commit()
 
-def store_train_detects(DETECT_LIST):
-	print('storing train detects')
+def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
+	print('storing train event')
+	start = DETECT_LIST[0][2]
+	end = DETECT_LIST[-1][2]
+	query = """INSERT INTO train_events
+				(start,end)
+				VALUES (%s,%s);
+			"""
+	CNX = database_config.connection()
+	try:
+		cursor = CNX.cursor()
+		cursor.execute(query, [strat,end])
+	except mysql.connector.Error as err:
+		print(err)
+	else:
+		CNX.commit()
+		event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
 	l = int(len(DETECT_LIST)/10)
-	for i in range(0, l):
-		t0 = threading.Thread(target=store_a_train_detect, args=(*DETECT_LIST[i*10],))
-		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*10][0], DETECT_LIST[i*10][3] + '.jpg',))
+	for i in range(0,l):
+		filename = str(event_id) + '/' + str(DETECT_LIST[i][2]) + '.jpg'
+		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i][1], filename, event_id,))
+		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i][0],filename,))
 		t0.start()
 		t1.start()
 
@@ -144,12 +148,11 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		train_detects = [d for d in detections if d.label_id == 6]
 		if len(train_detects) > 0: # is a train event
-			for detect in train_detects:
-				detect_list.append([image, detect, MySQLF, timestamp])
-				empty_frames = 0
-				if not was_train_event: # start of new train event
-					print('starting new train event')
-					was_train_event = True
+			detect_list.append([image, train_detects, timestamp])
+			empty_frames = 0
+			if not was_train_event: # start of new train event
+				print('starting new train event')
+				was_train_event = True
 		else: # is not a train event, check if need to prolong ongoing train event
 			if empty_frames > EMPTY_FRAMES: # hit non train frames limit
 				was_train_event = False
@@ -157,7 +160,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 					empty_frames += 1
 					print('ending train event')
 					was_train_event = False
-					t = threading.Thread(target =store_train_detects, args=(detect_list,))
+					t = threading.Thread(target =store_train_event, args=(detect_list,))
 					t.start()
 					detect_list = []
 				else:
