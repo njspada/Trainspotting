@@ -136,9 +136,9 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 		global COLLECT_FREQUENCY
 	l = int(len(DETECT_LIST)/COLLECT_FREQUENCY)
 	for i in range(0,l):
-		filename = str(event_id) + '/' + str(DETECT_LIST[i*10][2]) + '.jpg'
-		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*10][1], filename, event_id,))
-		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*10][0],filename,))
+		filename = str(event_id) + '/' + str(DETECT_LIST[i*COLLECT_FREQUENCY][2]) + '.jpg'
+		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*COLLECT_FREQUENCY][1], filename, event_id,))
+		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*COLLECT_FREQUENCY][0],filename,))
 		t0.start()
 		t1.start()
 
