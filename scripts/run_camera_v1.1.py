@@ -142,30 +142,32 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-		for detect in detections:
-			if detect.label_id == 6: # 6 = train
+		train_detects = [d for d in detections if d.label_id == 6]
+		if len(train_detects) > 0: # is a train event
+			for detect in train_detects:
 				detect_list.append([image, detect, MySQLF, timestamp])
+				empty_frames = 0
 				if not was_train_event: # start of new train event
-					#print('empty frames = ' + str(empty_frames))
 					print('starting new train event')
-					empty_frames = 0
 					was_train_event = True
-			else:
-				if empty_frames > EMPTY_FRAMES and len(detect_list) > 0: # end of train event
+		else: # is not a train event, check if need to prolong ongoing train event
+			if empty_frames > EMPTY_FRAMES: # hit non train frames limit
+				was_train_event = False
+				if len(detect_list) > 0: # at least one train event, store it
 					empty_frames = 0
 					print('ending train event')
 					was_train_event = False
 					t = threading.Thread(target =store_train_detects, args=(detect_list,))
 					t.start()
 					detect_list = []
-				elif was_train_event:
-					print('empty frames = ' + str(empty_frames))
-					empty_frames += 1
 				else:
 					empty_frames += 1
-
-			if DEBUG:
-				debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
+			else:
+				was_train_event = True
+				empty_frames += 1
+		if DEBUG:
+			for detect in detections:
+				debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 
 
 
