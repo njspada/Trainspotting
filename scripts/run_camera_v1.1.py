@@ -127,7 +127,7 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 	else:
 		CNX.commit()
 		#event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
-		event_id = cursor.lastrowid()
+		event_id = cursor.lastrowid
 	l = int(len(DETECT_LIST)/10)
 	for i in range(0,l):
 		filename = str(event_id) + '/' + str(DETECT_LIST[i][2]) + '.jpg'
