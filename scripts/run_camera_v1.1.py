@@ -121,7 +121,7 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 	CNX = database_config.connection()
 	try:
 		cursor = CNX.cursor()
-		cursor.execute(query, [strat,end])
+		cursor.execute(query, [start,end])
 	except mysql.connector.Error as err:
 		print(err)
 	else:
