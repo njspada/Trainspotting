@@ -4,7 +4,6 @@ from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
 import cv2
-from imutils.video import VideoStream
 import numpy
 from datetime import datetime
 import database_config
