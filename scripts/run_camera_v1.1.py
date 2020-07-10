@@ -160,7 +160,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 					detect_list = []
 				elif was_train_event:
 					print('empty frames = ' + str(empty_frames))
-					empty_frames = 1
+					empty_frames += 1
 				else:
 					empty_frames += 1
 
