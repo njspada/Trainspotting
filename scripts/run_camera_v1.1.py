@@ -16,6 +16,8 @@ import met_sql as met
 import time
 import threading
 
+from os import mkdir
+
 start_t = time.time()
 frame_times = []
 
@@ -131,6 +133,7 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 		event_id = cursor.lastrowid
 	l = int(len(DETECT_LIST)/10)
 	for i in range(0,l):
+		mkdir('/home/coal/Desktop/output/' + str(event_id))
 		filename = str(event_id) + '/' + str(DETECT_LIST[i][2]) + '.jpg'
 		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i][1], filename, event_id,))
 		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i][0],filename,))
