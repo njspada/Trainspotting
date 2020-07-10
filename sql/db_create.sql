@@ -30,3 +30,5 @@ CREATE TABLE `camera_detects` (
   `y1` int(11) NOT NULL,
   `filename` varchar(35) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Store output from run_camera.py';
+
+CREATE TABLE `trainspotting`.`train_events` ( `id` INT NOT NULL AUTO_INCREMENT COMMENT 'event id auto increment' , `start` TIMESTAMP NOT NULL COMMENT 'even start imestamp' , `end` TIMESTAMP NOT NULL COMMENT 'event end timestamp' , PRIMARY KEY (`id`)) ENGINE = InnoDB;
