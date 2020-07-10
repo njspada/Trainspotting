@@ -97,14 +97,16 @@ def save_image(IMAGE, FILENAME):
 def store_a_train_detect(DETECTS, FILENAME, EVENT_ID):
 	global LABELS
 	print(DETECTS[0].bounding_box.flatten().astype("int"))
-	DATA = [[EVENT_ID, FILENAME, str(d.bounding_box.flatten().astype("int")), LABELS[d.label_id], float(d.score)] for d in DETECTS]
+	DATA = [[EVENT_ID, FILENAME, LABELS[d.label_id], float(d.score)]
+			.extend(DETECTS[0].bounding_box.flatten().astype("int"))
+			 for d in DETECTS]
 	CNX = database_config.connection()
 	if not CNX:
 		print('Failed to connect to MySQL database!')
 		exit()
 	query = """INSERT INTO images  
-				(event_id, filename, `box`, label, conf) 
-				VALUES (%s,%s,%s,%s,%s);""";
+				(event_id, filename, label, conf, `x0`, `y0`, `x1`, `y1`) 
+				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
 	try:
 		cursor = CNX.cursor()
 		cursor.executemany(query, DATA)
