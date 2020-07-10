@@ -151,8 +151,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 					empty_frames = 0
 					was_train_event = True
 			else:
-				if was_train_event and empty_frames > EMPTY_FRAMES: # end of train event
-					empty_frames += 1
+				if empty_frames > EMPTY_FRAMES and len(detect_list) > 0: # end of train event
+					empty_frames = 0
 					print('ending train event')
 					was_train_event = False
 					t = threading.Thread(target =store_train_detects, args=(detect_list,))
@@ -160,9 +160,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
 					detect_list = []
 				elif was_train_event:
 					print('empty frames = ' + str(empty_frames))
-					empty_frames += 1
+					empty_frames = 1
 				else:
-					empty_frames = 0
+					empty_frames += 1
 
 			if DEBUG:
 				debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
