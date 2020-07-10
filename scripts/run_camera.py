@@ -4,7 +4,7 @@ from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
 import cv2
-#from imutils.video import VideoStream
+from imutils.video import VideoStream
 import numpy
 from datetime import datetime
 import database_config
@@ -187,8 +187,11 @@ if __name__ == "__main__":
 		exit()
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
+	#STREAM = 
 
 	try:
+		if not STREAM.isOpened():
+			STREAM.open()
 		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency)
 		STREAM.release()
 		cv2.destroyAllWindows()
