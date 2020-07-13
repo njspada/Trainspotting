@@ -10,6 +10,34 @@ import imutils
 import time
 import cv2
 
+
+def gstreamer_pipeline(
+	capture_width=300,
+	capture_height=300,
+	display_width=300,
+	display_height=300,
+	framerate=21,
+	flip_method=0,
+	):
+	return (
+		"nvarguscamerasrc ! "
+		"video/x-raw(memory:NVMM), "
+		"width=(int)%d, height=(int)%d, "
+		"format=(string)NV12, framerate=(fraction)%d/1 ! "
+		"nvvidconv flip-method=%d ! "
+		"video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
+		"videoconvert ! "
+		"video/x-raw, format=(string)BGR ! appsink"
+		% (
+			capture_width,
+			capture_height,
+			framerate,
+			flip_method,
+			display_width,
+			display_height,
+		)
+	)
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
@@ -52,7 +80,7 @@ initBB = None
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get("video", False):
 	print("[INFO] starting video stream...")
-	vs = VideoStream(src=0).start()
+	vs = cv2.VideoCapture(gstreamer_pipeline(capture_width = 300, capture_height = 300, display_width = 300, display_height = 300, framerate=60), cv2.CAP_GSTREAMER)
 	time.sleep(1.0)
 
 # otherwise, grab a reference to the video file
@@ -66,8 +94,8 @@ fps = None
 while True:
 	# grab the current frame, then handle if we are using a
 	# VideoStream or VideoCapture object
-	frame = vs.read()
-	frame = frame[1] if args.get("video", False) else frame
+	_,frame = vs.read()
+	#frame = frame[1] if args.get("video", False) else frame
 
 	# check to see if we have reached the end of the stream
 	if frame is None:
@@ -129,12 +157,12 @@ while True:
 		break
 
 # if we are using a webcam, release the pointer
-if not args.get("video", False):
-	vs.stop()
+# if not args.get("video", False):
+# 	vs.stop()
 
-# otherwise, release the file pointer
-else:
-	vs.release()
+# # otherwise, release the file pointer
+# else:
+# 	vs.release()
 
 # close all windows
 cv2.destroyAllWindows()
