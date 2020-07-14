@@ -164,6 +164,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
+				print('tracked box = ' + str(box))
 				BOX = box
 			else: # end train event
 				tracking = False
@@ -177,9 +178,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				# detected a train, start tracking it!
 				train_detect = train_detects[0]
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
-				print(initBB)
 				initBB = tuple(initBB)
-				print(initBB)
+				print('detected box = ' + str(initBB))
 				BOX = initBB
 				TRACKER.init(image, initBB)
 				tracking = True
