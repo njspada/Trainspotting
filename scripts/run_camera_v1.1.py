@@ -82,9 +82,9 @@ def get_fps() -> float: # returns (fps,start_t)
 	return fps
 
 def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP):
-	coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
-	dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
-	print(dataline)
+	# coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
+	# dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
+	# print(dataline)
 	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
@@ -148,46 +148,68 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	tracking = False # true when using tracker instead of detection engine
 	was_train_event = False
 	detect_list = []
+	track_list = []
 	empty_frames = 0
+	train_detect []
+	BOX = []
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
 	while STREAM.isOpened():
 		fps = get_fps()
+		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		if tracking:
+			print('tracking')
 			(success, box) = tracker.update(frame)
+			if success: # continue train event
+				track_list.append([image, box, timestamp])
+				BOX = box
+			else: # end train event
+				tracking = False
+				print('ending train event')
 		else:
+			print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
-		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-		train_detects = [d for d in detections if d.label_id == 6]
-		if len(train_detects) > 0: # is a train event
-			detect_list.append([image, train_detects, timestamp])
-			empty_frames = 0
-			if not was_train_event: # start of new train event
-				print('starting new train event')
-				was_train_event = True
-		else: # is not a train event, check if need to prolong ongoing train event
-			if empty_frames > EMPTY_FRAMES: # hit non train frames limit
-				was_train_event = False
-				if len(detect_list) > 0: # at least one train event, store it
-					empty_frames += 1
-					print('ending train event')
-					was_train_event = False
-					t = threading.Thread(target =store_train_event, args=(detect_list,))
-					t.start()
-					detect_list = []
-				else:
-					empty_frames += 1
-			elif was_train_event:
-				print('empty_frames = ' + str(empty_frames))
-				#was_train_event = True
-				empty_frames += 1
+			train_detects = [d for d in detections if d.label_id == 6]
+			if len(train_detects) > 0: # is a train event
+				#detect_list.append([image, train_detects[0], timestamp])
+				# detected a train, start tracking it!
+				train_detect = train_detects[0]
+				initBB = train_detects[0].bounding_box
+				BOX = initBB
+				TRACKER.init(image, initBB)
+				tracking = True
+				print('starting train event')
 			else:
-				empty_frames += 1
+				train_detect = []
+				#empty_frames = 0
+				# if not was_train_event: # start of new train event
+				# 	print('starting new train event')
+				# 	was_train_event = True
+			# else: # is not a train event, check if need to prolong ongoing train event
+			# 	if empty_frames > EMPTY_FRAMES: # hit non train frames limit
+			# 		was_train_event = False
+			# 		if len(detect_list) > 0: # at least one train event, store it
+			# 			empty_frames += 1
+			# 			print('ending train event')
+			# 			was_train_event = False
+			# 			t = threading.Thread(target =store_train_event, args=(detect_list,))
+			# 			t.start()
+			# 			detect_list = []
+			# 		else:
+			# 			empty_frames += 1
+			# 	elif was_train_event:
+			# 		print('empty_frames = ' + str(empty_frames))
+			# 		#was_train_event = True
+			# 		empty_frames += 1
+			# 	else:
+			# 		empty_frames += 1
 		if DEBUG:
-			for detect in detections:
-				debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
+			#for detect in detections:
+			#if tracking:
+			debug(train_detect, BOX, fps, image, timestamp)
+			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 
 
 
