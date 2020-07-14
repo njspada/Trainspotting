@@ -186,9 +186,12 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				hDist = ydist(BOX,box)
 				print('y pixels traveled = ' + str(hDist))
 				BOX = box
-			else: # end train event
+				empty_frames = 0
+			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
 				print('ending train event')
+			else:
+				empty_frames += 1
 		else:
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
