@@ -135,24 +135,30 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 		event_id = cursor.lastrowid
 		mkdir('/home/coal/Desktop/output/' + str(event_id))
 		global COLLECT_FREQUENCY
-	l = int(len(DETECT_LIST)/COLLECT_FREQUENCY)
-	for i in range(0,l):
-		filename = str(event_id) + '/' + str(DETECT_LIST[i*COLLECT_FREQUENCY][2]) + '.jpg'
-		t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*COLLECT_FREQUENCY][1], filename, event_id,))
-		t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*COLLECT_FREQUENCY][0],filename,))
-		t0.start()
-		t1.start()
+		l = int(len(DETECT_LIST)/COLLECT_FREQUENCY)
+		for i in range(0,l):
+			filename = str(event_id) + '/' + str(DETECT_LIST[i*COLLECT_FREQUENCY][2]) + '.jpg'
+			t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*COLLECT_FREQUENCY][1], filename, event_id,))
+			t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*COLLECT_FREQUENCY][0],filename,))
+			t0.start()
+			t1.start()
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	print('empty trains = ' + str(EMPTY_FRAMES))
+	tracking = False # true when using tracker instead of detection engine
 	was_train_event = False
 	detect_list = []
 	empty_frames = 0
+	# initialize the bounding box coordinates of the train we are going to track
+	initBB = None
 	while STREAM.isOpened():
 		fps = get_fps()
 		print('fps = ' + str(fps))
 		_, image = STREAM.read()
-		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
+		if tracking:
+			(success, box) = tracker.update(frame)
+		else:
+			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		train_detects = [d for d in detections if d.label_id == 6]
 		if len(train_detects) > 0: # is a train event
@@ -196,6 +202,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
 	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
+	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
@@ -213,10 +220,24 @@ if __name__ == "__main__":
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
+	OPENCV_OBJECT_TRACKERS = {
+		"csrt": cv2.TrackerCSRT_create,
+		"kcf": cv2.TrackerKCF_create,
+		"boosting": cv2.TrackerBoosting_create,
+		"mil": cv2.TrackerMIL_create,
+		"tld": cv2.TrackerTLD_create,
+		"medianflow": cv2.TrackerMedianFlow_create,
+		"mosse": cv2.TrackerMOSSE_create
+	}
+
+	# grab the appropriate object tracker using our dictionary of
+	# OpenCV object tracker objects
+	TRACKER = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
+
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
