@@ -162,7 +162,7 @@ def ydist(oldBox,newBox):
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
 def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
-	/print('empty trains = ' + str(EMPTY_FRAMES))
+	# print('empty trains = ' + str(EMPTY_FRAMES))
 	tracking = False # true when using tracker instead of detection engine
 	was_train_event = False
 	detect_list = []
