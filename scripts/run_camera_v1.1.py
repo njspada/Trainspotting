@@ -161,7 +161,7 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 	# print('empty trains = ' + str(EMPTY_FRAMES))
 	tracking = False # true when using tracker instead of detection engine
 	was_train_event = False
@@ -204,6 +204,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6]
+			train_detects = [d for d in train_detects if d.score >= CONF]
 			if len(stationary_trains) > 0:
 				temp = []
 				for t in train_detects:
@@ -273,6 +274,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
+	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=50, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
@@ -307,7 +309,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER, ARGS.confidence)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
