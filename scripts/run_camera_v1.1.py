@@ -150,7 +150,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	detect_list = []
 	track_list = []
 	empty_frames = 0
-	train_detect = []
+	train_detect = {}
 	BOX = []
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
@@ -208,7 +208,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 		if DEBUG:
 			#for detect in detections:
 			#if tracking:
-			debug(train_detect, BOX, fps, image, timestamp)
+			if train_detect != {}:
+				debug(train_detect, BOX, fps, image, timestamp)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 
 
