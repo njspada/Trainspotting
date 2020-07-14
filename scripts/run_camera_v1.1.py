@@ -17,6 +17,8 @@ import threading
 
 from os import mkdir
 
+import math
+
 start_t = time.time()
 frame_times = []
 
@@ -148,8 +150,19 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t0.start()
 			t1.start()
 
+def box2centroid(box) -> xy:
+	(startX,startY,endX,endY) = box
+	cX = int((startX + endX) / 2.0)
+	cY = int((startY + endY) / 2.0)
+	return [cX,cY]
+
+def ydist(oldBox,newBox):
+	oldP = box2centroid(oldBox)
+	newP = box2centroid(newBox)
+	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
+
 def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
-	print('empty trains = ' + str(EMPTY_FRAMES))
+	/print('empty trains = ' + str(EMPTY_FRAMES))
 	tracking = False # true when using tracker instead of detection engine
 	was_train_event = False
 	detect_list = []
@@ -170,6 +183,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
 				# print('tracked box = ' + str(box))
+				hDist = ydist(BOX,box)
+				print('y pixels traveled = ' + str(hDist))
 				BOX = box
 			else: # end train event
 				tracking = False
