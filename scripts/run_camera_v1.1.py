@@ -203,7 +203,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				initBB = tuple(initBB)
 				(x0,_,x1,_) = initBB
 				if(x1-x0>=100):
-					TRACKER = cv2.TrackerKCF_create()
+					TRACKER = cv2.TrackerCSRT_create()
 					train_detect = train_detects[0]
 					# print('detected box = ' + str(initBB))
 					BOX = initBB
