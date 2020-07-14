@@ -209,7 +209,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				for t in train_detects:
 					dx = ydist(t.bounding_box.flatten().astype("int"),stationary_trains[-1])
 					print('dx = ' + str(dx))
-					if dx > 1:
+					if dx > 10:
 						temp.append(t)
 				train_detects = temp
 				#train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),stationary_trains[-1]) > 1]
