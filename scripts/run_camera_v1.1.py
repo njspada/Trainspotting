@@ -204,7 +204,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6]
-			train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),stationary_trains[-1]) > 1]
+			if len(stationary_trains) > 0:
+				train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),stationary_trains[-1]) > 1]
 			if len(train_detects) > 0: # is a train event
 				#detect_list.append([image, train_detects[0], timestamp])
 				# detected a train, start tracking it!
