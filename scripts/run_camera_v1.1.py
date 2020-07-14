@@ -162,14 +162,14 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-		print('fps = ' + str(fps))
+		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		if tracking:
 			print('tracking')
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
-				print('tracked box = ' + str(box))
+				# print('tracked box = ' + str(box))
 				BOX = box
 			else: # end train event
 				tracking = False
@@ -184,7 +184,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				train_detect = train_detects[0]
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
 				initBB = tuple(initBB)
-				print('detected box = ' + str(initBB))
+				# print('detected box = ' + str(initBB))
 				BOX = initBB
 				TRACKER.init(image, initBB)
 				tracking = True
