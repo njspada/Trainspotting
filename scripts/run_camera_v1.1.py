@@ -85,6 +85,7 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP):
 	# coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
 	# dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
 	# print(dataline)
+	BOX = list(BOX)
 	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
