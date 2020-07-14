@@ -54,8 +54,11 @@ def gstreamer_pipeline(
 	)
 
 # for debuggin
-def display_image(IMAGE, BOX, LABEL, SCORE, FPS):
-	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
+	if TRACKING:
+		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
+	else:
+		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
@@ -81,13 +84,13 @@ def get_fps() -> float: # returns (fps,start_t)
 	start_t = time.time()
 	return fps
 
-def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP):
+def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 	# coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
 	# dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
 	# print(dataline)
 	BOX = list(BOX)
 	BOX = [int(_) for _ in BOX]
-	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS)
+	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS, TRACKING)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
@@ -215,7 +218,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			#if tracking:
 			print(train_detect)
 			if train_detect != {}:
-				debug(train_detect, BOX, fps, image, timestamp)
+				debug(train_detect, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 
 
