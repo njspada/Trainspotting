@@ -150,7 +150,7 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t0.start()
 			t1.start()
 
-def box2centroid(box) -> xy:
+def box2centroid(box):
 	(startX,startY,endX,endY) = box
 	cX = int((startX + endX) / 2.0)
 	cY = int((startY + endY) / 2.0)
