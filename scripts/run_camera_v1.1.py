@@ -170,6 +170,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	empty_frames = 0
 	train_detect = {}
 	BOX = []
+	stationary_trains = []
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
 	while STREAM.isOpened():
@@ -184,9 +185,16 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				track_list.append([image, box, timestamp])
 				# print('tracked box = ' + str(box))
 				hDist = ydist(BOX,box)
-				print('y pixels traveled = ' + str(hDist))
-				BOX = box
-				empty_frames = 0
+				if hDist < 1.5:
+					# train is stationary, add to stationary_trains list
+					stationary_trains.append(box)
+					tracking = False
+					print('train is stationary. stopping tracking')
+					empty_frames = 0
+				#print('y pixels traveled = ' + str(hDist))
+				else:
+					BOX = box
+					empty_frames = 0
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
 				print('ending train event')
@@ -196,6 +204,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6]
+			train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),BOX) > 1.5]
 			if len(train_detects) > 0: # is a train event
 				#detect_list.append([image, train_detects[0], timestamp])
 				# detected a train, start tracking it!
@@ -237,7 +246,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 		if DEBUG:
 			#for detect in detections:
 			#if tracking:
-			print(train_detect)
+			#print(train_detect)
 			if train_detect != {}:
 				debug(train_detect, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
