@@ -169,7 +169,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 	track_list = []
 	empty_frames = 0
 	train_detect = {}
-	BOX = []
+	BOX = [0,0,0,0]
 	stationary_trains = []
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
