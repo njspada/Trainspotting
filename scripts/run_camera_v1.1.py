@@ -181,14 +181,16 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 			if len(train_detects) > 0: # is a train event
 				#detect_list.append([image, train_detects[0], timestamp])
 				# detected a train, start tracking it!
-				train_detect = train_detects[0]
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
 				initBB = tuple(initBB)
-				# print('detected box = ' + str(initBB))
-				BOX = initBB
-				TRACKER.init(image, initBB)
-				tracking = True
-				print('starting train event')
+				(x0,_,x1,_) = initBB
+				if(x1-x0>=75):
+					train_detect = train_detects[0]
+					# print('detected box = ' + str(initBB))
+					BOX = initBB
+					TRACKER.init(image, initBB)
+					tracking = True
+					print('starting train event')
 			else:
 				train_detect = {}
 				#empty_frames = 0
