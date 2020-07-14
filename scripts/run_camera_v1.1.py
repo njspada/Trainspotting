@@ -182,7 +182,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				tracking = True
 				print('starting train event')
 			else:
-				train_detect = []
+				train_detect = {}
 				#empty_frames = 0
 				# if not was_train_event: # start of new train event
 				# 	print('starting new train event')
@@ -208,6 +208,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 		if DEBUG:
 			#for detect in detections:
 			#if tracking:
+			print(train_detect)
 			if train_detect != {}:
 				debug(train_detect, BOX, fps, image, timestamp)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
