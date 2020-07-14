@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
 	# grab the appropriate object tracker using our dictionary of
 	# OpenCV object tracker objects
-	TRACKER = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
+	TRACKER = OPENCV_OBJECT_TRACKERS[ARGS.tracker]()
 
 	try:
 		if not STREAM.isOpened():
