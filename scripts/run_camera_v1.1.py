@@ -204,7 +204,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6]
-			train_detects = [d for d in train_detects if d.score >= CONF]
+			# train_detects = [d for d in train_detects if d.score >= CONF]
 			if len(stationary_trains) > 0:
 				temp = []
 				for t in train_detects:
