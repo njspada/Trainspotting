@@ -161,7 +161,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 		_, image = STREAM.read()
 		if tracking:
 			print('tracking')
-			(success, box) = tracker.update(frame)
+			(success, box) = TRACKER.update(frame)
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
 				BOX = box
