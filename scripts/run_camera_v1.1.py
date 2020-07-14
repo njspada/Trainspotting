@@ -165,7 +165,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		if tracking:
-			print('tracking')
+			#print('tracking')
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
@@ -175,7 +175,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER):
 				tracking = False
 				print('ending train event')
 		else:
-			print('detecting')
+			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6]
 			if len(train_detects) > 0: # is a train event
