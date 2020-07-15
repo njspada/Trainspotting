@@ -195,36 +195,28 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
 			empty_frames += 1
 			continue
-		else:
-			empty_frames = 0
-		temp_train_detects = [] if len(stationary_trains) > 0 else train_detects
+		empty_frames = 0
+		remove_train_detects = []
 		temp_stationary = []
-		if len(stationary_trains) > 0: # match already detected stationary trains
-			#print('some stats')
+		# match already detected stationary trains
+		for s in stationary_trains:
 			for d in train_detects:
-				is_stationary = False
-				for s in stationary_trains:
-					if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 10.0:
-						is_stationary = True
-						temp_stationary.append(s)
-						break
-				if is_stationary:
-					stationary_trains.remove(temp_stationary[-1])
-				else:
-					temp_train_detects.append(d)
-		train_detects = temp_train_detects
+				if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 10.0:
+					is_stationary = True
+					temp_stationary.append(s)
+					remove_train_detects.append(d)
+					break
 		stationary_trains = temp_stationary
-		temp_train_detects = [] if len(previous_detects) > 0 else train_detects
-		if len(previous_detects) > 0: # if there were detects in previous frame, try to match them to current detects
-			#print('some prev')
+		train_detects = [d for d in train_detects if d not in remove_train_detects]
+		# now check if trains in previous frame are in the same position in the current frame, mark those as a stationary trains
+		remove_train_detects = []
+		for p in previous_detects:
 			for d in train_detects:
-				for p in previous_detects:
-					if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 1.0: # mark this detect as stationary
-						stationary_trains.append(d)
-					else:
-						temp_train_detects.append(d)
-		previous_detects = temp_train_detects
-		train_detects = temp_train_detects
+				if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 5.0: # mark this detect as stationary
+					stationary_trains.append(d)
+					remove_train_detects.append(d)
+			train_detects = [d for d in train_detects if d not in remove_train_detects]
+		previous_detects = train_detects
 		if DEBUG:
 			print(len(train_detects))
 			print(len(stationary_trains))
