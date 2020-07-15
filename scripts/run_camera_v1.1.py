@@ -194,6 +194,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		temp_train_detects = []
 		temp_stationary = []
 		if len(stationary_trains) > 0: # match already detected stationary trains
+			#print('some stats')
 			for d in train_detects:
 				is_stationary = False
 				for s in stationary_trains:
@@ -201,7 +202,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 						is_stationary = True
 						temp_stationary.append(s)
 						break
-				if not is_stationary:
+				if is_stationary:
 					stationary_trains.remove(temp_stationary[-1])
 				else:
 					temp_train_detects.append(d)
@@ -209,6 +210,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		stationary_trains = temp_stationary
 		temp_train_detects = []
 		if len(previous_detects) > 0: # if there were detects in previous frame, try to match them to current detects
+			#print('some prev')
 			for d in train_detects:
 				for p in previous_detects:
 					if ydist(d.bounding_box, p.bounding_box) < 10.0: # mark this detect as stationary
@@ -234,7 +236,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
-	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
+	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=0, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
