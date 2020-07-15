@@ -192,6 +192,9 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			#print('detecting')
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
+			empty_frames += 1
+			continue
 		temp_train_detects = [] if len(stationary_trains) > 0 else train_detects
 		temp_stationary = []
 		if len(stationary_trains) > 0: # match already detected stationary trains
@@ -241,7 +244,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
 	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
-	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
+	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=5, help="Length of empty frame buffer.")
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
