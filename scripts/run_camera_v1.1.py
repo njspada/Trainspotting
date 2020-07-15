@@ -213,7 +213,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			print('some prev')
 			for d in train_detects:
 				for p in previous_detects:
-					if ydist(d.bounding_box, p.bounding_box) < 1.0: # mark this detect as stationary
+					if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 1.0: # mark this detect as stationary
 						stationary_trains.append(d)
 					else:
 						temp_train_detects.append(d)
