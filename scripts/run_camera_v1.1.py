@@ -96,6 +96,20 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
+def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
+	def put_lines(IMAGE, BOX, LABEL, SCORE, BOX_COLOR_BGR):
+		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), BOX_COLOR_BGR, 5)
+		(startX, startY, endX, endY) = BOX
+		y = startY - 40 if startY - 40 > 40 else startY + 40
+		text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
+		font = cv2.FONT_HERSHEY_SIMPLEX
+		cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+	for d in MOVING_DETECTS:
+		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (0,0,255)) # moving box is red color
+	for d in STAT_DETECTS:
+		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
+	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+
 def save_image(IMAGE, FILENAME):
 	print('saving image')
 	output_path = "/home/coal/Desktop/output/"
@@ -161,105 +175,50 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
+def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 	# print('empty trains = ' + str(EMPTY_FRAMES))
 	CONF = CONF/100
-	tracking = False # true when using tracker instead of detection engine
-	was_train_event = False
-	detect_list = []
-	track_list = []
 	empty_frames = 0
 	train_detect = {}
 	BOX = [0,0,0,0]
 	stationary_trains = []
-	# initialize the bounding box coordinates of the train we are going to track
-	initBB = None
+	previous_detects = []
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
-		if tracking:
-			#print('tracking')
-			(success, box) = TRACKER.update(image)
-			if success: # continue train event
-				track_list.append([image, box, timestamp])
-				# print('tracked box = ' + str(box))
-				hDist = ydist(BOX,box)
-				if hDist < 1:
-					# train is stationary, add to stationary_trains list
-					stationary_trains.append(box)
-					tracking = False
-					print('train is stationary. stopping tracking')
-					empty_frames = 0
-				#print('y pixels traveled = ' + str(hDist))
-				else:
-					BOX = box
-					empty_frames = 0
-			elif empty_frames >= EMPTY_FRAMES: # end train event
-				tracking = False
-				print('ending train event')
-			else:
-				empty_frames += 1
-		else:
 			#print('detecting')
-			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
-			train_detects = [d for d in detections if d.label_id == 6]
-			train_detects = [d for d in train_detects if d.score >= CONF]
-			if len(stationary_trains) > 0:
-				temp = []
-				for t in train_detects:
-					dx = ydist(t.bounding_box.flatten().astype("int"),stationary_trains[-1])
-					print('dx = ' + str(dx))
-					if dx > 10:
-						temp.append(t)
-				train_detects = temp
-				#train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),stationary_trains[-1]) > 1]
-			if len(train_detects) > 0: # is a train event
-				#detect_list.append([image, train_detects[0], timestamp])
-				# detected a train, start tracking it!
-				initBB = train_detects[0].bounding_box.flatten().astype("int")
-				initBB = tuple(initBB)
-				(x0,_,x1,_) = initBB
-				if(x1-x0>=100):
-					TRACKER = cv2.TrackerCSRT_create()
-					train_detect = train_detects[0]
-					# print('detected box = ' + str(initBB))
-					BOX = initBB
-					TRACKER.init(image, initBB)
-					tracking = True
-					print('starting train event')
-			else:
-				train_detect = {}
-				#empty_frames = 0
-				# if not was_train_event: # start of new train event
-				# 	print('starting new train event')
-				# 	was_train_event = True
-			# else: # is not a train event, check if need to prolong ongoing train event
-			# 	if empty_frames > EMPTY_FRAMES: # hit non train frames limit
-			# 		was_train_event = False
-			# 		if len(detect_list) > 0: # at least one train event, store it
-			# 			empty_frames += 1
-			# 			print('ending train event')
-			# 			was_train_event = False
-			# 			t = threading.Thread(target =store_train_event, args=(detect_list,))
-			# 			t.start()
-			# 			detect_list = []
-			# 		else:
-			# 			empty_frames += 1
-			# 	elif was_train_event:
-			# 		print('empty_frames = ' + str(empty_frames))
-			# 		#was_train_event = True
-			# 		empty_frames += 1
-			# 	else:
-			# 		empty_frames += 1
+		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+		temp_train_detects = []
+		temp_stationary = []
+		if len(stationary_trains) > 0: # match already detected stationary trains
+			for d in train_detects:
+				is_stationary = False
+				for s in stationary_trains:
+					if ydist(d.bounding_box, s.bounding_box) < 10.0:
+						is_stationary = True
+						temp_stationary.append(s)
+						break
+				if not is_stationary:
+					stationary_trains.remove(temp_stationary[-1])
+				else:
+					temp_train_detects.append(d)
+		train_detects = temp_train_detects
+		stationary_trains = temp_stationary
+		temp_train_detects = []
+		if len(previous_detects) > 0: # if there were detects in previous frame, try to match them to current detects
+			for d in train_detects:
+				for p in previous_detects:
+					if ydist(d.bounding_box, p.bounding_box) < 10.0: # mark this detect as stationary
+						stationary_trains.append(d)
+					else:
+						temp_train_detects.append(d)
+		previous_detects = temp_train_detects
+		train_detects = temp_train_detects
 		if DEBUG:
-			#for detect in detections:
-			#if tracking:
-			#print(train_detect)
-			if train_detect != {}:
-				debug(train_detect, BOX, fps, image, timestamp, tracking)
-			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
+			debug_mul(train_detects, stationary_trains, image, fps)
 
 
 
@@ -310,7 +269,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER, ARGS.confidence)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.empty_frames, ARGS.confidence)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
