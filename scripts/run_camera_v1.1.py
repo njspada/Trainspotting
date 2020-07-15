@@ -194,7 +194,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		temp_train_detects = []
 		temp_stationary = []
 		if len(stationary_trains) > 0: # match already detected stationary trains
-			#print('some stats')
+			print('some stats')
 			for d in train_detects:
 				is_stationary = False
 				for s in stationary_trains:
@@ -210,10 +210,10 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		stationary_trains = temp_stationary
 		temp_train_detects = [] if len(previous_detects) > 0 else train_detects
 		if len(previous_detects) > 0: # if there were detects in previous frame, try to match them to current detects
-			#print('some prev')
+			print('some prev')
 			for d in train_detects:
 				for p in previous_detects:
-					if ydist(d.bounding_box, p.bounding_box) < 10.0: # mark this detect as stationary
+					if ydist(d.bounding_box, p.bounding_box) < 1.0: # mark this detect as stationary
 						stationary_trains.append(d)
 					else:
 						temp_train_detects.append(d)
