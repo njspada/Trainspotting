@@ -198,7 +198,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			for d in train_detects:
 				is_stationary = False
 				for s in stationary_trains:
-					if ydist(d.bounding_box, s.bounding_box) < 10.0:
+					if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 10.0:
 						is_stationary = True
 						temp_stationary.append(s)
 						break
