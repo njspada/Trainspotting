@@ -218,15 +218,18 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		remove_train_detects = []
 		for p in previous_detects:
 			for d in train_detects:
-				if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 0.5: # mark this detect as stationary
+				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
+				print(str(dist))
+				if dist < 0.5: # mark this detect as stationary
+					print('swicthing')
 					stationary_trains.append(d)
 					remove_train_detects.append(d)
 			train_detects = [d for d in train_detects if d not in remove_train_detects]
 		previous_detects = train_detects
 		if DEBUG:
-			print(len(train_detects))
-			print(len(stationary_trains))
-			print('--------')
+			# print(len(train_detects))
+			# print(len(stationary_trains))
+			# print('--------')
 			debug_mul(train_detects, stationary_trains, image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
