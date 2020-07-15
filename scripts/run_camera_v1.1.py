@@ -201,7 +201,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		# match already detected stationary trains
 		for s in stationary_trains:
 			for d in train_detects:
-				if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 10.0:
+				if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 5.0:
 					is_stationary = True
 					temp_stationary.append(s)
 					remove_train_detects.append(d)
