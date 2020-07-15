@@ -208,7 +208,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 					temp_train_detects.append(d)
 		train_detects = temp_train_detects
 		stationary_trains = temp_stationary
-		temp_train_detects = []
+		temp_train_detects = [] if len(previous_detects) > 0 else train_detects
 		if len(previous_detects) > 0: # if there were detects in previous frame, try to match them to current detects
 			#print('some prev')
 			for d in train_detects:
