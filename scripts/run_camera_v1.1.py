@@ -225,6 +225,10 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			print(len(stationary_trains))
 			print('--------')
 			debug_mul(train_detects, stationary_trains, image, fps)
+			keyCode = cv2.waitKey(1) & 0xFF
+			# Stop the program on the 'q' key
+			if keyCode == ord("q"):
+				break
 
 
 
