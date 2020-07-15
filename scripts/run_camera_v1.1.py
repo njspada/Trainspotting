@@ -198,11 +198,13 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			#print('detecting')
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+		print('--------------')
+		print(len(train_detects))
+		print(len(previous_detects))
+		print(len(stationary_trains))
 		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
-			print('skipping frame')
 			empty_frames += 1
 			continue
-		print('using frame')
 		empty_frames = 0
 		remove_train_detects = []
 		temp_stationary = []
