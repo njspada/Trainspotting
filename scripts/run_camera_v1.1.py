@@ -194,7 +194,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
 			empty_frames += 1
-			continue
+			#continue
 		empty_frames = 0
 		remove_train_detects = []
 		temp_stationary = []
