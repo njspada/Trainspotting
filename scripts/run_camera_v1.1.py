@@ -218,7 +218,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		remove_train_detects = []
 		for p in previous_detects:
 			for d in train_detects:
-				if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 1.0: # mark this detect as stationary
+				if ydist(d.bounding_box.flatten(), p.bounding_box.flatten()) < 0.5: # mark this detect as stationary
 					stationary_trains.append(d)
 					remove_train_detects.append(d)
 			train_detects = [d for d in train_detects if d not in remove_train_detects]
