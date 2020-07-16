@@ -161,6 +161,9 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
+def dist(oldP,newP):
+	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
+
 def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 	# print('empty trains = ' + str(EMPTY_FRAMES))
 	CONF = CONF/100
@@ -211,7 +214,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 				temp = []
 				i = 0
 				for t in train_detects:
-					dx = ydist(train_centroids[i],stationary_centroids[-1])
+					dx = dist(train_centroids[i],stationary_centroids[-1])
 					print('dx = ' + str(dx))
 					if dx > 10:
 						temp.append(t)
