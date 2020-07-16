@@ -209,8 +209,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 			train_centroids = [box2centroid(d.bounding_box.flatten()) for d in train_detects]
 			if len(stationary_trains) > 0:
 				temp = []
+				i = 0
 				for t in train_detects:
-					dx = ydist(t.bounding_box.flatten().astype("int"),stationary_trains[-1])
+					dx = ydist(train_centroids[i],stationary_trains[-1])
 					print('dx = ' + str(dx))
 					if dx > 10:
 						temp.append(t)
