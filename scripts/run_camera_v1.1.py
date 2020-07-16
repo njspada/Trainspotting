@@ -171,7 +171,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 	empty_frames = 0
 	train_detect = {}
 	BOX = [0,0,0,0]
-	stationary_trains = []
+	stationary_centroids = []
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
 	while STREAM.isOpened():
@@ -188,7 +188,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 				hDist = ydist(BOX,box)
 				if hDist < 1:
 					# train is stationary, add to stationary_trains list
-					stationary_trains.append(box)
+					#stationary_trains.append(box)
+					stationary_centroids.append(box2centroid(box))
 					tracking = False
 					print('train is stationary. stopping tracking')
 					empty_frames = 0
@@ -204,8 +205,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 		else:
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
-			train_detects = [d for d in detections if d.label_id == 6]
-			train_detects = [d for d in train_detects if d.score >= CONF]
+			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+			train_centroids = [box2centroid(d.bounding_box.flatten()) for d in train_detects]
 			if len(stationary_trains) > 0:
 				temp = []
 				for t in train_detects:
@@ -231,28 +232,6 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					print('starting train event')
 			else:
 				train_detect = {}
-				#empty_frames = 0
-				# if not was_train_event: # start of new train event
-				# 	print('starting new train event')
-				# 	was_train_event = True
-			# else: # is not a train event, check if need to prolong ongoing train event
-			# 	if empty_frames > EMPTY_FRAMES: # hit non train frames limit
-			# 		was_train_event = False
-			# 		if len(detect_list) > 0: # at least one train event, store it
-			# 			empty_frames += 1
-			# 			print('ending train event')
-			# 			was_train_event = False
-			# 			t = threading.Thread(target =store_train_event, args=(detect_list,))
-			# 			t.start()
-			# 			detect_list = []
-			# 		else:
-			# 			empty_frames += 1
-			# 	elif was_train_event:
-			# 		print('empty_frames = ' + str(empty_frames))
-			# 		#was_train_event = True
-			# 		empty_frames += 1
-			# 	else:
-			# 		empty_frames += 1
 		if DEBUG:
 			#for detect in detections:
 			#if tracking:
