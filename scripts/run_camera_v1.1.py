@@ -211,7 +211,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 				temp = []
 				i = 0
 				for t in train_detects:
-					dx = ydist(train_centroids[i],stationary_trains[-1])
+					dx = ydist(train_centroids[i],stationary_centroids[-1])
 					print('dx = ' + str(dx))
 					if dx > 10:
 						temp.append(t)
