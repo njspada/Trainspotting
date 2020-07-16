@@ -207,7 +207,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 			train_centroids = [box2centroid(d.bounding_box.flatten()) for d in train_detects]
-			if len(stationary_trains) > 0:
+			if len(stationary_centroids) > 0:
 				temp = []
 				i = 0
 				for t in train_detects:
