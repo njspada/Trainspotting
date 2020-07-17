@@ -235,6 +235,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 				mins = np.amin(D, axis=1)
 				cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 				min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+				print('# stationary trains = ' + str(len(stationary_centroids)))
 				print('# min_heap = ' + str(len(min_heap)))
 				heapq.heapify(min_heap)
 				#print(min_heap)
