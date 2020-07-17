@@ -117,6 +117,7 @@ def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
 		add_to_image(IMAGE, d.bounding_box, 'detect', d.score, (255,0,0))
 	for st in STATIONARY:
 		# add_to_image(IMAGE, st, 'stat', 0, (0,0,255))
+		print(st)
 		cv2.circle(IMAGE, st, radius=0, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
@@ -223,7 +224,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			if len(train_detects) == 0:
 				continue
 			arr = np.array([d.bounding_box for d in train_detects])
-			print(arr)
+			#print(arr)
 			train_centroids = arr.sum(axis=1) / 2
 			# now calculate distances between each pair of input trains and stationary trains
 			if len(stationary_centroids) > 0:
