@@ -233,9 +233,10 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 				min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
 				heapq.heapify(min_heap)
+				print(min_heap)
 				used_cols = set()
 				renew_stationary = []
-				while(min_heap[0]()[0] <= dist_detect_to_statioanry):
+				while(min_heap[0][0] <= dist_detect_to_statioanry):
 					(min_value,(row,col)) = heapq.heappop(min_heap)
 					if not col in used_cols:
 						used_cols.add(col)
