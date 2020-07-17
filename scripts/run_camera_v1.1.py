@@ -225,6 +225,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 			if len(train_detects) == 0:
 				continue
+			print('# train detects = ' + str(len(train_detects)))
 			arr = np.array([d.bounding_box for d in train_detects])
 			#print(arr)
 			train_centroids = arr.sum(axis=1) / 2
@@ -251,6 +252,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 				stationary_centroids = renew_stationary
+				print('# stationary trains = ' + str(len(stationary_centroids)))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
