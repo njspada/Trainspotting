@@ -262,6 +262,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				TRACKER.init(image, initBB)
 				tracking = True
 			else:
+				train_detect = None
 				print('not tracking')
 		else:
 			(success, box) = TRACKER.update(image)
