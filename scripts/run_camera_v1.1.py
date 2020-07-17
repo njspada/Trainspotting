@@ -118,7 +118,7 @@ def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
 	for st in STATIONARY: # marked stationary
 		# add_to_image(IMAGE, st, 'stat', 0, (0,0,255))
 		#print(st)
-		cv2.circle(IMAGE, (st[0],st[1]), radius=0, color=(0, 0, 255), thickness=-1)
+		cv2.circle(IMAGE, (st[0],st[1]), radius=10, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
