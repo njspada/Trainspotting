@@ -287,6 +287,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			#for detect in detections:
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
+			print('len(st) = ' + str(len(stationary_centroids)))
 			debug_multi(train_detects, train_detect, stationary_centroids, fps, image)
 
 
