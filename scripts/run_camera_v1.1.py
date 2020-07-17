@@ -271,11 +271,11 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 		else:
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
-				print('continued tracking')
 				hDist = ydist(BOX,box)
 				print(hDist)
 				if hDist <= DTS and empty_frames >= EMPTY_FRAMES:
 					# train is stationary, add to stationary_trains list
+					print('continued tracking')
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
 					empty_frames = 0
