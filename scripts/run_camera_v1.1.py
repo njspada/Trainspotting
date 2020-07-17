@@ -233,7 +233,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 				min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
 				heapq.heapify(min_heap)
-				print(min_heap)
+				#print(min_heap)
 				used_cols = set()
 				renew_stationary = []
 				while len(min_heap) > 0:
@@ -245,6 +245,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 					else:
 						continue
 					renew_stationary.append(stationary_centroids[row])
+					print('added to stationary_centroids')
 					del train_detects[col]
 				stationary_centroids = renew_stationary
 				print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
