@@ -256,7 +256,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 				stationary_centroids = renew_stationary
-				print('# stationary trains = ' + str(len(stationary_centroids)))
+				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
