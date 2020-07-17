@@ -253,8 +253,14 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 					#print('added to stationary_centroids')
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
-				stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
-				stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
+				temp_st = [[],[]]
+				for row in range(len(stationary_centroids[0])):
+					if row in used_rows or stationary_centroids[1][row] < EMPTY_FRAMES:
+						temp_st[0].append(stationary_centroids[0][row])
+						temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
+				# stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
+				# stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
+				stationary_centroids = temp_st
 				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
