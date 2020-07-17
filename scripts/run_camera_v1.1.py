@@ -113,7 +113,7 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 
 def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE, DFPS):
 	if DFPS:
-		print('fps = ' FPS)
+		print('fps = ' str(FPS))
 		return
 	if TRAIN_DETECT: #green being tracked
 		add_to_image(IMAGE, TRAIN_DETECT.bounding_box, 'train', TRAIN_DETECT.score, (0,255,0))
