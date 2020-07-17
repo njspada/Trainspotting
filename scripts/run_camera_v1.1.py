@@ -309,7 +309,7 @@ if __name__ == "__main__":
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
-	global OPENCV_OBJECT_TRACKERS
+	#global OPENCV_OBJECT_TRACKERS
 	OPENCV_OBJECT_TRACKERS = {
 		"csrt": cv2.TrackerCSRT_create,
 		"kcf": cv2.TrackerKCF_create,
