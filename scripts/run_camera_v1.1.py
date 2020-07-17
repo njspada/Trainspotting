@@ -240,22 +240,21 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 				heapq.heapify(min_heap)
 				#print(min_heap)
 				used_cols = set()
+				used_rows = []
 				renew_stationary = [[],[]]
 				while len(min_heap) > 0:
 					(min_value,(row,col)) = heapq.heappop(min_heap)
-					if min_value < DDS or stationary_centroids[1][row] < EMPTY_FRAMES:
+					if min_value < DDS:
 						if not col in used_cols:
-							frames = 0 if min_value < DDS else stationary_centroids[1][row]+1
 							used_cols.add(col)
-							renew_stationary[0].append(stationary_centroids[0][row])
-							renew_stationary[1].append(frames)
-							print('adding to renew')
+							used_rows.append(row)
 						else:
 							continue
 					#print('added to stationary_centroids')
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
-				stationary_centroids = renew_stationary
+				stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
+				stationary_centroids[1] = [0 if row in used_rows else frames+1 for row,frames in enumerate(stationary_centroids[1] if row in used_rows or st[1][row] < EMPTY_FRAMES)]
 				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
