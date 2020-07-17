@@ -267,7 +267,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 		# previous_detects = train_detects
 		##########################################
 		if DEBUG:
-			debug_mul(train_detects, stationary_centroids, image, fps)
+			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
