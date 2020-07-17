@@ -264,14 +264,14 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
-				initBB = train_detects[0].bounding_box.flatten().astype("int")
+				initBB = train_detects[-1].bounding_box.flatten().astype("int")
 				initBB = tuple(initBB)
 				BOX = initBB
 				(x0,_,x1,_) = initBB
 				# if(x1-x0>=100):
 				TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
-				train_detect = train_detects[0]
-				del train_detects[0]
+				train_detect = train_detects[-1]
+				del train_detects[-1]
 				train_detect.bounding_box = BOX
 				TRACKER.init(image, initBB)
 				tracking = True
