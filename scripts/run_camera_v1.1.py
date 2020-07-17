@@ -220,7 +220,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
-			train_centroids = (np.array([d.bounding_box for d in train_detects])).sum(axis=1) / 2
+			arr = np.array([d.bounding_box for d in train_detects])
+			print(arr)
+			train_centroids = arr.sum(axis=1) / 2
 			# now calculate distances between each pair of input trains and stationary trains
 			D = dist.cdist(np.array(stationary_centroids), train_centroids)
 			mins = np.amin(D, axis=1)
