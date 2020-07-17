@@ -61,11 +61,12 @@ def gstreamer_pipeline(
 	)
 
 # for debuggin
-def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
-	if TRACKING:
-		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
-	else:
-		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+def display_image(IMAGE, BOX, LABEL, SCORE, FPS, COLOR_BGR):
+	# if TRACKING:
+	# 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
+	# else:
+	# 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), COLOR_BGR, 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
@@ -78,6 +79,14 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
 	# cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
+
+def add_to_image(IMAGE, BOX, LABEL, SCORE, COLOR_BGR):
+	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), COLOR_BGR, 5)
+	(startX, startY, endX, endY) = BOX
+	y = startY - 40 if startY - 40 > 40 else startY + 40
+	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
+	font = cv2.FONT_HERSHEY_SIMPLEX
+	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
 
 # for debugging
 def get_fps() -> float: # returns (fps,start_t)
@@ -98,6 +107,19 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 	BOX = list(BOX)
 	BOX = [int(_) for _ in BOX]
 	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS, TRACKING)
+	if cv2.waitKey(1) & 0xFF == ord('q'):
+		return
+
+def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
+	if TRAIN_DETECT:
+		add_to_image(IMAGE, TRAIN_DETECT.bounding_box, 'train', TRAIN_DETECT.score, (0,255,0))
+	for d in DETECTS:
+		add_to_image(IMAGE, d.bounding_box, 'detect', d.score, (255,0,0))
+	for st in STATIONARY:
+		# add_to_image(IMAGE, st, 'stat', 0, (0,0,255))
+		cv2.circle(IMAGE, st, radius=0, color=(0, 0, 255), thickness=-1)
+	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+	cv2.imshow('Trainspotting', IMAGE)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
@@ -187,11 +209,13 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 	BOX = [0,0,0,0]
 	dist_detect_to_statioanry = 5.0
 	stationary_centroids = []
+	train_detect = None
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
+		train_detects = []
 		if not tracking:
 			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
@@ -201,7 +225,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			D = dist.cdist(np.array(stationary_centroids), train_centroids)
 			mins = np.amin(D, axis=1)
 			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
-			min_heap = [(min_value, (row,col) for row,col in enumerate(cols))]
+			min_heap = [(min_value, (row,col) for row,col in enumerate(cols))] # creating list of nested tuple - (min_value, (row,col))
 			heapq.heapify(min_heap)
 			used_cols = set()
 			renew_stationary = []
@@ -213,48 +237,45 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 					continue
 				renew_stationary.append(stationary_centroids[row])
 				del train_detects[col]
+			stationary_centroids = renew_stationary
 			print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
 				initBB = tuple(initBB)
+				BOX = initBB
 				(x0,_,x1,_) = initBB
-				if(x1-x0>=100):
-					TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
-					train_detect = train_detects[0]
-					BOX = initBB
-					TRACKER.init(image, initBB)
-					tracking = True
+				# if(x1-x0>=100):
+				TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
+				train_detect = train_detects[0]
+				del train_detects[0]
+				train_detect.bounding_box = BOX
+				TRACKER.init(image, initBB)
+				tracking = True
 			else:
-				train_detect = {}
+				print('not tracking')
 		else:
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
-				track_list.append([image, box, timestamp])
-				# print('tracked box = ' + str(box))
 				hDist = ydist(BOX,box)
 				if hDist < 1:
 					# train is stationary, add to stationary_trains list
-					#stationary_trains.append(box)
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
-					#print('train is stationary. stopping tracking')
 					empty_frames = 0
-				#print('y pixels traveled = ' + str(hDist))
 				else:
+					train
 					BOX = box
+					train_detect.bounding_box = BOX
 					empty_frames = 0
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
-				#print('ending train event')
 			else:
 				empty_frames += 1
 		if DEBUG:
 			#for detect in detections:
-			#if tracking:
-			#print(train_detect)
-			if train_detect != {}:
-				debug(train_detect, BOX, fps, image, timestamp, tracking)
+			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
+			debug_multi(train_detects, train_detect, stationary_centroids, FPS, IMAGE)
 
 
 
