@@ -254,7 +254,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 				stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
-				stationary_centroids[1] = [0 if row in used_rows else frames+1 for row,frames in enumerate(stationary_centroids[1] if row in used_rows or st[1][row] < EMPTY_FRAMES)]
+				stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
 				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
