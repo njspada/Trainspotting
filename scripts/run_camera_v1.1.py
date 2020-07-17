@@ -211,7 +211,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 	BOX = [0,0,0,0]
 	dist_detect_to_statioanry = DTS
 	dist_tracking_to_stationary = DDS
-	stationary_centroids = []
+	stationary_centroids = [[],[]]
 	train_detect = None
 	while STREAM.isOpened():
 		fps = get_fps()
@@ -230,26 +230,27 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 			#print(arr)
 			train_centroids = arr.sum(axis=1) / 2
 			# now calculate distances between each pair of input trains and stationary trains
-			if len(stationary_centroids) > 0:
-				D = dist.cdist(np.array(stationary_centroids), train_centroids)
+			if len(stationary_centroids[0]) > 0:
+				D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
 				mins = np.amin(D, axis=1)
 				cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 				min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-				print('# stationary trains = ' + str(len(stationary_centroids)))
+				print('# stationary trains = ' + str(len(stationary_centroids[0])))
 				print('# min_heap = ' + str(len(min_heap)))
 				heapq.heapify(min_heap)
 				#print(min_heap)
 				used_cols = set()
-				renew_stationary = []
+				renew_stationary = [[],[]]
 				while len(min_heap) > 0:
-					if min_heap[0][0] > dist_detect_to_statioanry:
-						break
 					(min_value,(row,col)) = heapq.heappop(min_heap)
-					if not col in used_cols:
-						used_cols.add(col)
-					else:
-						continue
-					renew_stationary.append(stationary_centroids[row])
+					if min_value < DDS or stationary_centroids[1][row] < EMPTY_FRAMES:
+						if not col in used_cols:
+							frames = 0 if min_value < DDS else stationary_centroids[1][row]+1
+							used_cols.add(col)
+							renew_stationary[0].append(stationary_centroids[0][row])
+							renew_stationary[1].append(frames)
+						else:
+							continue
 					#print('added to stationary_centroids')
 					#del train_detects[col]
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
@@ -279,7 +280,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 				print(hDist)
 				if hDist <= DTS and empty_frames >= EMPTY_FRAMES:
 					# train is stationary, add to stationary_trains list
-					stationary_centroids.append(box2centroid(box))
+					stationary_centroids[0].append(box2centroid(box))
+					stationary_centroids[1].append(0)
 					tracking = False
 					empty_frames = 0
 				else:
@@ -296,7 +298,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 			#print('len(st) = ' + str(len(stationary_centroids)))
-			debug_multi(train_detects, train_detect, stationary_centroids, fps, image)
+			debug_multi(train_detects, train_detect, stationary_centroids[0], fps, image)
 
 
 
