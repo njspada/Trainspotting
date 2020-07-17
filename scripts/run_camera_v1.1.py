@@ -269,13 +269,13 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			if success: # continue train event
 				print('continued tracking')
 				hDist = ydist(BOX,box)
-				if hDist < 1:
+				print(hDist)
+				if hDist < 0.5:
 					# train is stationary, add to stationary_trains list
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
 					empty_frames = 0
 				else:
-					train
 					BOX = box
 					train_detect.bounding_box = BOX
 					empty_frames = 0
