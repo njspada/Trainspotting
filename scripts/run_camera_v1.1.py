@@ -228,7 +228,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 			if len(train_detects) == 0:
 				continue
-			print('# train detects = ' + str(len(train_detects)))
+			# print('# train detects = ' + str(len(train_detects)))
 			arr = np.array([d.bounding_box for d in train_detects])
 			#print(arr)
 			train_centroids = arr.sum(axis=1) / 2
@@ -238,8 +238,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				mins = np.amin(D, axis=1)
 				cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 				min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-				print('# stationary trains = ' + str(len(stationary_centroids[0])))
-				print('# min_heap = ' + str(len(min_heap)))
+				# print('# stationary trains = ' + str(len(stationary_centroids[0])))
+				# print('# min_heap = ' + str(len(min_heap)))
 				heapq.heapify(min_heap)
 				#print(min_heap)
 				used_cols = set()
@@ -248,7 +248,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				while len(min_heap) > 0:
 					(min_value,(row,col)) = heapq.heappop(min_heap)
 					if min_value < DDS:
-						if not col in used_cols:
+						if col not in used_cols:
 							used_cols.add(col)
 							used_rows.append(row)
 						else:
@@ -265,6 +265,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				# stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
 				stationary_centroids = temp_st
 				print('# stationary trains = ' + str(len(stationary_centroids[0])))
+				print('# train detects = ' + str(len(train_detects)))
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
 				initBB = train_detects[-1].bounding_box.flatten().astype("int")
@@ -282,7 +283,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 			else:
 				train_detect = None
 				#print('not tracking. len(st) = ' + str(len(stationary_centroids)))
-		else:
+		else: # we are tracking
+			print('tracking')
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
 				hDist = ydist(BOX,box)
