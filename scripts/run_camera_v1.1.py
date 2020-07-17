@@ -4,7 +4,7 @@ from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
 import cv2
-import numpy
+import numpy as np
 from datetime import datetime
 import database_config
 import mysql.connector
@@ -18,6 +18,7 @@ import threading
 from os import mkdir
 
 import math
+import heapq
 
 start_t = time.time()
 frame_times = []
@@ -27,6 +28,7 @@ last_time = time.time()
 DATA_ARR = []
 LABELS = []
 COLLECT_FREQUENCY = 10
+OPENCV_OBJECT_TRACKERS = {}
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -182,14 +184,14 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
-	# print('empty trains = ' + str(EMPTY_FRAMES))
+def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
+	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
+	tracking = False
 	empty_frames = 0
-	train_detect = {}
 	BOX = [0,0,0,0]
-	stationary_trains = []
-	previous_detects = []
+	stationary_centroids = [[],[]]
+	previous_centroids = []
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -199,27 +201,40 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 		print('--------------')
-		print(len(train_detects))
-		print(len(previous_detects))
-		print(len(stationary_trains))
-		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
-			empty_frames += 1
-			continue
-		empty_frames = 0
-		remove_train_detects = []
-		temp_stationary = []
-		# match already detected stationary trains
-		for s in stationary_trains:
-			for d in train_detects:
-				if ydist(d.bounding_box.flatten(), s.bounding_box.flatten()) < 10.0:
-					is_stationary = True
-					temp_stationary.append(s)
-					remove_train_detects.append(d)
-					break
-		stationary_trains = temp_stationary
-		train_detects = [d for d in train_detects if d not in remove_train_detects]
-		# now check if trains in previous frame are in the same position in the current frame, mark those as a stationary trains
-		remove_train_detects = []
+		arr = np.array([d.bounding_box for d in train_detects])
+		train_centroids = arr.sum(axis=1) / 2
+		# now calculate distances between each pair of input trains and stationary trains
+		if len(stationary_centroids[0]) > 0:
+			D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
+			mins = np.amin(D, axis=1)
+			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+			# print('# stationary trains = ' + str(len(stationary_centroids[0])))
+			# print('# min_heap = ' + str(len(min_heap)))
+			heapq.heapify(min_heap)
+			#print(min_heap)
+			used_cols = set()
+			used_rows = []
+			renew_stationary = [[],[]]
+			while len(min_heap) > 0:
+				(min_value,(row,col)) = heapq.heappop(min_heap)
+				if min_value < DDS:
+					if col not in used_cols:
+						used_cols.add(col)
+						used_rows.append(row)
+					else:
+						continue
+				#print('added to stationary_centroids')
+				#del train_detects[col]
+			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
+			temp_st = [[],[]]
+			for row in range(len(stationary_centroids[0])):
+				if row in used_rows or stationary_centroids[1][row] < EFD:
+					temp_st[0].append(stationary_centroids[0][row])
+					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
+			# stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
+			# stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
+			stationary_centroids = temp_st
 		for p in previous_detects:
 			for d in train_detects:
 				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
