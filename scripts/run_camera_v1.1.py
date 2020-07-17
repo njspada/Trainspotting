@@ -4,7 +4,7 @@ from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
 import cv2
-import numpy
+import numpy as np
 from datetime import datetime
 import database_config
 import mysql.connector
