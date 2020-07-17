@@ -218,7 +218,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 		_, image = STREAM.read()
 		train_detects = []
 		if not tracking:
-			#print('detecting')
+			print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 			if len(train_detects) == 0:
@@ -245,10 +245,10 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 					else:
 						continue
 					renew_stationary.append(stationary_centroids[row])
-					print('added to stationary_centroids')
+					#print('added to stationary_centroids')
 					del train_detects[col]
 				stationary_centroids = renew_stationary
-				print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
+				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
 				initBB = train_detects[0].bounding_box.flatten().astype("int")
 				initBB = tuple(initBB)
@@ -263,7 +263,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				tracking = True
 			else:
 				train_detect = None
-				print('not tracking. len(st) = ' + str(len(stationary_centroids)))
+				#print('not tracking. len(st) = ' + str(len(stationary_centroids)))
 		else:
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
@@ -287,7 +287,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 			#for detect in detections:
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
-			print('len(st) = ' + str(len(stationary_centroids)))
+			#print('len(st) = ' + str(len(stationary_centroids)))
 			debug_multi(train_detects, train_detect, stationary_centroids, fps, image)
 
 
