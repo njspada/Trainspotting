@@ -248,7 +248,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 						continue
 					renew_stationary.append(stationary_centroids[row])
 					#print('added to stationary_centroids')
-					del train_detects[col]
+					#del train_detects[col]
+				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 				stationary_centroids = renew_stationary
 				#print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
 			if len(train_detects) > 0: # is a train event
