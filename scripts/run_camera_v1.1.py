@@ -203,13 +203,14 @@ def ydist(oldBox,newBox):
 #    b. The tracker succeeds in tracking. Check if the tracked train is stationary.
 #       i. If train is stationary, add it to the stationary_trains list
 #       ii. Else, continue tracking train
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	tracking = False
 	empty_frames = 0
 	BOX = [0,0,0,0]
-	dist_detect_to_statioanry = 5.0
+	dist_detect_to_statioanry = DTS
+	dist_tracking_to_stationary = DDS
 	stationary_centroids = []
 	train_detect = None
 	while STREAM.isOpened():
@@ -272,7 +273,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				print('continued tracking')
 				hDist = ydist(BOX,box)
 				print(hDist)
-				if hDist <= 1.0 and empty_frames >= EMPTY_FRAMES:
+				if hDist <= DTS and empty_frames >= EMPTY_FRAMES:
 					# train is stationary, add to stationary_trains list
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
@@ -280,7 +281,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				else:
 					BOX = box
 					train_detect.bounding_box = BOX
-					empty_frames = 0 if hDist >= 1.0 else empty_frames+1
+					empty_frames = 0 if hDist >= DTS else empty_frames+1
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
 				empty_frames = 0
@@ -308,6 +309,8 @@ if __name__ == "__main__":
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
+	PARSER.add_argument('-dts', '--dts', action='store', type=int, default=2, help="distance tracking to stationary.")
+	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=2, help="distance detect to stationary.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
@@ -343,7 +346,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.DDS)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
