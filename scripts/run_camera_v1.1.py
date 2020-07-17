@@ -19,6 +19,7 @@ from os import mkdir
 
 import math
 import heapq
+from scipy.spatial import distance as dist
 
 start_t = time.time()
 frame_times = []
