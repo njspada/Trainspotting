@@ -18,6 +18,9 @@ import threading
 from os import mkdir
 
 import math
+from scipy.spatial import distance as dist
+
+import heapq
 
 start_t = time.time()
 frame_times = []
@@ -27,6 +30,8 @@ last_time = time.time()
 DATA_ARR = []
 LABELS = []
 COLLECT_FREQUENCY = 10
+
+OPENCV_OBJECT_TRACKERS = {}
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -161,26 +166,67 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
-	# print('empty trains = ' + str(EMPTY_FRAMES))
+
+# stationary_trains - list of train objects that are identified as stationary
+# 1. When we are not tracking any trains, use detection engine to detect all train objects in the current frame
+#    Then discount all the newly detected trains that can be matched with stationary trains.
+#    Discount any unmatched stationary_trains
+#    Ideally there should be only one remaining train detect that is not stationary, attach tracker to this train
+# 2. When tracking a train, there two cases - 
+#    a. The tracker lost the object. Make use of empty frame buffer here. 
+#           If tracker returns failure for more than EMPTY_FRAMES limit, then the train is no longer in the frame.
+#           Switch to detecting.
+#    b. The tracker succeeds in tracking. Check if the tracked train is stationary.
+#       i. If train is stationary, add it to the stationary_trains list
+#       ii. Else, continue tracking train
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
+	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
-	tracking = False # true when using tracker instead of detection engine
-	was_train_event = False
-	detect_list = []
-	track_list = []
+	tracking = False
 	empty_frames = 0
-	train_detect = {}
 	BOX = [0,0,0,0]
+	dist_detect_to_statioanry = 5.0
 	stationary_centroids = []
-	# initialize the bounding box coordinates of the train we are going to track
-	initBB = None
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
-		if tracking:
-			#print('tracking')
+		if not tracking:
+			#print('detecting')
+			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
+			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+			train_centroids = (np.array([d.bounding_box for d in train_detects])).sum(axis=1) / 2
+			# now calculate distances between each pair of input trains and stationary trains
+			D = dist.cdist(np.array(stationary_centroids), train_centroids)
+			mins = np.amin(D, axis=1)
+			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			min_heap = [(min_value, (row,col) for row,col in enumerate(cols))]
+			heapq.heapify(min_heap)
+			used_cols = set()
+			renew_stationary = []
+			while(min_heap[0][0] <= dist_detect_to_statioanry):
+				(min_value,(row,col)) = heapq.heappop(min_heap)
+				if not col in used_cols:
+					used_cols.add(col)
+				else:
+					continue
+				renew_stationary.append(stationary_centroids[row])
+				del train_detects[col]
+			print('discounted stationary_trains, #train_detects = ' + str(len(train_detects)))
+			if len(train_detects) > 0: # is a train event
+				initBB = train_detects[0].bounding_box.flatten().astype("int")
+				initBB = tuple(initBB)
+				(x0,_,x1,_) = initBB
+				if(x1-x0>=100):
+					TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
+					train_detect = train_detects[0]
+					BOX = initBB
+					TRACKER.init(image, initBB)
+					tracking = True
+			else:
+				train_detect = {}
+		else:
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
 				track_list.append([image, box, timestamp])
@@ -191,7 +237,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					#stationary_trains.append(box)
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
-					print('train is stationary. stopping tracking')
+					#print('train is stationary. stopping tracking')
 					empty_frames = 0
 				#print('y pixels traveled = ' + str(hDist))
 				else:
@@ -199,39 +245,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					empty_frames = 0
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
-				print('ending train event')
+				#print('ending train event')
 			else:
 				empty_frames += 1
-		else:
-			#print('detecting')
-			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=3, keep_aspect_ratio=True, relative_coord=False)
-			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
-			train_centroids = [box2centroid(d.bounding_box.flatten()) for d in train_detects]
-			if len(stationary_trains) > 0:
-				temp = []
-				for t in train_detects:
-					dx = ydist(t.bounding_box.flatten().astype("int"),stationary_trains[-1])
-					print('dx = ' + str(dx))
-					if dx > 10:
-						temp.append(t)
-				train_detects = temp
-				#train_detects = [d for d in train_detects if ydist(d.bounding_box.flatten().astype("int"),stationary_trains[-1]) > 1]
-			if len(train_detects) > 0: # is a train event
-				#detect_list.append([image, train_detects[0], timestamp])
-				# detected a train, start tracking it!
-				initBB = train_detects[0].bounding_box.flatten().astype("int")
-				initBB = tuple(initBB)
-				(x0,_,x1,_) = initBB
-				if(x1-x0>=100):
-					TRACKER = cv2.TrackerCSRT_create()
-					train_detect = train_detects[0]
-					# print('detected box = ' + str(initBB))
-					BOX = initBB
-					TRACKER.init(image, initBB)
-					tracking = True
-					print('starting train event')
-			else:
-				train_detect = {}
 		if DEBUG:
 			#for detect in detections:
 			#if tracking:
@@ -272,6 +288,7 @@ if __name__ == "__main__":
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
+	global OPENCV_OBJECT_TRACKERS
 	OPENCV_OBJECT_TRACKERS = {
 		"csrt": cv2.TrackerCSRT_create,
 		"kcf": cv2.TrackerKCF_create,
@@ -284,12 +301,12 @@ if __name__ == "__main__":
 
 	# grab the appropriate object tracker using our dictionary of
 	# OpenCV object tracker objects
-	TRACKER = OPENCV_OBJECT_TRACKERS[ARGS.tracker]()
+	#TRACKER = OPENCV_OBJECT_TRACKERS[ARGS.tracker]()
 
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER, ARGS.confidence)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
