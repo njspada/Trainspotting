@@ -253,7 +253,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				if row in used_rows:
 					stationary_centroids[0].append(previous_centroids[row])
 					stationary_centroids[1].append(0)
-			previous_centroids = train_centroids
+		previous_centroids = train_centroids
 		############---old tracking---#############
 		# for p in previous_detects:
 		# 	for d in train_detects:
