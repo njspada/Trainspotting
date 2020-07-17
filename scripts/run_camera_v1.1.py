@@ -346,7 +346,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.DDS)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
