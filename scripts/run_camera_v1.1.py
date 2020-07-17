@@ -18,8 +18,11 @@ import threading
 from os import mkdir
 
 import math
+<<<<<<< Updated upstream
 from scipy.spatial import distance as dist
 
+=======
+>>>>>>> Stashed changes
 import heapq
 
 start_t = time.time()
@@ -30,6 +33,7 @@ last_time = time.time()
 DATA_ARR = []
 LABELS = []
 COLLECT_FREQUENCY = 10
+OPENCV_OBJECT_TRACKERS = {}
 
 OPENCV_OBJECT_TRACKERS = {}
 
@@ -193,6 +197,7 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
+<<<<<<< Updated upstream
 
 # stationary_trains - list of train objects that are identified as stationary
 # 1. When we are not tracking any trains, use detection engine to detect all train objects in the current frame
@@ -206,21 +211,29 @@ def ydist(oldBox,newBox):
 #    b. The tracker succeeds in tracking. Check if the tracked train is stationary.
 #       i. If train is stationary, add it to the stationary_trains list
 #       ii. Else, continue tracking train
+=======
+>>>>>>> Stashed changes
 def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	tracking = False
 	empty_frames = 0
 	BOX = [0,0,0,0]
+<<<<<<< Updated upstream
 	dist_detect_to_statioanry = DTS
 	dist_tracking_to_stationary = DDS
 	stationary_centroids = [[],[]]
 	train_detect = None
+=======
+	stationary_centroids = [[],[]]
+	previous_centroids = []
+>>>>>>> Stashed changes
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
+<<<<<<< Updated upstream
 		train_detects = []
 		if not tracking:
 			print('detecting')
@@ -304,6 +317,56 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				empty_frames = 0
 			else:
 				empty_frames += 1
+=======
+			#print('detecting')
+		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+		print('--------------')
+		arr = np.array([d.bounding_box for d in train_detects])
+		train_centroids = arr.sum(axis=1) / 2
+		# now calculate distances between each pair of input trains and stationary trains
+		if len(stationary_centroids[0]) > 0:
+			D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
+			mins = np.amin(D, axis=1)
+			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+			# print('# stationary trains = ' + str(len(stationary_centroids[0])))
+			# print('# min_heap = ' + str(len(min_heap)))
+			heapq.heapify(min_heap)
+			#print(min_heap)
+			used_cols = set()
+			used_rows = []
+			renew_stationary = [[],[]]
+			while len(min_heap) > 0:
+				(min_value,(row,col)) = heapq.heappop(min_heap)
+				if min_value < DDS:
+					if col not in used_cols:
+						used_cols.add(col)
+						used_rows.append(row)
+					else:
+						continue
+				#print('added to stationary_centroids')
+				#del train_detects[col]
+			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
+			temp_st = [[],[]]
+			for row in range(len(stationary_centroids[0])):
+				if row in used_rows or stationary_centroids[1][row] < EFD:
+					temp_st[0].append(stationary_centroids[0][row])
+					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
+			# stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
+			# stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
+			stationary_centroids = temp_st
+		for p in previous_detects:
+			for d in train_detects:
+				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
+				print(str(dist))
+				if dist < 0.5: # mark this detect as stationary
+					print('swicthing')
+					stationary_trains.append(d)
+					remove_train_detects.append(d)
+			train_detects = [d for d in train_detects if d not in remove_train_detects]
+		previous_detects = train_detects
+>>>>>>> Stashed changes
 		if DEBUG:
 			#for detect in detections:
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
