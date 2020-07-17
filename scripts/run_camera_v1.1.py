@@ -109,7 +109,8 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 	for d in MOVING_DETECTS:
 		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (0,0,255)) # moving box is red color
 	for d in STAT_DETECTS:
-		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
+		#put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
+		cv2.circle(IMAGE, (st[0],st[1]), radius=10, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	# font = cv2.FONT_HERSHEY_SIMPLEX
 	# pa_data = pa.get_latest_data()
@@ -209,10 +210,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 			mins = np.amin(D, axis=1)
 			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-			# print('# stationary trains = ' + str(len(stationary_centroids[0])))
-			# print('# min_heap = ' + str(len(min_heap)))
 			heapq.heapify(min_heap)
-			#print(min_heap)
 			used_cols = set()
 			used_rows = []
 			renew_stationary = [[],[]]
@@ -224,32 +222,52 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 						used_rows.append(row)
 					else:
 						continue
-				#print('added to stationary_centroids')
-				#del train_detects[col]
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
+			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
 			temp_st = [[],[]]
 			for row in range(len(stationary_centroids[0])):
 				if row in used_rows or stationary_centroids[1][row] < EFD:
 					temp_st[0].append(stationary_centroids[0][row])
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
-			# stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
-			# stationary_centroids[1] = [(0 if row in used_rows else frames+1) for row,frames in enumerate(stationary_centroids[1] if (row in used_rows or st[1][row] < EMPTY_FRAMES))]
 			stationary_centroids = temp_st
-		for p in previous_detects:
-			for d in train_detects:
-				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
-				print(str(dist))
-				if dist < 0.5: # mark this detect as stationary
-					print('swicthing')
-					stationary_trains.append(d)
-					remove_train_detects.append(d)
-			train_detects = [d for d in train_detects if d not in remove_train_detects]
-		previous_detects = train_detects
+		# now try to match previous detects to current detects and see if they moved or are stationary
+		if len(previous_centroids) > 0:
+			D = dist.cdist(np.array(previous_centroids), train_centroids)
+			mins = np.amin(D, axis=1)
+			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+			heapq.heapify(min_heap)
+			used_cols = set()
+			used_rows = []
+			while len(min_heap) > 0:
+				(min_value,(row,col)) = heapq.heappop(min_heap)
+				if min_value < DTS:
+					if col not in used_cols:
+						used_cols.add(col)
+						used_rows.append(row)
+					else:
+						continue
+			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
+			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
+			for row in range(len(previous_centroids)):
+				if row in used_rows:
+					stationary_centroids[0].append(previous_centroids[row])
+					stationary_centroids[1].append(0)
+			previous_centroids = train_centroids
+		############---old tracking---#############
+		# for p in previous_detects:
+		# 	for d in train_detects:
+		# 		dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
+		# 		print(str(dist))
+		# 		if dist < 0.5: # mark this detect as stationary
+		# 			print('swicthing')
+		# 			stationary_trains.append(d)
+		# 			remove_train_detects.append(d)
+		# 	train_detects = [d for d in train_detects if d not in remove_train_detects]
+		# previous_detects = train_detects
+		##########################################
 		if DEBUG:
-			# print(len(train_detects))
-			# print(len(stationary_trains))
-			# print('--------')
-			debug_mul(train_detects, stationary_trains, image, fps)
+			debug_mul(train_detects, stationary_centroids, image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
@@ -325,4 +343,3 @@ if __name__ == "__main__":
 
 
 
-	
