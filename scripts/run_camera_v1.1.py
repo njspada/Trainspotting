@@ -236,7 +236,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				print(min_heap)
 				used_cols = set()
 				renew_stationary = []
-				while(min_heap[0][0] <= dist_detect_to_statioanry):
+				while len(min_heap) > 0:
+					if min_heap[0][0] <= dist_detect_to_statioanry:
+						break
 					(min_value,(row,col)) = heapq.heappop(min_heap)
 					if not col in used_cols:
 						used_cols.add(col)
