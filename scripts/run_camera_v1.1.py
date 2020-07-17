@@ -81,7 +81,7 @@ def display_image(IMAGE, BOX, LABEL, SCORE, FPS, COLOR_BGR):
 	cv2.imshow('Trainspotting', IMAGE)
 
 def add_to_image(IMAGE, BOX, LABEL, SCORE, COLOR_BGR):
-	print(BOX)
+	BOX = (int(_) for _ in BOX)
 	cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), COLOR_BGR, 5)
 	(startX, startY, endX, endY) = BOX
 	y = startY - 40 if startY - 40 > 40 else startY + 40
