@@ -203,7 +203,7 @@ def ydist(oldBox,newBox):
 #    b. The tracker succeeds in tracking. Check if the tracked train is stationary.
 #       i. If train is stationary, add it to the stationary_trains list
 #       ii. Else, continue tracking train
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	tracking = False
@@ -255,7 +255,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 				train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 				temp_st = [[],[]]
 				for row in range(len(stationary_centroids[0])):
-					if row in used_rows or stationary_centroids[1][row] < EMPTY_FRAMES:
+					if row in used_rows or stationary_centroids[1][row] < EFD:
 						temp_st[0].append(stationary_centroids[0][row])
 						temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
 				# stationary_centroids[0] = [st for row,st in enumerate(stationary_centroids[0]) if row in used_rows or st[1][row] < EMPTY_FRAMES]
@@ -284,7 +284,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 			if success: # continue train event
 				hDist = ydist(BOX,box)
 				print(hDist)
-				if hDist <= DTS and empty_frames >= EMPTY_FRAMES:
+				if hDist <= DTS and empty_frames >= EFT:
 					# train is stationary, add to stationary_trains list
 					stationary_centroids[0].append(box2centroid(box))
 					stationary_centroids[1].append(0)
@@ -294,7 +294,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 					BOX = box
 					train_detect.bounding_box = BOX
 					empty_frames = 0 if hDist >= DTS else empty_frames+1
-			elif empty_frames >= EMPTY_FRAMES: # end train event
+			elif empty_frames >= EFT: # end train event
 				tracking = False
 				empty_frames = 0
 			else:
@@ -317,12 +317,14 @@ if __name__ == "__main__":
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
 	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
-	PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
+	#PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-dts', '--dts', action='store', type=int, default=2, help="distance tracking to stationary.")
 	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=2, help="distance detect to stationary.")
+	PARSER.add_argument('-eft', '--eft', action='store', type=int, default=2, help="empty frames allowed for tracking.")
+	PARSER.add_argument('-efd', '--efd', action='store', type=int, default=10, help="empty frames allowed for detection.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
@@ -358,7 +360,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
