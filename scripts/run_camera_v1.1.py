@@ -111,7 +111,10 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		return
 
-def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
+def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE, DFPS):
+	if DFPS:
+		print('fps = ' FPS)
+		return
 	if TRAIN_DETECT: #green being tracked
 		add_to_image(IMAGE, TRAIN_DETECT.bounding_box, 'train', TRAIN_DETECT.score, (0,255,0))
 	for d in DETECTS: #blue detected but not tracked
@@ -203,7 +206,7 @@ def ydist(oldBox,newBox):
 #    b. The tracker succeeds in tracking. Check if the tracked train is stationary.
 #       i. If train is stationary, add it to the stationary_trains list
 #       ii. Else, continue tracking train
-def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	tracking = False
@@ -304,7 +307,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD):
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 			#print('len(st) = ' + str(len(stationary_centroids)))
-			debug_multi(train_detects, train_detect, stationary_centroids[0], fps, image)
+			debug_multi(train_detects, train_detect, stationary_centroids[0], fps, image, dfps)
 
 
 
@@ -326,6 +329,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-eft', '--eft', action='store', type=int, default=2, help="empty frames allowed for tracking.")
 	PARSER.add_argument('-efd', '--efd', action='store', type=int, default=10, help="empty frames allowed for detection.")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
+	PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
 
 	ARGS = PARSER.parse_args()
 	COLLECT_FREQUENCY = ARGS.collect_frequency
@@ -360,7 +364,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd, ARGS.dfps)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
