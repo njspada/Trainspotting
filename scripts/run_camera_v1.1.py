@@ -249,6 +249,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF, DTS, DDS):
 							used_cols.add(col)
 							renew_stationary[0].append(stationary_centroids[0][row])
 							renew_stationary[1].append(frames)
+							print('adding to renew')
 						else:
 							continue
 					#print('added to stationary_centroids')
