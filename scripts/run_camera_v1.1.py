@@ -279,7 +279,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				else:
 					BOX = box
 					train_detect.bounding_box = BOX
-					empty_frames = 0 if empty_frames hDist >= 0.5 else empty_frames+1
+					empty_frames = 0 if hDist >= 0.5 else empty_frames+1
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
 				empty_frames = 0
