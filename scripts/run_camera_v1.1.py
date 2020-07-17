@@ -108,7 +108,7 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 		cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
 	for d in MOVING_DETECTS:
 		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (0,0,255)) # moving box is red color
-	for d in STAT_DETECTS:
+	for st in STAT_DETECTS:
 		#put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
 		cv2.circle(IMAGE, (st[0],st[1]), radius=10, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
