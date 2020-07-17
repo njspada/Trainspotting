@@ -115,7 +115,7 @@ def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
 	if TRAIN_DETECT: #green being tracked
 		add_to_image(IMAGE, TRAIN_DETECT.bounding_box, 'train', TRAIN_DETECT.score, (0,255,0))
 	for d in DETECTS: #blue detected but not tracked
-		add_to_image(IMAGE, d.bounding_box, 'detect', d.score, (255,0,0))
+		add_to_image(IMAGE, d.bounding_box.flatten(), 'detect', d.score, (255,0,0))
 	for st in STATIONARY: # marked stationary
 		# add_to_image(IMAGE, st, 'stat', 0, (0,0,255))
 		#print(st)
