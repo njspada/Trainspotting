@@ -111,11 +111,11 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 		return
 
 def debug_multi(DETECTS, TRAIN_DETECT, STATIONARY, FPS, IMAGE):
-	if TRAIN_DETECT:
+	if TRAIN_DETECT: #green being tracked
 		add_to_image(IMAGE, TRAIN_DETECT.bounding_box, 'train', TRAIN_DETECT.score, (0,255,0))
-	for d in DETECTS:
+	for d in DETECTS: #blue detected but not tracked
 		add_to_image(IMAGE, d.bounding_box, 'detect', d.score, (255,0,0))
-	for st in STATIONARY:
+	for st in STATIONARY: # marked stationary
 		# add_to_image(IMAGE, st, 'stat', 0, (0,0,255))
 		#print(st)
 		cv2.circle(IMAGE, (st[0],st[1]), radius=0, color=(0, 0, 255), thickness=-1)
@@ -237,7 +237,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 				used_cols = set()
 				renew_stationary = []
 				while len(min_heap) > 0:
-					if min_heap[0][0] <= dist_detect_to_statioanry:
+					if min_heap[0][0] > dist_detect_to_statioanry:
 						break
 					(min_value,(row,col)) = heapq.heappop(min_heap)
 					if not col in used_cols:
@@ -265,6 +265,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, tracker, CONF):
 		else:
 			(success, box) = TRACKER.update(image)
 			if success: # continue train event
+				print('continued tracking')
 				hDist = ydist(BOX,box)
 				if hDist < 1:
 					# train is stationary, add to stationary_trains list
