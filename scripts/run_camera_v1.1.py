@@ -261,7 +261,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
-	PARSER,add_argument('-dfps', '--debugfpsonly', action='store_true', default=False, help='Debug mode - print fps only')
+	PARSER.add_argument('-dfps', '--debugfpsonly', action='store_true', default=False, help='Debug mode - print fps only')
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
