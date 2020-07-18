@@ -182,7 +182,7 @@ def ydist(oldBox,newBox):
 	newP = box2centroid(newBox)
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
+def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 	# print('empty trains = ' + str(EMPTY_FRAMES))
 	CONF = CONF/100
 	empty_frames = 0
@@ -292,7 +292,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.empty_frames, ARGS.confidence)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.empty_frames, ARGS.confidence, ARGS.debugonlyfps)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
