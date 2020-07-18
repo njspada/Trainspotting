@@ -198,10 +198,10 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			#print('detecting')
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
-		print('--------------')
-		print(len(train_detects))
-		print(len(previous_detects))
-		print(len(stationary_trains))
+		# print('--------------')
+		# print(len(train_detects))
+		# print(len(previous_detects))
+		# print(len(stationary_trains))
 		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
 			empty_frames += 1
 			continue
@@ -225,12 +225,12 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
 				print(str(dist))
 				if dist < 0.5: # mark this detect as stationary
-					print('swicthing')
+					#print('swicthing')
 					stationary_trains.append(d)
 					remove_train_detects.append(d)
 			train_detects = [d for d in train_detects if d not in remove_train_detects]
 		previous_detects = train_detects
-		if DEBUG:
+		if DEBUG and not DFPS:
 			# print(len(train_detects))
 			# print(len(stationary_trains))
 			# print('--------')
@@ -239,6 +239,8 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF):
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
+		if DFPS:
+			print('fps = ' + str(fps))
 
 
 
@@ -255,6 +257,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
+	PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
