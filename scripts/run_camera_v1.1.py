@@ -269,12 +269,14 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 		# 	train_detects = [d for d in train_detects if d not in remove_train_detects]
 		# previous_detects = train_detects
 		##########################################
-		if DEBUG:
+		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
+		if DFPS:
+			print('fps = ' + str(fps))
 
 
 
