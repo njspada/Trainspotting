@@ -164,7 +164,7 @@ def ydist(oldBox,newBox):
 def dist(oldP,newP):
 	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
+def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF, DFPS):
 	# print('empty trains = ' + str(EMPTY_FRAMES))
 	CONF = CONF/100
 	tracking = False # true when using tracker instead of detection engine
@@ -194,7 +194,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					#stationary_trains.append(box)
 					stationary_centroids.append(box2centroid(box))
 					tracking = False
-					print('train is stationary. stopping tracking')
+					#print('train is stationary. stopping tracking')
 					empty_frames = 0
 				#print('y pixels traveled = ' + str(hDist))
 				else:
@@ -202,7 +202,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					empty_frames = 0
 			elif empty_frames >= EMPTY_FRAMES: # end train event
 				tracking = False
-				print('ending train event')
+				#print('ending train event')
 			else:
 				empty_frames += 1
 		else:
@@ -215,7 +215,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 				i = 0
 				for t in train_detects:
 					dx = dist(train_centroids[i],stationary_centroids[-1])
-					print('dx = ' + str(dx))
+					#print('dx = ' + str(dx))
 					if dx > 10:
 						temp.append(t)
 				train_detects = temp
@@ -233,16 +233,18 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF):
 					BOX = initBB
 					TRACKER.init(image, initBB)
 					tracking = True
-					print('starting train event')
+					#print('starting train event')
 			else:
 				train_detect = {}
-		if DEBUG:
+		if DEBUG and not DFPS:
 			#for detect in detections:
 			#if tracking:
 			#print(train_detect)
 			if train_detect != {}:
 				debug(train_detect, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
+		if DFPS:
+			print('fps = ' + str(fps))
 
 
 
@@ -259,6 +261,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
 	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
+	PARSER,add_argument('-dfps', '--debugfpsonly', action='store_true', default=False, help='Debug mode - print fps only')
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 
 	ARGS = PARSER.parse_args()
@@ -293,7 +296,7 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER, ARGS.confidence)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.empty_frames, TRACKER, ARGS.confidence, ARGS.debugfpsonly)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
