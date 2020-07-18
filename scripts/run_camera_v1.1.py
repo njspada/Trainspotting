@@ -234,8 +234,8 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
 			stationary_centroids = temp_st
 		# now try to match previous detects to current detects and see if they moved or are stationary
-		if len(previous_centroids) > 0:
-			D = dist.cdist(np.array(previous_centroids), train_centroids)
+		if len(previous_centroids) > 0 and len(train_centroids) > 0:
+			D = dist.cdist(np.array(previous_centroids), np.array(train_centroids))
 			mins = np.amin(D, axis=1)
 			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
