@@ -258,7 +258,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				if row in used_rows:
 					stationary_centroids[0].append(previous_centroids[0][row])
 					stationary_centroids[1].append(0)
-				elif stationary_centroids[1][row] < EFT:
+				elif previous_centroids[1][row] < EFT:
 					temp_previous[0].append(previous_centroids[0][row])
 					temp_previous[1].append(previous_centroids[1][row]+1)
 			previous_centroids = temp_previous
