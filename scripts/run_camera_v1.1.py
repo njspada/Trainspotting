@@ -192,7 +192,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	tracking = False
 	empty_frames = 0
 	BOX = [0,0,0,0]
-	stationary_centroids = [[],[]]
+	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
 	previous_centroids = []
 	while STREAM.isOpened():
 		fps = get_fps()
@@ -234,6 +234,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
 			stationary_centroids = temp_st
 		# now try to match previous detects to current detects and see if they moved or are stationary
+		print('len previous = ' + str(len(previous_centroids)))
 		if len(previous_centroids) > 0 and len(train_centroids) > 0:
 			D = dist.cdist(np.array(previous_centroids), np.array(train_centroids))
 			mins = np.amin(D, axis=1)
@@ -257,18 +258,6 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					stationary_centroids[0].append(previous_centroids[row])
 					stationary_centroids[1].append(0)
 		previous_centroids = train_centroids
-		############---old tracking---#############
-		# for p in previous_detects:
-		# 	for d in train_detects:
-		# 		dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
-		# 		print(str(dist))
-		# 		if dist < 0.5: # mark this detect as stationary
-		# 			print('swicthing')
-		# 			stationary_trains.append(d)
-		# 			remove_train_detects.append(d)
-		# 	train_detects = [d for d in train_detects if d not in remove_train_detects]
-		# previous_detects = train_detects
-		##########################################
 		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
