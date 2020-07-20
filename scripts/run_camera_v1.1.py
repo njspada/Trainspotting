@@ -175,6 +175,24 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t0.start()
 			t1.start()
 
+def match_min_dist(row_vector, col_vector, dist_limit):
+	D = dist.cdist(row_vector, col_vector)
+	mins = np.amin(D, axis=1)
+	cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+	min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+	heapq.heapify(min_heap)
+	used_cols = set()
+	used_rows = []
+	while len(min_heap) > 0:
+		(min_value,(row,col)) = heapq.heappop(min_heap)
+		if min_value < DDS:
+			if col not in used_cols:
+				used_cols.add(col)
+				used_rows.append(row)
+			else:
+				continue
+	return (used_rows, used_cols)
+
 def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
@@ -183,34 +201,33 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
-			#print('detecting')
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 		if len(train_detects) == 0:
 				continue
-		#print('--------------')
 		arr = np.array([d.bounding_box for d in train_detects])
 		train_centroids = arr.sum(axis=1) / 2
 		# now calculate distances between each pair of input trains and stationary trains
 		if len(stationary_centroids[0]) > 0:
-			D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
-			mins = np.amin(D, axis=1)
-			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
-			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-			heapq.heapify(min_heap)
-			used_cols = set()
-			used_rows = []
-			renew_stationary = [[],[]]
-			while len(min_heap) > 0:
-				(min_value,(row,col)) = heapq.heappop(min_heap)
-				if min_value < DDS:
-					if col not in used_cols:
-						used_cols.add(col)
-						used_rows.append(row)
-					else:
-						continue
+			# D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
+			# mins = np.amin(D, axis=1)
+			# cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			# min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+			# heapq.heapify(min_heap)
+			# used_cols = set()
+			# used_rows = []
+			# renew_stationary = [[],[]]
+			# while len(min_heap) > 0:
+			# 	(min_value,(row,col)) = heapq.heappop(min_heap)
+			# 	if min_value < DDS:
+			# 		if col not in used_cols:
+			# 			used_cols.add(col)
+			# 			used_rows.append(row)
+			# 		else:
+			# 			continue
+			(used_rows, used_cols) = match_min_dist(row_vector=np.array(stationary_centroids[0]),
+													col_vector=train_centroids, dist_limit=DDS)
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
 			temp_st = [[],[]]
@@ -220,23 +237,24 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
 			stationary_centroids = temp_st
 		# now try to match previous detects to current detects and see if they moved or are stationary
-		#print('len previous = ' + str(len(previous_centroids[0])))
 		if len(previous_centroids[0]) > 0 and len(train_centroids) > 0:
-			D = dist.cdist(np.array(previous_centroids[0]), np.array(train_centroids))
-			mins = np.amin(D, axis=1)
-			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
-			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-			heapq.heapify(min_heap)
-			used_cols = set()
-			used_rows = []
-			while len(min_heap) > 0:
-				(min_value,(row,col)) = heapq.heappop(min_heap)
-				if min_value < DTS:
-					if col not in used_cols:
-						used_cols.add(col)
-						used_rows.append(row)
-					else:
-						continue
+			# D = dist.cdist(np.array(previous_centroids[0]), np.array(train_centroids))
+			# mins = np.amin(D, axis=1)
+			# cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+			# min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+			# heapq.heapify(min_heap)
+			# used_cols = set()
+			# used_rows = []
+			# while len(min_heap) > 0:
+			# 	(min_value,(row,col)) = heapq.heappop(min_heap)
+			# 	if min_value < DTS:
+			# 		if col not in used_cols:
+			# 			used_cols.add(col)
+			# 			used_rows.append(row)
+			# 		else:
+			# 			continue
+			(used_rows, used_cols) = match_min_dist(row_vector=np.array(previous_centroids[0]),
+													col_vector=np.array(train_centroids), dist_limit=DTS)
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
 			temp_previous = [[],[]]
