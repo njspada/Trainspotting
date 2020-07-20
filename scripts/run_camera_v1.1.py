@@ -193,7 +193,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	empty_frames = 0
 	BOX = [0,0,0,0]
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
-	previous_centroids = []
+	previous_centroids = [[],[]]
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -234,9 +234,9 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
 			stationary_centroids = temp_st
 		# now try to match previous detects to current detects and see if they moved or are stationary
-		print('len previous = ' + str(len(previous_centroids)))
-		if len(previous_centroids) > 0 and len(train_centroids) > 0:
-			D = dist.cdist(np.array(previous_centroids), np.array(train_centroids))
+		#print('len previous = ' + str(len(previous_centroids[0])))
+		if len(previous_centroids[0]) > 0 and len(train_centroids) > 0:
+			D = dist.cdist(np.array(previous_centroids[0]), np.array(train_centroids))
 			mins = np.amin(D, axis=1)
 			cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
 			min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
@@ -253,11 +253,17 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 						continue
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
-			for row in range(len(previous_centroids)):
+			temp_previous = [[],[]]
+			for row in range(len(previous_centroids[0])):
 				if row in used_rows:
-					stationary_centroids[0].append(previous_centroids[row])
+					stationary_centroids[0].append(previous_centroids[0][row])
 					stationary_centroids[1].append(0)
-		previous_centroids = train_centroids
+				elif stationary_centroids[1][row] < EFT:
+					temp_previous[0].append(previous_centroids[0][row])
+					temp_previous[1].append(previous_centroids[1][row]+1)
+			previous_centroids = temp_previous
+		previous_centroids[0].extend(train_centroids)
+		previous_centroids[1].extend([0 for _ in range(len(train_centroids))])
 		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
