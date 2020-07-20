@@ -175,23 +175,9 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t0.start()
 			t1.start()
 
-def box2centroid(box):
-	(startX,startY,endX,endY) = box
-	cX = int((startX + endX) / 2.0)
-	cY = int((startY + endY) / 2.0)
-	return [cX,cY]
-
-def ydist(oldBox,newBox):
-	oldP = box2centroid(oldBox)
-	newP = box2centroid(newBox)
-	return math.hypot(oldP[0]-newP[0],oldP[1]-newP[1])
-
 def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
-	tracking = False
-	empty_frames = 0
-	BOX = [0,0,0,0]
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
 	previous_centroids = [[],[]]
 	while STREAM.isOpened():
