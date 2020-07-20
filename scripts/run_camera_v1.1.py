@@ -185,7 +185,7 @@ def match_min_dist(row_vector, col_vector, dist_limit):
 	used_rows = []
 	while len(min_heap) > 0:
 		(min_value,(row,col)) = heapq.heappop(min_heap)
-		if min_value < DDS:
+		if min_value < dist_limit:
 			if col not in used_cols:
 				used_cols.add(col)
 				used_rows.append(row)
