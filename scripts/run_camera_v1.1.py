@@ -283,7 +283,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				TRACKER.init(image, initBB)
 				tracking = True
 				empty_frames = 0
-				total_moving_detects += len(train_detects)
+				#total_moving_detects += len(train_detects)
 			else:
 				train_detect = None
 				#print('not tracking. len(st) = ' + str(len(stationary_centroids)))
