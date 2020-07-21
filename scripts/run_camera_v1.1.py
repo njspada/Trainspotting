@@ -193,7 +193,7 @@ def match_min_dist(row_vector, col_vector, dist_limit):
 				continue
 	return (used_rows, used_cols)
 
-def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS):
+def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
@@ -202,69 +202,53 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
-		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
-		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
+		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		train_detects = [d for d in detections if d.label_id == 6]
 		if len(train_detects) == 0:
 				continue
-		arr = np.array([d.bounding_box for d in train_detects])
-		train_centroids = arr.sum(axis=1) / 2
-		# now calculate distances between each pair of input trains and stationary trains
+		train_centroids = (np.array([d.bounding_box for d in train_detects])).sum(axis=1) / 2
+		# Step 1 - Discounting previously recognized stationary trains from the current train detects .
 		if len(stationary_centroids[0]) > 0:
-			# D = dist.cdist(np.array(stationary_centroids[0]), train_centroids)
-			# mins = np.amin(D, axis=1)
-			# cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
-			# min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-			# heapq.heapify(min_heap)
-			# used_cols = set()
-			# used_rows = []
-			# renew_stationary = [[],[]]
-			# while len(min_heap) > 0:
-			# 	(min_value,(row,col)) = heapq.heappop(min_heap)
-			# 	if min_value < DDS:
-			# 		if col not in used_cols:
-			# 			used_cols.add(col)
-			# 			used_rows.append(row)
-			# 		else:
-			# 			continue
+			# Calculate distances between each pair of train detect centroids and stationary centroids.
+			# Sort pairs by minimum distance and match unique paris with distances less
+			# than DDS (Detect to Stationary Distance).
 			(used_rows, used_cols) = match_min_dist(row_vector=np.array(stationary_centroids[0]),
 													col_vector=train_centroids, dist_limit=DDS)
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
 			temp_st = [[],[]]
-			for row in range(len(stationary_centroids[0])):
+			def filter_st(row):
+				# used rows = stationary centroids that were matched with train detects in current frames.
+				# We need to retain those.
+				# Also retain centroids that have not been detected for up
+				# to EFD frames (Empty Frames for Detection).
 				if row in used_rows or stationary_centroids[1][row] < EFD:
 					temp_st[0].append(stationary_centroids[0][row])
 					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
+			_ = [filter_st(row) for row in range(len(stationary_centroids[0]))]
 			stationary_centroids = temp_st
-		# now try to match previous detects to current detects and see if they moved or are stationary
+		# Step 2 - Recognizing new stationary trains by comparing centroids from previous frames
 		if len(previous_centroids[0]) > 0 and len(train_centroids) > 0:
-			# D = dist.cdist(np.array(previous_centroids[0]), np.array(train_centroids))
-			# mins = np.amin(D, axis=1)
-			# cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
-			# min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
-			# heapq.heapify(min_heap)
-			# used_cols = set()
-			# used_rows = []
-			# while len(min_heap) > 0:
-			# 	(min_value,(row,col)) = heapq.heappop(min_heap)
-			# 	if min_value < DTS:
-			# 		if col not in used_cols:
-			# 			used_cols.add(col)
-			# 			used_rows.append(row)
-			# 		else:
-			# 			continue
+			# Calculate distances between each pair of (filtered) train detect centroids and stationary centroids.
+			# Sort pairs by minimum distance and match unique paris with distances less
+			# than DTS (Tracking to Stationary Distance).
 			(used_rows, used_cols) = match_min_dist(row_vector=np.array(previous_centroids[0]),
 													col_vector=np.array(train_centroids), dist_limit=DTS)
 			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
 			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
 			temp_previous = [[],[]]
-			for row in range(len(previous_centroids[0])):
+			def filter_previous_update_stationary(row):
+				# used rows = previous centroids that are matched with current detects.
+				# these previous centroids need to be marked as stationary trains.
+				# previous centroids not matched with a train detect for more \
+				# than EFT (Empty Frames for Tracking) consecutive frames will be discarded.
 				if row in used_rows:
 					stationary_centroids[0].append(previous_centroids[0][row])
 					stationary_centroids[1].append(0)
 				elif previous_centroids[1][row] < EFT:
 					temp_previous[0].append(previous_centroids[0][row])
 					temp_previous[1].append(previous_centroids[1][row]+1)
+			_ = [filter_previous_update_stationary(row) for row in range(len(previous_centroids[0]))]
 			previous_centroids = temp_previous
 		previous_centroids[0].extend(train_centroids)
 		previous_centroids[1].extend([0 for _ in range(len(train_centroids))])
@@ -287,10 +271,10 @@ if __name__ == "__main__":
 	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
-	PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
+	#PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
 	#PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
-	PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
-	PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
+	#PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
+	#PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-dts', '--dts', action='store', type=int, default=2, help="distance tracking to stationary.")
 	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=2, help="distance detect to stationary.")
@@ -300,7 +284,6 @@ if __name__ == "__main__":
 	PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
 
 	ARGS = PARSER.parse_args()
-	COLLECT_FREQUENCY = ARGS.collect_frequency
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
@@ -314,25 +297,10 @@ if __name__ == "__main__":
 	# Setup image capture stream
 	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
 
-	#global OPENCV_OBJECT_TRACKERS
-	OPENCV_OBJECT_TRACKERS = {
-		"csrt": cv2.TrackerCSRT_create,
-		"kcf": cv2.TrackerKCF_create,
-		"boosting": cv2.TrackerBoosting_create,
-		"mil": cv2.TrackerMIL_create,
-		"tld": cv2.TrackerTLD_create,
-		"medianflow": cv2.TrackerMedianFlow_create,
-		"mosse": cv2.TrackerMOSSE_create
-	}
-
-	# grab the appropriate object tracker using our dictionary of
-	# OpenCV object tracker objects
-	#TRACKER = OPENCV_OBJECT_TRACKERS[ARGS.tracker]()
-
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.mysql_frequency, ARGS.tracker, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd, ARGS.debugonlyfps)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd, ARGS.debugonlyfps)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
