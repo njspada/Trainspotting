@@ -218,12 +218,14 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	train_detect = None
 	while STREAM.isOpened():
 		fps = get_fps()
+		if DFPS:
+		print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		train_detects = []
 		if not tracking:
-			print('detecting')
+			#print('detecting')
 			detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 			train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
 			if len(train_detects) == 0:
