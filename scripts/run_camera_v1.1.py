@@ -216,9 +216,10 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	dist_tracking_to_stationary = DDS
 	stationary_centroids = [[],[]]
 	train_detect = None
+	total_moving_detects = 0
 	while STREAM.isOpened():
 		fps = get_fps()
-		if DFPS:
+		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
@@ -282,6 +283,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 				TRACKER.init(image, initBB)
 				tracking = True
 				empty_frames = 0
+				total_moving_detects += len(train_detects)
 			else:
 				train_detect = None
 				#print('not tracking. len(st) = ' + str(len(stationary_centroids)))
@@ -301,17 +303,21 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 					BOX = box
 					train_detect.bounding_box = BOX
 					empty_frames = 0 if hDist >= DTS else empty_frames+1
+					total_moving_detects += 1
 			elif empty_frames >= EFT: # end train event
 				tracking = False
 				empty_frames = 0
 			else:
 				empty_frames += 1
-		if DEBUG:
+
+		if DEBUG and not DFPS:
 			#for detect in detections:
 			#debug(train_detects, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
 			#print('len(st) = ' + str(len(stationary_centroids)))
 			debug_multi(train_detects, train_detect, stationary_centroids[0], fps, image, DFPS)
+		if DEBUG and DFPS:
+			print('total_moving_detects = ' + str(total_moving_detects))
 
 
 
