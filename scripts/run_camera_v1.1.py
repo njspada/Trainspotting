@@ -206,9 +206,10 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 	CONF = CONF/100
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
 	previous_centroids = [[],[]]
+	total_moving_detects = 0
 	while STREAM.isOpened():
 		fps = get_fps()
-		if DFPS:
+		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
@@ -260,6 +261,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 					temp_previous[1].append(previous_centroids[1][row]+1)
 			_ = [filter_previous_update_stationary(row) for row in range(len(previous_centroids[0]))]
 			previous_centroids = temp_previous
+		total_moving_detects += len(train_detects)
 		previous_centroids[0].extend(train_centroids)
 		previous_centroids[1].extend([0 for _ in range(len(train_centroids))])
 		if DEBUG and not DFPS:
@@ -268,6 +270,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
+		if DEBUG and DFPS:
+			print('total_moving_detects = ' + str(total_moving_detects))
 
 
 
