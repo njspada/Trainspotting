@@ -8,10 +8,21 @@ Notes about Object (Train) tracking in run_camera script -
 3. Sequential algorithm using OpenCV's in-built object tracker.
 	- git branch - "add-object-tracking"
 4. Vectorized approach to in-built object tracking.
+	-git branch - "vectorize-tracker"	
 
 ----- Manual Tracking -------
-	- For every frame, object detection model predictions are compared with centroids of known stationary trains and the closest trains are discounted from train detects. Staionary trains that are not matched with predicted trains in current frames are discared after a certain number of consecutive unmatched frames.
-	- Then, the remaining train detects are matched with previously detected moving trains. Detects that are within close distance to a previous train are marked as stationary. Previous trains that are left unmatched for a certain number of consecutive frames are discarded. Train detects that cannot be matched with a previous train are assumed to be moving and appended to the list of previous train detects for the next frame.
+	- There are 2 steps in the loop - 
+		1. Discounting previously observed stationary trains from train detects in current frame.
+		2. Recognizing new stationary trains in current frame.
+
+	1. Discounting -  For every frame, object detection model predictions are compared with centroids of known stationary trains.
+		- stationary-new train detect pairs within the 'Detection-to-Statioanry-Distance' (DDS) limit are discounted from train detects.
+		- previous staionary trains that are not matched with predicted trains in current frame are discared after a certain number of consecutive unmatched frames (EFD).
+	2. Recognizing - we now need to recognize new stationary trains in the remaining train detects.
+		- the remaining train detects are matched with previously detected moving trains.
+		- pair distances within the 'Tracking-to-Stationary-Distance' (DTS)  are marked as stationary and discounted from the both lists
+		- Previous trains that are left unmatched for a certain number of consecutive frames (EFT) are discarded.
+		- Train detects that cannot be matched with a previous train are assumed to be moving and appended to the list of previous train detects for the next frame.
 
 ----- Using OpenCV's object tracker --------
 	- There are two modes in the loop - 1. Detecting, 2. Tracking
