@@ -1,0 +1,7 @@
+Algorithm,*no trains,*one stationary,*one moving,*one stationary + one moving,*multiple stationary + no moving,*multiple stationary + one moving,,,DTS,DDS,EFT,EFD,Conf
+Vectorized nontracker,49,49,49,47,47,46,,,1,5,20,40,20
+Vectorized tracker,48,4.5,18,4.5,4.5,4.5,,,1,5,20,40,20
+Sequential nontracker,48,49,47,49,47,47,,,,,,,
+Sequential tracker,50,48,11,10,48,7,,,,,,,
+,,,,,,,,,,,,,
+,* = All numbers are FPS values!,,,,,,,,,,,,

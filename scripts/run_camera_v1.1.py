@@ -190,6 +190,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 	BOX = [0,0,0,0]
 	stationary_trains = []
 	previous_detects = []
+	total_moving_detects = 0
 	while STREAM.isOpened():
 		fps = get_fps()
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -226,6 +227,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 					remove_train_detects.append(d)
 			train_detects = [d for d in train_detects if d not in remove_train_detects]
 		previous_detects = train_detects
+		total_moving_detects += len(train_detects)
 		if DEBUG and not DFPS:
 			# print(len(train_detects))
 			# print(len(stationary_trains))
@@ -235,8 +237,10 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
-		if DFPS:
+		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
+		if DFPS and DEBUG:
+			print('total_moving_detects = ' + str(total_moving_detects))
 
 
 
