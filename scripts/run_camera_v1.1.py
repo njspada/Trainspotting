@@ -198,10 +198,6 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 			#print('detecting')
 		detections = ENGINE.detect_with_image(Image.fromarray(image), top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6 and d.score >= CONF]
-		# print('--------------')
-		# print(len(train_detects))
-		# print(len(previous_detects))
-		# print(len(stationary_trains))
 		if len(train_detects) < len(stationary_trains)+len(previous_detects) and empty_frames < EMPTY_FRAMES:
 			empty_frames += 1
 			continue
@@ -223,7 +219,7 @@ def loop(STREAM, ENGINE, DEBUG, EMPTY_FRAMES, CONF, DFPS):
 		for p in previous_detects:
 			for d in train_detects:
 				dist = ydist(d.bounding_box.flatten(), p.bounding_box.flatten())
-				print(str(dist))
+				# print(str(dist))
 				if dist < 0.5: # mark this detect as stationary
 					#print('swicthing')
 					stationary_trains.append(d)
