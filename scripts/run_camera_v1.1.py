@@ -219,7 +219,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, tracker, CONF, DTS, DDS, EFT, EFD, DFPS)
 	while STREAM.isOpened():
 		fps = get_fps()
 		if DFPS:
-		print('fps = ' + str(fps))
+			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		# print('fps = ' + str(fps))
 		_, image = STREAM.read()
