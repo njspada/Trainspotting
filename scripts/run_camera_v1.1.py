@@ -21,15 +21,14 @@ import math
 import heapq
 from scipy.spatial import distance as dist
 
+# for fps calculations
 start_t = time.time()
 frame_times = []
-
 last_time = time.time()
 
 DATA_ARR = []
 LABELS = []
 COLLECT_FREQUENCY = 10
-OPENCV_OBJECT_TRACKERS = {}
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -176,16 +175,26 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t1.start()
 
 def match_min_dist(row_vector, col_vector, dist_limit):
+	# row_vector and col_vector are numpy arrays of points.
+	# dist.cdist calculates euclidean distance between each
+	# pair of points in row and col and returns a m*n matirx.
+	# m = len(row_vector), n = len(col_vector)
 	D = dist.cdist(row_vector, col_vector)
+	# amin(D, axis=1) returns a column vector with minimum values of each row
 	mins = np.amin(D, axis=1)
+	# we want the indices of the columns in which the row-minimums occur
 	cols = [np.where(D[i] == mins[i])[0][0] for i in range(mins.shape[0])]
+	# create a list of nested tuples 
 	min_heap = [(mins[row], (row,col)) for row,col in enumerate(cols)] # creating list of nested tuple - (min_value, (row,col))
+	# sort the tuples using a minheap, sorting by distance ascending
 	heapq.heapify(min_heap)
+	# keep track of matched pairs because we want them to be unique! (unique row,unique col)
 	used_cols = set()
 	used_rows = []
 	while len(min_heap) > 0:
 		(min_value,(row,col)) = heapq.heappop(min_heap)
 		if min_value < dist_limit:
+			# we only check for col in used_cols because rows are already unique, we made a column vector for min cols in each row.
 			if col not in used_cols:
 				used_cols.add(col)
 				used_rows.append(row)
@@ -194,7 +203,6 @@ def match_min_dist(row_vector, col_vector, dist_limit):
 	return (used_rows, used_cols)
 
 def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
-	TRACKER = OPENCV_OBJECT_TRACKERS[tracker]()
 	CONF = CONF/100
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
 	previous_centroids = [[],[]]
@@ -271,10 +279,6 @@ if __name__ == "__main__":
 	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
 	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
-	#PARSER.add_argument('-M', '--mysql_frequency', action='store', type=int, default=100, help="Number of records in writeback to MySQL")
-	#PARSER.add_argument('-E', '--empty_frames', action='store', type=int, default=50, help="Length of empty frame buffer.")
-	#PARSER.add_argument('-C', '--collect_frequency', action='store', type=int, default=10, help="Collect 1 image in collect_frequency.")
-	#PARSER.add_argument('-t', '--tracker', action='store', type=str, default="kcf", help="OpenCV object tracker type")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=30, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-dts', '--dts', action='store', type=int, default=2, help="distance tracking to stationary.")
 	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=2, help="distance detect to stationary.")
@@ -300,7 +304,8 @@ if __name__ == "__main__":
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		loop(STREAM, ENGINE, ARGS.debug, ARGS.confidence, ARGS.dts, ARGS.dds, ARGS.eft, ARGS.efd, ARGS.debugonlyfps)
+		loop(STREAM, ENGINE, ARGS.debug, ARGS.confidence, ARGS.dts,
+			 ARGS.dds, ARGS.eft, ARGS.efd, ARGS.debugonlyfps)
 		STREAM.release()
 		cv2.destroyAllWindows()
 	except KeyboardInterrupt:
