@@ -208,6 +208,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 	previous_centroids = [[],[]]
 	while STREAM.isOpened():
 		fps = get_fps()
+		if DFPS:
+			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
@@ -266,8 +268,6 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
-		if DFPS:
-			print('fps = ' + str(fps))
 
 
 
