@@ -175,6 +175,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF, DFPS):
 	train_detect = {}
 	BOX = [0,0,0,0]
 	stationary_centroids = []
+	total_moving_detects = 0
 	# initialize the bounding box coordinates of the train we are going to track
 	initBB = None
 	while STREAM.isOpened():
@@ -236,6 +237,7 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF, DFPS):
 					#print('starting train event')
 			else:
 				train_detect = {}
+		total_moving_detects += 1 if train_detect != {} else 0
 		if DEBUG and not DFPS:
 			#for detect in detections:
 			#if tracking:
@@ -243,8 +245,10 @@ def loop(STREAM, ENGINE, DEBUG, MySQLF, EMPTY_FRAMES, TRACKER, CONF, DFPS):
 			if train_detect != {}:
 				debug(train_detect, BOX, fps, image, timestamp, tracking)
 			#debug(detect, detect.bounding_box.flatten().astype("int"), fps, image, timestamp)
-		if DFPS:
+		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
+		if DFPS and DEBUG:
+			print('total_moving_detects = ' + str(total_moving_detects))
 
 
 
