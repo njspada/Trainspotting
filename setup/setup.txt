@@ -51,3 +51,11 @@ models and label files stored in /usr/share/edgetpu/examples/models
 
 $ sudo reboot now
 
+-----------------------------------------\
+we also need to reinstall/upgrade he jetson's opencv version to use the object trackers.
+
+follow this guide:
+- https://pythops.com/post/compile-deeplearning-libraries-for-jetson-nano
+- remember to to turn on "WITH_GSTREANER=ON" in the cmake build command
+- it might run faster if you increase the jeton's swap memory from 2GB to 4GB. Look up how to do that.
+

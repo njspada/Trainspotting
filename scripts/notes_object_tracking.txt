@@ -1,0 +1,42 @@
+Notes about Object (Train) tracking in run_camera script - 
+
+- 4 different approaches used:
+1. Sequential (list-based) manual tracking algorithm that stores bounding boxes of stationary trains and previous train detects.
+	- git branch - "tracking-without-tracker"
+2. Vectorized  approach to manual tracking.
+	- git branch - "vectorize-nontracker"
+3. Sequential algorithm using OpenCV's in-built object tracker.
+	- git branch - "add-object-tracking"
+4. Vectorized approach to in-built object tracking.
+	-git branch - "vectorize-tracker"	
+
+----- Manual Tracking -------
+	- There are 2 steps in the loop - 
+		1. Discounting previously observed stationary trains from train detects in current frame.
+		2. Recognizing new stationary trains in current frame.
+
+	1. Discounting -  For every frame, object detection model predictions are compared with centroids of known stationary trains.
+		- stationary-new train detect pairs within the 'Detection-to-Statioanry-Distance' (DDS) limit are discounted from train detects.
+		- previous staionary trains that are not matched with predicted trains in current frame are discared after a certain number of consecutive unmatched frames (EFD).
+	2. Recognizing - we now need to recognize new stationary trains in the remaining train detects.
+		- the remaining train detects are matched with previously detected moving trains.
+		- pair distances within the 'Tracking-to-Stationary-Distance' (DTS)  are marked as stationary and discounted from the both lists
+		- Previous trains that are left unmatched for a certain number of consecutive frames (EFT) are discarded.
+		- Train detects that cannot be matched with a previous train are assumed to be moving and appended to the list of previous train detects for the next frame.
+
+----- Using OpenCV's object tracker --------
+	- There are two modes in the loop - 1. Detecting, 2. Tracking
+	1. Detecting - this is when there are no moving trains being tracked by the in-built tracker. 
+		- we start by running the object detector, getting the bounding boxes of trains in the current frame. 
+		- then we discount all stationary trains from current detects (using the same approach as the manual method aboove)
+		- if there is any train detect left after discounting stationary trains, that train is assumed to be moving and the tracker is initiated with that train's bounding box as the ROI (region of interest). This switches the mode to 'Tracking'.
+	2. Tracking - this is when a train is being tracked by the in-built object tracker.
+		- we use the tracker to get an updated bounding box of the train being tracked.
+		- if the tracker fails, the train has moved out of frame or is untrackable in the current frame.
+			- we allow a certain number of consecutive empty frames for the tracker.
+			- once that limit is reached we can assume the end of the train event and switch back to detecting mode.
+		- if the tracker succeeds in returning a bounding box - 
+			- we first compute the distance of between the new and old bounding boxes
+			- if the distance is under the 'Tracking-to-Staionary-Distance' (DTS) then the train is considered stationary and appended to that list. we switch back to detecting mode.
+			- else the train event is continued and we continue in tracking mode.
+
