@@ -56,40 +56,39 @@ get_met <- function(day) {
                         password = mysql_pw,
                         dbname = mysql_db_weewx,
                         host= mysql_host)
-  query <- paste("SELECT (outTemp,windSpeed,windDir,windGust,
-          windGustDir,inTemp,outHumidity,rain)
+  query <- paste("SELECT dateTime,outTemp,outHumidity,rain,
+          windSpeed,windDir,windGust,windGustDir,inTemp
           FROM archive 
           WHERE dateTime >=", startTimeUnix, 
           "AND dateTime < ", endTimeUnix, 
           "ORDER BY dateTime ;")
 
   res <- dbSendQuery(weewx_db_con, query)
-  while(!dbHasCompleted(res)){
-    chunk <- dbFetch(res, n = 5)
-    print(nrow(chunk))
-  }
+  met <- dbFetch(res) %>%
+          mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
+  print(met)
   
-  if (file.exists(fname)) {
+  # if (file.exists(fname)) {
     
-    met.names <- c('datetime', 'tempF', 'rh', 'rain', 'ws', 'wd',
-                   'wg', 'wgd', 'inTempF')
+  #   met.names <- c('datetime', 'tempF', 'rh', 'rain', 'ws', 'wd',
+  #                  'wg', 'wgd', 'inTempF')
     
-    met <- read.csv(fname,
-                    header = F, stringsAsFactors = F,
-                    col.names = met.names) %>%
-      mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
+  #   met <- read.csv(fname,
+  #                   header = F, stringsAsFactors = F,
+  #                   col.names = met.names) %>%
+  #     mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
     
-    # Initialize one second data frame, join with met, then fill down
+  #   # Initialize one second data frame, join with met, then fill down
     
-    met.out <- data.frame(
-      datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-      left_join(met, 'datetime') %>%
-      fill(tempF:inTempF, .direction = 'up') %>%
-      fill(tempF:inTempF, .direction = 'down')
+  #   met.out <- data.frame(
+  #     datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
+  #     left_join(met, 'datetime') %>%
+  #     fill(tempF:inTempF, .direction = 'up') %>%
+  #     fill(tempF:inTempF, .direction = 'down')
     
-    return(met.out)
+  #   return(met.out)
     
-  }
+  # }
   
   return(NULL)
 }
@@ -283,4 +282,4 @@ run_service <- function() {
 }
 
 
-run_service()
+# run_service()
