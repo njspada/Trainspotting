@@ -65,7 +65,7 @@ get_met <- function(day) {
 
   res <- dbSendQuery(weewx_db_con, query)
   met <- dbFetch(res) %>%
-          mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
+          mutate(dateTime = as.POSIXct(dateTime, format = "%Y%m%dT%H%M%S"))
   print(met)
   
   # if (file.exists(fname)) {
