@@ -42,15 +42,26 @@ get_met <- function(day) {
   # First setup a connection to the 'archive' table in database 'weewx'
   
   # fname <- paste0(out.dir, "met_", format(day), ".log")
-  weewx_db_con = dbConnect(RMariaDB::MariaDB(),
+
+  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+                            format = '%Y-%m-%d %H:%M:%S')
+  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
+                          format = '%Y-%m-%d %H:%M:%S')
+  startTime <- as.numeric(startTime)
+  endTime <- as.numeric(endTime)
+
+
+  weewx_db_con <- dbConnect(RMariaDB::MariaDB(),
                         user = mysql_user,
                         password = mysql_pw,
                         dbname = mysql_db_weewx,
                         host= mysql_host)
-  query = "SELECT * FROM archive 
-          WHERE dateTime >= CURDATE()
-          AND dateTime < CURDATE() + INTERVAL 1 DAY
-          ORDER BY dateTime ;"
+  query <- paste("SELECT (outTemp,windSpeed,windDir,windGust,
+          windGustDir,inTemp,outHumidity,rain)
+          FROM archive 
+          WHERE dateTime >=", startTimeUnix, 
+          "AND dateTime < ", endTimeUnix, 
+          "ORDER BY dateTime ;")
 
   res <- dbSendQuery(weewx_db_con, query)
   while(!dbHasCompleted(res)){
@@ -69,10 +80,7 @@ get_met <- function(day) {
       mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
     
     # Initialize one second data frame, join with met, then fill down
-    startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                            format = '%Y-%m-%d %H:%M:%S')
-    endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                          format = '%Y-%m-%d %H:%M:%S')
+    
     met.out <- data.frame(
       datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
       left_join(met, 'datetime') %>%
