@@ -10,5 +10,6 @@ Setup needed for run_reporting.r
 	- install.packages("DBI")
 	- install.packages("RMariaDB")
 	- checkout https://rmariadb.r-dbi.org/index.html
+	- install.packages("tidyverse")
 
 3. No need to install odbc or any drivers for odbc!!!!
