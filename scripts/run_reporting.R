@@ -1,7 +1,15 @@
 # Script to gather log data and push to Google Sheet
 
 require(tidyverse)
+library(DBI)
+library(RMariaDB)
 #require(googledrive)
+
+mysql_user = "dhawal"
+mysql_pw = "april+1Hitmonlee"
+mysql_db_trainspotting = "trainspotting"
+mysql_db_weewx = "weewx"
+mysql_host = "localhost"
 
 keyLoc <- paste0("/usr/local/controller/setup/reporting/",
 		 "Trainspotting-de6353d6caf4.json")
@@ -34,6 +42,21 @@ get_met <- function(day) {
   # First setup a connection to the 'archive' table in database 'weewx'
   
   # fname <- paste0(out.dir, "met_", format(day), ".log")
+  weewx_db_con = dbConnect(RMariaDB::MariaDB(),
+                        user = mysql_user,
+                        password = mysql_pw,
+                        dbname = mysql_db_weewx,
+                        host= mysql_host)
+  query = "SELECT * FROM archive 
+          WHERE dateTime >= CURDATE()
+          AND timestamp < CURDATE() + INTERVAL 1 DAY
+          ORDER BY dateTime ;"
+
+  res <- dbSendQuery(weewx_db_con, query)
+  while(!dbHasCompleted(res)){
+    chunk <- dbFetch(res, n = 5)
+    print(nrow(chunk))
+  }
   
   if (file.exists(fname)) {
     
