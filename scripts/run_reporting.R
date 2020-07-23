@@ -31,8 +31,9 @@ update_latest <- function() {
 # Each log file will be converted into this one second format
 # then all combined
 get_met <- function(day) {
+  # First setup a connection to the 'archive' table in database 'weewx'
   
-  fname <- paste0(out.dir, "met_", format(day), ".log")
+  # fname <- paste0(out.dir, "met_", format(day), ".log")
   
   if (file.exists(fname)) {
     
