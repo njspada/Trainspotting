@@ -41,9 +41,6 @@ update_latest <- function() {
 # then all combined
 get_met <- function(day) {
   # First setup a connection to the 'archive' table in database 'weewx'
-  
-  # fname <- paste0(out.dir, "met_", format(day), ".log")
-
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
   endTime <- as.POSIXct(paste(format(day), '23:59:59'),
@@ -65,38 +62,16 @@ get_met <- function(day) {
           "ORDER BY dateTime ;")
 
   res <- dbSendQuery(weewx_db_con, query)
-  met <- dbFetch(res) 
+  met <- dbFetch(res) %>%
+          mutate_all(~replace(., is.na(.), 0.0))
   met.out <- data.frame(
-      dateTime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
+      dateTime = seq(startTime, endTime)) %>%
       left_join(met, 'dateTime') %>%
       fill(outTemp:inTemp, .direction = 'down') %>%
       fill(outTemp:inTemp, .direction = 'up')
     
+  dbDisconnect()
   return(met.out)
-  
-  # if (file.exists(fname)) {
-    
-  #   met.names <- c('datetime', 'tempF', 'rh', 'rain', 'ws', 'wd',
-  #                  'wg', 'wgd', 'inTempF')
-    
-  #   met <- read.csv(fname,
-  #                   header = F, stringsAsFactors = F,
-  #                   col.names = met.names) %>%
-  #     mutate(datetime = as.POSIXct(datetime, format = "%Y%m%dT%H%M%S"))
-    
-  #   # Initialize one second data frame, join with met, then fill down
-    
-  #   met.out <- data.frame(
-  #     datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-  #     left_join(met, 'datetime') %>%
-  #     fill(tempF:inTempF, .direction = 'up') %>%
-  #     fill(tempF:inTempF, .direction = 'down')
-    
-  #   return(met.out)
-    
-  # }
-  
-  return(NULL)
 }
 
 expand_event <- function(events, eventStart) {
