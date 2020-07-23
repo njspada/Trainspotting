@@ -1,0 +1,14 @@
+Setup needed for run_reporting.r
+
+1. install R for ubuntu
+	- sudo apt install r-base
+	- if this doesnt work, try installing using aptitude
+	- sudo apt-get install aptitude
+	- sudo aptitude install r-base
+
+2. get inside R command line
+	- install.packages("DBI")
+	- install.packages("RMariaDB")
+	- checkout https://rmariadb.r-dbi.org/index.html
+
+3. No need to install odbc or any drivers for odbc!!!!
