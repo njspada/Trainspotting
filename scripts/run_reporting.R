@@ -1,6 +1,7 @@
 # Script to gather log data and push to Google Sheet
 
-require(tidyverse)
+#require(tidyverse)
+require(dplyr)
 library(DBI)
 library(RMariaDB)
 #require(googledrive)
@@ -59,14 +60,19 @@ get_met <- function(day) {
   query <- paste("SELECT dateTime,outTemp,outHumidity,rain,
           windSpeed,windDir,windGust,windGustDir,inTemp
           FROM archive 
-          WHERE dateTime >=", startTimeUnix, 
-          "AND dateTime < ", endTimeUnix, 
+          WHERE dateTime >=", startTime, 
+          "AND dateTime < ", endTime, 
           "ORDER BY dateTime ;")
 
   res <- dbSendQuery(weewx_db_con, query)
-  met <- dbFetch(res) %>%
-          mutate(dateTime = as.POSIXct(dateTime, format = "%Y%m%dT%H%M%S"))
-  print(met)
+  met <- dbFetch(res) 
+  met.out <- data.frame(
+      dateTime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
+      left_join(met, 'dateTime') %>%
+      fill(outTemp:inTemp, .direction = 'down') %>%
+      fill(outTemp:inTemp, .direction = 'up')
+    
+  return(met.out)
   
   # if (file.exists(fname)) {
     
