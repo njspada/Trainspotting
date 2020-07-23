@@ -49,7 +49,7 @@ get_met <- function(day) {
                         host= mysql_host)
   query = "SELECT * FROM archive 
           WHERE dateTime >= CURDATE()
-          AND timestamp < CURDATE() + INTERVAL 1 DAY
+          AND dateTime < CURDATE() + INTERVAL 1 DAY
           ORDER BY dateTime ;"
 
   res <- dbSendQuery(weewx_db_con, query)
