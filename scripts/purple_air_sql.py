@@ -16,7 +16,7 @@ if cnx:
 def write_to_db(timestamp, dataline):
     # timestamp must be "Y-m-d H:i:s"
     cnx = database_config.connection()
-    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    # timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
     names = ['datetime', 'datetime2', 'mac', 'firmware', 'hardware',
                   'tempF', 'rh', 'dewptF', 'pres', 'adc', 'mem', 'rssi',
                   'uptime',
@@ -35,8 +35,9 @@ def write_to_db(timestamp, dataline):
     
     selected = [pa[s_name] for s_name in s_names]
     query = """INSERT INTO purple_air  
-            (datetime, `pm2.5`, `pm1`, `pm10`, `p0.3`, `p0.5`, `p1`, `p2.5`, `p5`, `p10`) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+            (dateTime, `pm2.5`, `pm1`, `pm10`, `p0.3`, `p0.5`, `p1`, `p2.5`, `p5`, `p10`,
+             `pm2.5_b`, `pm1_b`, `pm10_b`, `p0.3_b`, `p0.5_b`, `p1_b`, `p2.5_b`, `p5_b`, `p10_b`) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     try:
       cursor = cnx.cursor()
       cursor.execute(query, selected)
