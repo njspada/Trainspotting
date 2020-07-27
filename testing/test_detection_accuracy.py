@@ -51,36 +51,34 @@ def loop(STREAM, ENGINE, T, CONF):
 			break
 	return detected
 
-
+def acc(d):
+	return (len([t for t in d if t > 0])/len(d))
 #if __name__ == "__main__":
-def run_test():
-	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
-	PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
-	PARSER.add_argument('-l', '--label', action='store', default='/usr/share/edgetpu/examples/models/coco_labels.txt', help="Path to labels text file.")
-	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
-	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
-	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
-	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=20, help="Detection confidence level out of 100.")
-	PARSER.add_argument('-t', '--time', action='store', type=int, default=10, help="Number of seconds to detect")
+def run_test(t=10,conf=30):
+	
+	model = '/usr/share/edgetpu/examples/models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite'
+	label= '/usr/share/edgetpu/examples/models/coco_labels.txt'
+	width = 300
+	height = 300
+	fps = 60
 
-	ARGS = PARSER.parse_args()
 	# Load the DetectionEngine
-	ENGINE = DetectionEngine(ARGS.model)
+	ENGINE = DetectionEngine(model)
 	if not ENGINE:
 		print("Failed to load detection engine.")
 		exit()
 	# Read labels file
-	LABELS = dataset_utils.read_label_file(ARGS.label)
+	LABELS = dataset_utils.read_label_file(label)
 	if not LABELS:
 		print("Failed to load labels file")
 		exit()
 	# Setup image capture stream
-	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = ARGS.width, capture_height = ARGS.height, display_width = ARGS.width, display_height = ARGS.height, framerate=ARGS.fps), cv2.CAP_GSTREAMER)
+	STREAM = cv2.VideoCapture(gstreamer_pipeline(capture_width = width, capture_height = height, display_width = width, display_height = height, framerate=fps), cv2.CAP_GSTREAMER)
 
 	try:
 		if not STREAM.isOpened():
 			STREAM.open()
-		return (loop(STREAM, ENGINE, ARGS.time, ARGS.confidence))
+		return (loop(STREAM, ENGINE, t, conf))
 
 		STREAM.release()
 		cv2.destroyAllWindows()
