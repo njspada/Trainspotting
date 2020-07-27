@@ -124,6 +124,31 @@ get_camera <- function(day) {
   return(NULL)
 }
 
+get_pa_data <- function(day) {
+  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+                            format = '%Y-%m-%d %H:%M:%S')
+  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
+                          format = '%Y-%m-%d %H:%M:%S')
+  startTime <- as.numeric(startTime)
+  endTime <- as.numeric(endTime)
+
+
+  pa_db_con <- dbConnect(RMariaDB::MariaDB(),
+                        user = mysql_user,
+                        password = mysql_pw,
+                        dbname = mysql_db_trainspotting,
+                        host= mysql_host)
+  query <- paste("SELECT *
+          FROM purple_air 
+          WHERE dateTime >=", startTime, 
+          "AND dateTime < ", endTime, 
+          "ORDER BY dateTime ;")
+
+  res <- dbSendQuery(pa_db_con, query)
+  pa <- dbFetch(res)
+  return(pa)
+}
+
 get_pa <- function(day) {
 
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
