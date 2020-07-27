@@ -70,7 +70,8 @@ get_met <- function(day) {
       fill(outTemp:inTemp, .direction = 'down') %>%
       fill(outTemp:inTemp, .direction = 'up')
     
-  dbDisconnect()
+  dbClearResult(res)
+  dbDisconnect(weewx_db_con)
   return(met.out)
 }
 
@@ -202,7 +203,8 @@ get_pa <- function(day) {
     fill(pm1:p10, .direction = 'down') %>%
     fill(pm1:p10, .direction = 'up')
   
-  dbDisconnect()
+  dbClearResult(res)
+  dbDisconnect(pa_db_con)
   return(pa.out)
 }
 
