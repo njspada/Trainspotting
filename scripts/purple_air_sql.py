@@ -5,7 +5,8 @@ from mysql.connector import errorcode
 
 cnx = database_config.connection()
 
-s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10']
+s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10', 
+            'pm2.5_b', 'pm1_b', 'pm10_b', 'p0.3_b', 'p0.5_b', 'p1_b', 'p2.5_b', 'p5_b', 'p10_b']
 name_dict = {pair for pair in enumerate(s_names)}
 
 if cnx:
