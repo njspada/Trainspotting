@@ -1,9 +1,9 @@
 # Script to gather log data and push to Google Sheet
 
-#require(tidyverse)
-require(dplyr)
-library(DBI)
-library(RMariaDB)
+require(tidyverse)
+#require(dplyr)
+require(DBI)
+require(RMariaDB)
 #require(googledrive)
 
 mysql_user = "dhawal"
