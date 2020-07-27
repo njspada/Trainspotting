@@ -44,6 +44,11 @@ def loop(STREAM, ENGINE, T, CONF):
 		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		train_detects = [d for d in detections if d.label_id == 6]
 		detected.append(len(train_detects))
+		cv2.imshow('Trainspotting', image)
+		keyCode = cv2.waitKey(1) & 0xFF
+		# Stop the program on the 'q' key
+		if keyCode == ord("q"):
+			break
 	return detected
 
 
