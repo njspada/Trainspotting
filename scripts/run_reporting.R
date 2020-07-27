@@ -193,18 +193,14 @@ get_pa <- function(day) {
     filter(dateTime %in% good) %>%
     select(dateTime, Type, Mean) %>%
     spread(Type, Mean) %>%
-    select(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
+    select(dateTime, pm2.5, pm1, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
   
   # Initialize one second data frame, join with met, then fill down
-  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                          format = '%Y-%m-%d %H:%M:%S')
-  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                        format = '%Y-%m-%d %H:%M:%S')
   pa.out <- data.frame(
     dateTime = seq(startTime, endTime)) %>%
     left_join(pa.abr, 'dateTime') %>%
-    fill(pm2.5:p10, .direction = 'down') %>%
-    fill(pm2.5:p10, .direction = 'up')
+    fill(pm1:p10, .direction = 'down') %>%
+    fill(pm1:p10, .direction = 'up')
   
   dbDisconnect()
   return(pa.out)
