@@ -194,7 +194,7 @@ get_pa <- function(day) {
     filter(dateTime %in% good) %>%
     select(dateTime, Type, Mean) %>%
     spread(Type, Mean) %>%
-    select(dateTime, pm2.5, pm1, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
+    select(dateTime, pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
   
   # Initialize one second data frame, join with met, then fill down
   pa.out <- data.frame(
