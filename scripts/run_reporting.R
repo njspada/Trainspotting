@@ -1,9 +1,9 @@
 # Script to gather log data and push to Google Sheet
 
-#require(tidyverse)
-require(dplyr)
-library(DBI)
-library(RMariaDB)
+require(tidyverse)
+#require(dplyr)
+require(DBI)
+require(RMariaDB)
 #require(googledrive)
 
 mysql_user = "dhawal"
@@ -70,7 +70,8 @@ get_met <- function(day) {
       fill(outTemp:inTemp, .direction = 'down') %>%
       fill(outTemp:inTemp, .direction = 'up')
     
-  dbDisconnect()
+  dbClearResult(res)
+  dbDisconnect(weewx_db_con)
   return(met.out)
 }
 
@@ -124,73 +125,87 @@ get_camera <- function(day) {
   return(NULL)
 }
 
-get_pa <- function(day) {
-  
-  fname <- paste0(out.dir, "purpleair_", format(day), ".log")
-  
-  if (file.exists(fname)) {
-    
-    pa.names <- c('datetime', 'datetime2', 'mac', 'firmware', 'hardware',
-                  'tempF', 'rh', 'dewptF', 'pres', 'adc', 'mem', 'rssi',
-                  'uptime',
-                  'pm1', 'pm2.5', 'pm10',
-                  'pm1_cf', 'pm2.5_cf', 'pm10_cf', # V19
-                  'junk1', 'junk2', # V21
-                  'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10', # V27
-                  'pm1_b', 'pm2.5_b', 'pm10_b',
-                  'pm1_cf_b', 'pm2.5_cf_b', 'pm10_cf_b', # V33
-                  'junk3', 'junk4',
-                  'p0.3_b', 'p0.5_b', 'p1_b', 'p2.5_b', 'p5_b', 'p10_b',
-                  'junk5')
-    
-    pa <- read.csv(fname,
-                   header = F, stringsAsFactors = F,
-                   col.names = pa.names) %>%
-      # Grab only the fields we're interested in
-      select(datetime,
-             pm1, pm2.5, pm10,
-             p0.3, p0.5, p1, p2.5, p5, p10,
-             pm1_b, pm2.5_b, pm10_b,
-             p0.3_b, p0.5_b, p1_b, p2.5_b, p5_b, p10_b) %>%
-      mutate(datetime = as.POSIXct(datetime, format = "%Y-%m-%d %H:%M:%S")) %>%
-      # Wrangle the data into a long form we can use to compare the two channels
-      gather(Tmp, Value, pm1:p10_b) %>%
-      separate(Tmp, c('Type', 'Channel'), sep = '_', fill = 'right') %>%
-      mutate(Channel = ifelse(is.na(Channel), 'a', Channel)) %>%
-      spread(Channel, Value) %>%
-      # Calculate the mean value between the two sensors and 
-      # the scaled relative difference
-      mutate(Mean = (a + b) / 2,
-             SRD = ( (a - b) / sqrt(2) ) / Mean)
-    
-    # We will only accept results where the PM2.5 estimate is within +/- 0.5
-    # for he SRD
-    good <- select(pa, datetime, SRD) %>%
-      filter(SRD >= -0.5 | SRD <= 0.5) %>%
-      .$datetime
-    
-    # Prepare dataset for return
-    pa.abr <- pa %>%
-      filter(datetime %in% good) %>%
-      select(datetime, Type, Mean) %>%
-      spread(Type, Mean) %>%
-      select(datetime, pm2.5, pm1, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
-    
-    # Initialize one second data frame, join with met, then fill down
-    startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+get_pa_data <- function(day) {
+  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
-    endTime <- as.POSIXct(paste(format(day), '23:59:59'),
+  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
                           format = '%Y-%m-%d %H:%M:%S')
-    pa.out <- data.frame(
-      datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-      left_join(pa.abr, 'datetime') %>%
-      fill(pm2.5:p10, .direction = 'up') %>%
-      fill(pm2.5:p10, .direction = 'down')
-    
-    return(pa.out)
-    
-  }
-  return(NULL)
+  startTime <- as.numeric(startTime)
+  endTime <- as.numeric(endTime)
+
+
+  pa_db_con <- dbConnect(RMariaDB::MariaDB(),
+                        user = mysql_user,
+                        password = mysql_pw,
+                        dbname = mysql_db_trainspotting,
+                        host= mysql_host)
+  query <- paste("SELECT *
+          FROM purple_air 
+          WHERE dateTime >=", startTime, 
+          "AND dateTime < ", endTime, 
+          "ORDER BY dateTime ;")
+
+  res <- dbSendQuery(pa_db_con, query)
+  pa <- dbFetch(res)
+  return(pa)
+}
+
+get_pa <- function(day) {
+
+  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+                            format = '%Y-%m-%d %H:%M:%S')
+  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
+                          format = '%Y-%m-%d %H:%M:%S')
+  startTime <- as.numeric(startTime)
+  endTime <- as.numeric(endTime)
+
+
+  pa_db_con <- dbConnect(RMariaDB::MariaDB(),
+                        user = mysql_user,
+                        password = mysql_pw,
+                        dbname = mysql_db_trainspotting,
+                        host= mysql_host)
+  query <- paste("SELECT *
+          FROM purple_air 
+          WHERE dateTime >=", startTime, 
+          "AND dateTime < ", endTime, 
+          "ORDER BY dateTime ;")
+
+  res <- dbSendQuery(pa_db_con, query)
+  pa <- dbFetch(res) %>%
+    # Wrangle the data into a long form we can use to compare the two channels
+    gather(Tmp, Value, pm1:p10_b) %>%
+    separate(Tmp, c('Type', 'Channel'), sep = '_', fill = 'right') %>%
+    mutate(Channel = ifelse(is.na(Channel), 'a', Channel)) %>%
+    spread(Channel, Value) %>%
+    # Calculate the mean value between the two sensors and 
+    # the scaled relative difference
+    mutate(Mean = (a + b) / 2,
+           SRD = ( (a - b) / sqrt(2) ) / Mean)
+  
+  # We will only accept results where the PM2.5 estimate is within +/- 0.5
+  # for he SRD
+  good <- select(pa, dateTime, SRD) %>%
+    filter(SRD >= -0.5 | SRD <= 0.5) %>%
+    .$dateTime
+  
+  # Prepare dataset for return
+  pa.abr <- pa %>%
+    filter(dateTime %in% good) %>%
+    select(dateTime, Type, Mean) %>%
+    spread(Type, Mean) %>%
+    select(dateTime, pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
+  
+  # Initialize one second data frame, join with met, then fill down
+  pa.out <- data.frame(
+    dateTime = seq(startTime, endTime)) %>%
+    left_join(pa.abr, 'dateTime') %>%
+    fill(pm1:p10, .direction = 'down') %>%
+    fill(pm1:p10, .direction = 'up')
+  
+  dbClearResult(res)
+  dbDisconnect(pa_db_con)
+  return(pa.out)
 }
 
 get_logs <- function(day) {
