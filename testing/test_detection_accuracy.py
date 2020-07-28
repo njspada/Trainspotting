@@ -53,6 +53,18 @@ def loop(STREAM, ENGINE, T, CONF):
 
 def acc(d, n=1):
 	return (len([t for t in d if t >= n])/len(d))
+
+def zero_stats(d):
+	consec_zeros = []
+	c = 0
+	while len(d) > 0:
+		i = d.pop()
+		if i == 0:
+			c += 1
+		elif c > 0:
+			consec_zeros.insert(0,c)
+			c = 0
+	return consec_zeros
 #if __name__ == "__main__":
 def run_test(t=10,conf=30):
 	
