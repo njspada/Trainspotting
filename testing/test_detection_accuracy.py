@@ -51,8 +51,8 @@ def loop(STREAM, ENGINE, T, CONF):
 			break
 	return detected
 
-def acc(d):
-	return (len([t for t in d if t > 0])/len(d))
+def acc(d, n=1):
+	return (len([t for t in d if t >= n])/len(d))
 #if __name__ == "__main__":
 def run_test(t=10,conf=30):
 	
