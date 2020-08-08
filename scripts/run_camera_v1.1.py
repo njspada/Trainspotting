@@ -210,12 +210,12 @@ class LogEntry:
 
 class Logger:
 	train_event_on = False
-	frames = 0
+	frames = 0 # when train_event_on: count consecutive empty frames, else count moving frames
 	entries = [] # [train_image]
 	previous_entries = []
-	empty_frames_limit = 20
-	moving_trains_conf = 0.7
-	count_from_first_moving = 0
+	empty_frames_limit = 20 # used to switch from moving event to empty/stationary event
+	moving_trains_conf = 0.7 # used to switch from empty/stationary event to moving event
+	count_from_first_moving = 0 # number of frames 
 	max_stat_entries = 200
 	collect_rate_moving = 0.1
 	collect_rate_stat = 0.001
@@ -506,6 +506,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=5, help="distance detect to stationary.")
 	PARSER.add_argument('-eft', '--eft', action='store', type=int, default=20, help="empty frames allowed for tracking.")
 	PARSER.add_argument('-efd', '--efd', action='store', type=int, default=40, help="empty frames allowed for detection.")
+	
 	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 	PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
 
