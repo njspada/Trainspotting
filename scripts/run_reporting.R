@@ -87,42 +87,57 @@ expand_event <- function(events, eventStart) {
 }
 
 get_camera <- function(day) {
-  
-  fname <- paste0(out.dir, "camera_", format(day), ".log")
-  
-  if (file.exists(fname)) {
-    
-    camera.names <- c('detects', 'startEvent', 'endEvent')
-    
-    camera <- read.csv(fname,
-                       header = F, stringsAsFactors = F,
-                       col.names = camera.names) %>%
-      mutate(startEvent = as.POSIXct(startEvent, format = "%Y-%m-%dT%H:%M:%S"),
-             endEvent = as.POSIXct(endEvent, format = "%Y-%m-%dT%H:%M:%S"),
-             TrainDetected = ifelse('train' %in% unlist(strsplit(detects, '_')),
-                                    1, 0)) %>%
-      filter(TrainDetected == 1)
-    
-    # For each event, expand out to one second resolution
-    camera.expanded <- do.call(
-      'rbind',
-      lapply(camera$startEvent, function(x) expand_event(camera, x))) %>%
-      distinct()
-    
-    # Initialize one second data frame, join with met, then fill down
-    startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+
+	# returning empty data for now
+	camera.names <- c('trainEventID', 'numMoving', 'numStat')
+	startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
     endTime <- as.POSIXct(paste(format(day), '23:59:59'),
                           format = '%Y-%m-%d %H:%M:%S')
-    camera.out <- data.frame(
-      datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-      left_join(camera.expanded, 'datetime') %>%
-      mutate(TrainDetected = ifelse(is.na(TrainDetected), 0, 1))
+	startTime <- as.numeric(startTime)
+  	endTime <- as.numeric(endTime)
+
+  	camera.initial = data.frame(matrix(ncol=4,nrow=0, dimnames=list(NULL, c("trainEventID", "numMoving", "numStat", "dateTime"))))
+  	camera.out <- data.frame(dateTime = seq(startTime, endTime)) %>% 
+					left_join(camera.initial, 'dateTime')
+	camera.out[is.na(camera.out)] <- 0
+	return(camera.out)
+  
+  # fname <- paste0(out.dir, "camera_", format(day), ".log")
+  
+  # if (file.exists(fname)) {
     
-    return(camera.out)
+  #   camera.names <- c('detects', 'startEvent', 'endEvent')
     
-  }
-  return(NULL)
+  #   camera <- read.csv(fname,
+  #                      header = F, stringsAsFactors = F,
+  #                      col.names = camera.names) %>%
+  #     mutate(startEvent = as.POSIXct(startEvent, format = "%Y-%m-%dT%H:%M:%S"),
+  #            endEvent = as.POSIXct(endEvent, format = "%Y-%m-%dT%H:%M:%S"),
+  #            TrainDetected = ifelse('train' %in% unlist(strsplit(detects, '_')),
+  #                                   1, 0)) %>%
+  #     filter(TrainDetected == 1)
+    
+  #   # For each event, expand out to one second resolution
+  #   camera.expanded <- do.call(
+  #     'rbind',
+  #     lapply(camera$startEvent, function(x) expand_event(camera, x))) %>%
+  #     distinct()
+    
+  #   # Initialize one second data frame, join with met, then fill down
+  #   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
+  #                           format = '%Y-%m-%d %H:%M:%S')
+  #   endTime <- as.POSIXct(paste(format(day), '23:59:59'),
+  #                         format = '%Y-%m-%d %H:%M:%S')
+  #   camera.out <- data.frame(
+  #     datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
+  #     left_join(camera.expanded, 'datetime') %>%
+  #     mutate(TrainDetected = ifelse(is.na(TrainDetected), 0, 1))
+    
+  #   return(camera.out)
+    
+  # }
+  # return(NULL)
 }
 
 get_pa_data <- function(day) {
@@ -218,8 +233,8 @@ get_logs <- function(day) {
   if (!is.null(met) & !is.null(camera) & !is.null(pa)) {
     # Combine into final dataset
     total <- met %>%
-      left_join(camera, 'datetime') %>%
-      left_join(pa, 'datetime')
+      left_join(camera, 'dateTime') %>%
+      left_join(pa, 'dateTime')
     
     return(total)
   }

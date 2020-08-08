@@ -13,13 +13,16 @@ import purple_air_sql as pa
 import met_sql as met
 
 import time
-import threading
+from threading import Thread
+from concurrent.futures import Future
 
 from os import mkdir
 
 import math
 import heapq
 from scipy.spatial import distance as dist
+
+import copy
 
 # for fps calculations
 start_t = time.time()
@@ -29,6 +32,22 @@ last_time = time.time()
 DATA_ARR = []
 LABELS = []
 COLLECT_FREQUENCY = 10
+
+# threading related source from - 
+# https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
+def call_with_future(fn, future, args, kwargs):
+    try:
+        result = fn(*args, **kwargs)
+        future.set_result(result)
+    except Exception as exc:
+        future.set_exception(exc)
+
+def threaded(fn):
+    def wrapper(*args, **kwargs):
+        future = Future()
+        Thread(target=call_with_future, args=(fn, future, args, kwargs)).start()
+        return future
+    return wrapper
 
 def gstreamer_pipeline(
 	capture_width=300,
@@ -119,11 +138,6 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 	# cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	# cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
-
-def save_image(IMAGE, FILENAME):
-	print('saving image')
-	output_path = "/home/coal/Desktop/output/"
-	cv2.imwrite(output_path+FILENAME, IMAGE)
 	
 def store_a_train_detect(DETECTS, FILENAME, EVENT_ID):
 	global LABELS
@@ -174,6 +188,141 @@ def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
 			t0.start()
 			t1.start()
 
+@threaded
+def run_insert_query(query, data):
+	CNX = database_config.connection()
+	try:
+		cursor = CNX.cursor()
+		cursor.execute(query, [start_timestamp,end_timestamp])
+	except mysql.connector.Error as err:
+		print(err)
+		return -1
+	CNX.commit()
+	#event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
+	return cursor.lastrowid
+
+class LogEntry:
+	image = None
+	timestamp = ""
+	db_id = ""
+	moving_trains = None
+	stationary_trains = None
+
+class Logger:
+	train_event_on = False
+	frames = 0
+	entries = [] # [train_image]
+	previous_entries = []
+	empty_frames_limit = 20
+	moving_trains_conf = 0.7
+	count_from_first_moving = 0
+	max_stat_entries = 200
+	collect_rate_moving = 0.1
+	collect_rate_stat = 0.001
+
+	def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
+		entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
+		self.entries.append(entry)
+		if train_event_on:
+			# check if we hit max empty frames
+			if len(moving_trains) == 0:
+				self.frames += 1
+			else:
+				self.frames = 0
+			if self.frames >= self.empty_frames_limit:
+				self.frames = 0
+				train_event_on = False
+				# log entries and previous entries now
+				self.save_train_event(self.entries, self.collect_rate_moving)
+				self.save_train_event(self.previous_entries, self.collect_rate_stat)
+		else:
+			if len(moving_trains) > 0:
+				self.frames += 1
+				self.count_from_first_moving += 1
+			elif self.count_from_first_moving > 0:
+				self.count_from_first_moving += 1
+
+			if self.frames/self.count_from_first_moving >= moving_trains_conf:
+				# switch to train_event_on
+				self.frames = 0
+				self.train_event_on = True
+				self.count_from_first_moving = 0
+				# store non train event frames in buffer, write back after train event 
+				self.previous_entries = self.entries[:-self.count_from_first_moving]
+				self.entries = self.entries[-self.count_from_first_moving:]
+			elif len(self.entries) > self.max_stat_entries and self.count_from_first_moving < len(self.entries):
+				# get rid of older entries that are not part of potential moving event
+				# if number of potential moving entries is too high we want to get rid of everything in the next else block
+				self.previous_entries = self.entries[:-self.count_from_first_moving]
+				self.entries = [-self.count_from_first_moving:]
+				self.frames = self.count_from_first_moving
+				#self.save_train_event(entries)
+				self.save_train_event(self.previous_entries, self.collect_rate_stat)
+			else: # get rid of everything
+				self.frames = 0
+				self.count_from_first_moving = 0
+				self.save_train_event(self.entries, self.collect_rate_stat)
+
+	@threaded
+	def save_train_event(self, entries, collect_rate):
+		# first downsize entries
+		indices = np.random.randint(len(entries), int(collect_rate*len(entries)))
+		entries = [entry for i,entry in enumerate(entries) if i in indices]
+		if len(entries) > 0:
+			# save moving trains
+			#first setup event start and end timestamps
+			start_timestamp = int(math.ceil(entries[0].timestamp))
+			end_timestamp = int(math.floor(entries[-1].timestamp))
+			# now create a moving train event record in database
+			query = """INSERT INTO train_events
+				(start,end,num_moving)
+				VALUES (%s,%s);
+			"""
+			event_id = run_insert_query(query, [start_timestamp,end_timestamp]).result()
+			# now insert images into database ans save them on disk
+			for entry in entries:
+				self.insert_entry(entry, event_id)
+	@threaded
+	def insert_entry(self, entry, event_id):
+		t = datetime.fromtimestamp(entry.timestamp)
+		date = t.strftime('%Y-%m%d')
+		hour = t.strftime('%H')
+		filename = date + '/' + hour + '/' + event_id + '/' + timestamp + '.jpg'
+		self.save_image(entry.image, filename)
+		query = """INSERT INTO train_images
+				(filename)
+				VALUES (%s);
+		"""				
+		image_id = run_insert_query(query, [filename]).result()
+		# now insert into train_detects, moving trains and stationary trains
+		DATA = []
+		for i in range(entry.moving_trains.len()):
+			values = [event_id, 1, image_id, 'train', entry.moving_trains.scores[i]]
+			values = values.extend(entry.moving_trains.bounding_boxes[i].flatten().astype("int"))
+			DATA.append(values)
+		for i in range(entry.stationary_trains.len()):
+			values = [event_id, 2, image_id, 'train', entry.stationary_trains.scores[i]]
+			values = values.extend(entry.stationary_trains.bounding_boxes[i].flatten().astype("int"))
+			DATA.append(values)
+		query = """INSERT INTO train_detects
+				(event_id, type, image_id, label, score, x0, y0, x1, y1)
+				VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);
+		"""
+		try:
+			cursor = CNX.cursor()
+			cursor.executemany(query, DATA)
+		except mysql.connector.Error as err:
+			print(err)
+			return
+		CNX.commit()
+	@threaded
+	def save_image(self, IMAGE, FILENAME):
+		print('saving image')
+		output_path = "/home/coal/Desktop/output/"
+		cv2.imwrite(output_path+FILENAME, IMAGE)
+
+
+
 def match_min_dist(row_vector, col_vector, dist_limit):
 	# row_vector and col_vector are numpy arrays of points.
 	# dist.cdist calculates euclidean distance between each
@@ -202,10 +351,94 @@ def match_min_dist(row_vector, col_vector, dist_limit):
 				continue
 	return (used_rows, used_cols)
 
+class trains: # object to hold info about detected trains
+	bounding_boxes = []
+	centroids = []
+	empty_frames = []
+	scores = []
+
+	def __init__(self, l_bounding_box, l_centroid, l_scores):
+		self.bounding_boxes = l_bounding_box
+		self.centroids = l_centroid
+		self.empty_frames = [0 for _ in range(len(self.centroids))]
+		self.scores = l_scores
+
+	def add(self, bounding_box, centroid, score, frames = 0):
+		self.bounding_boxes.append(bounding_box)
+		self.centroids.append(centroid)
+		self.empty_frames.append(frames)
+		self.scores.append(score)
+
+	def remove_at(self, index):
+		if index < len(self.centroids):
+			del self.bounding_boxes[index]
+			del self.centroids[index]
+			del self.empty_frames[index]
+			del self.scores[index]
+
+	def len(self):
+		return len(self.centroids)
+
+	# def copy(self, target):
+	# 	self.bounding_boxes = copy.deepcopy(target.bounding_boxes)
+	# 	self.centroids = copy.deepcopy(target.centroids)
+	# 	self.empty_frames = copy.deepcopy(target.empty_frames)
+	# 	self.scores = copy.deepcopy(target.scores)
+
+	def extend(self, target, refresh = False):
+		if refresh:
+			self.bounding_boxes = []
+			self.centroids = []
+			self.empty_frames = []
+			self.scores = []
+		self.bounding_boxes.extend(target.bounding_boxes)
+		self.centroids.extend(target.centroids)
+		self.empty_frames.extend(target.empty_frames)
+		self.scores.extend(target.scores)
+
+	def filter_out(self, indices):
+		self.bounding_boxes = [b for i,b in enumerate(self.bounding_boxes) if i not in indices]
+		self.centroids = [c for i,c in enumerate(self.centroids) if i not in indices]
+		self.empty_frames = [f for i,f in enumerate(self.empty_frames) if i not in indices]
+		self.scores = [s for i,s in enumerate(self.scores) if i not in indices]
+
+	def filter_stationary(self, used_indices, EFD): # returns new object with filtered data
+		# used rows/indices = stationary centroids that were matched with train detects in current frames.
+		# We need to retain those.
+		# Also retain centroids that have not been detected for up
+		# to EFD frames (Empty Frames for Detection).
+		temp = trains()
+		for i in range(self.len()):
+			if i in used_indices:
+				temp.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], 0)
+			elif self.empty_frames[i] < EFD:
+				temp.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], self.empty_frames[i]+1)
+		self.extend(temp, refresh = True)
+		#return temp
+
+	def filter_previous(self, used_indices, EFT, stat_trains):
+		# used indecices = previous centroids that are matched with current detects.
+		# these previous centroids need to be marked as stationary trains.
+		# previous centroids not matched with a train detect for more \
+		# than EFT (Empty Frames for Tracking) consecutive frames will be discarded.
+		temp_previous = trains()
+		# temp_stat = trains()
+		for i in range(self.len()):
+			if i in used_indices:
+				stat_trains.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], 0)
+			elif self.empty_frames[i] < EFT:
+				temp_previous.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], self.empty_frames[i]+1)
+		self.extend(temp_previous, refresh = True)
+
+
 def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 	CONF = CONF/100
 	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
 	previous_centroids = [[],[]]
+
+	stationary_trains = trains()
+	previous_trains = trains()
+
 	total_moving_detects = 0
 	while STREAM.isOpened():
 		fps = get_fps()
@@ -218,52 +451,30 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 		if len(train_detects) == 0:
 				continue
 		train_centroids = (np.array([d.bounding_box for d in train_detects])).sum(axis=1) / 2
+
+		current_trains = trains([d.bounding_box for d in train_detects], train_centroids, [d.score for d in train_detects])
+
 		# Step 1 - Discounting previously recognized stationary trains from the current train detects .
-		if len(stationary_centroids[0]) > 0:
+		#if len(stationary_centroids[0]) > 0:
+		if stationary_trains.len() > 0:
 			# Calculate distances between each pair of train detect centroids and stationary centroids.
 			# Sort pairs by minimum distance and match unique paris with distances less
 			# than DDS (Detect to Stationary Distance).
-			(used_rows, used_cols) = match_min_dist(row_vector=np.array(stationary_centroids[0]),
-													col_vector=train_centroids, dist_limit=DDS)
-			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
-			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
-			temp_st = [[],[]]
-			def filter_st(row):
-				# used rows = stationary centroids that were matched with train detects in current frames.
-				# We need to retain those.
-				# Also retain centroids that have not been detected for up
-				# to EFD frames (Empty Frames for Detection).
-				if row in used_rows or stationary_centroids[1][row] < EFD:
-					temp_st[0].append(stationary_centroids[0][row])
-					temp_st[1].append(0 if row in used_rows else stationary_centroids[1][row]+1)
-			_ = [filter_st(row) for row in range(len(stationary_centroids[0]))]
-			stationary_centroids = temp_st
+			(used_rows, used_cols) = match_min_dist(row_vector=np.array(stationary_trains.centroids),
+													col_vector=current_trains.centroids, dist_limit=DDS)
+			current_trains.filter_out(used_cols)
+			stationary_trains.filter_stationary(used_rows)
 		# Step 2 - Recognizing new stationary trains by comparing centroids from previous frames
-		if len(previous_centroids[0]) > 0 and len(train_centroids) > 0:
+		if previous_trains.len() > 0 and current_trains.len() > 0:
 			# Calculate distances between each pair of (filtered) train detect centroids and stationary centroids.
 			# Sort pairs by minimum distance and match unique paris with distances less
 			# than DTS (Tracking to Stationary Distance).
-			(used_rows, used_cols) = match_min_dist(row_vector=np.array(previous_centroids[0]),
-													col_vector=np.array(train_centroids), dist_limit=DTS)
-			train_detects = [d for col,d in enumerate(train_detects) if col not in used_cols]
-			train_centroids = [c for col,c in enumerate(train_centroids) if col not in used_cols]
-			temp_previous = [[],[]]
-			def filter_previous_update_stationary(row):
-				# used rows = previous centroids that are matched with current detects.
-				# these previous centroids need to be marked as stationary trains.
-				# previous centroids not matched with a train detect for more \
-				# than EFT (Empty Frames for Tracking) consecutive frames will be discarded.
-				if row in used_rows:
-					stationary_centroids[0].append(previous_centroids[0][row])
-					stationary_centroids[1].append(0)
-				elif previous_centroids[1][row] < EFT:
-					temp_previous[0].append(previous_centroids[0][row])
-					temp_previous[1].append(previous_centroids[1][row]+1)
-			_ = [filter_previous_update_stationary(row) for row in range(len(previous_centroids[0]))]
-			previous_centroids = temp_previous
-		total_moving_detects += len(train_detects)
-		previous_centroids[0].extend(train_centroids)
-		previous_centroids[1].extend([0 for _ in range(len(train_centroids))])
+			(used_rows, used_cols) = match_min_dist(row_vector=np.array(previous_trains.centroids),
+													col_vector=np.array(current_trains.centroids), dist_limit=DTS)
+			current_trains.filter_out(used_cols)
+			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
+		# total_moving_detects += current_trains.len()
+		previous_trains.extend(current_trains)
 		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
