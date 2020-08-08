@@ -220,6 +220,13 @@ class Logger:
 	collect_rate_moving = 0.1
 	collect_rate_stat = 0.001
 
+	def __init__(self, collect_rate_moving=0.1, collect_rate_stat=0.001, empty_frames_limit=20, max_stat_entries=200, moving_trains_conf=0.7):
+		self.empty_frames_limit = empty_frames_limit
+		self.moving_trains_conf = moving_trains_conf
+		self.max_stat_entries = max_stat_entries
+		self.collect_rate_moving = collect_rate_moving
+		self.collect_rate_stat = collect_rate_stat
+
 	def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
 		entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
 		self.entries.append(entry)
