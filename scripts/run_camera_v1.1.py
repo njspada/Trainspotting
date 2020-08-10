@@ -138,55 +138,6 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 	# cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	# cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
-	
-def store_a_train_detect(DETECTS, FILENAME, EVENT_ID):
-	global LABELS
-	print(DETECTS[0].bounding_box.flatten().astype("int"))
-	DATA = [[EVENT_ID, FILENAME, LABELS[d.label_id], float(d.score)]
-			.extend(DETECTS[0].bounding_box.flatten().astype("int"))
-			 for d in DETECTS]
-	CNX = database_config.connection()
-	if not CNX:
-		print('Failed to connect to MySQL database!')
-		exit()
-	query = """INSERT INTO images  
-				(event_id, filename, label, conf, `x0`, `y0`, `x1`, `y1`) 
-				VALUES (%s,%s,%s,%s,%s,%s,%s,%s);""";
-	try:
-		cursor = CNX.cursor()
-		cursor.executemany(query, DATA)
-	except mysql.connector.Error as err:
-		print(err)
-	else:
-		CNX.commit()
-
-def store_train_event(DETECT_LIST):# [[image, [train_detects], timestamp]]
-	print('storing train event')
-	start = DETECT_LIST[0][2]
-	end = DETECT_LIST[-1][2]
-	query = """INSERT INTO train_events
-				(start,end)
-				VALUES (%s,%s);
-			"""
-	CNX = database_config.connection()
-	try:
-		cursor = CNX.cursor()
-		cursor.execute(query, [start,end])
-	except mysql.connector.Error as err:
-		print(err)
-	else:
-		CNX.commit()
-		#event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
-		event_id = cursor.lastrowid
-		mkdir('/home/coal/Desktop/output/' + str(event_id))
-		global COLLECT_FREQUENCY
-		l = int(len(DETECT_LIST)/COLLECT_FREQUENCY)
-		for i in range(0,l):
-			filename = str(event_id) + '/' + str(DETECT_LIST[i*COLLECT_FREQUENCY][2]) + '.jpg'
-			t0 = threading.Thread(target=store_a_train_detect, args=(DETECT_LIST[i*COLLECT_FREQUENCY][1], filename, event_id,))
-			t1 = threading.Thread(target=save_image, args=(DETECT_LIST[i*COLLECT_FREQUENCY][0],filename,))
-			t0.start()
-			t1.start()
 
 @threaded
 def run_insert_query(query, data):
@@ -280,7 +231,7 @@ class Logger:
 			end_timestamp = int(math.floor(entries[-1].timestamp))
 			# now create a moving train event record in database
 			query = """INSERT INTO train_events
-				(start,end,num_moving)
+				(start,end)
 				VALUES (%s,%s);
 			"""
 			event_id = run_insert_query(query, [start_timestamp,end_timestamp]).result()
@@ -362,7 +313,7 @@ class trains: # object to hold info about detected trains
 	empty_frames = []
 	scores = []
 
-	def __init__(self, l_bounding_box, l_centroid, l_scores):
+	def __init__(self, l_bounding_box = [], l_centroid = [], l_scores = []):
 		self.bounding_boxes = l_bounding_box
 		self.centroids = l_centroid
 		self.empty_frames = [0 for _ in range(len(self.centroids))]
@@ -482,7 +433,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 		# total_moving_detects += current_trains.len()
 		previous_trains.extend(current_trains)
 		if current_trains.len() + stationary_trains.len() > 0:
-			logger.Log(image = image, moving_trains = current_trains, stationary_trains = stationary_trains)
+			print('logging')
+			logger.log(image = image, moving_trains = current_trains, stationary_trains = stationary_trains)
 		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
