@@ -243,12 +243,8 @@ class Logger:
 				self.save_train_event(self.entries, self.collect_rate_moving)
 				self.save_train_event(self.previous_entries, self.collect_rate_stat)
 		else:
-			if len(moving_trains) > 0:
-				self.frames += 1
+			if self.count_from_first_moving > 0:
 				self.count_from_first_moving += 1
-			elif self.count_from_first_moving > 0:
-				self.count_from_first_moving += 1
-
 			if self.frames/self.count_from_first_moving >= moving_trains_conf:
 				# switch to train_event_on
 				self.frames = 0
@@ -257,18 +253,20 @@ class Logger:
 				# store non train event frames in buffer, write back after train event 
 				self.previous_entries = self.entries[:-self.count_from_first_moving]
 				self.entries = self.entries[-self.count_from_first_moving:]
-			elif len(self.entries) > self.max_stat_entries and self.count_from_first_moving < len(self.entries):
+			elif len(self.entries) > self.max_stat_entries:
 				# get rid of older entries that are not part of potential moving event
-				# if number of potential moving entries is too high we want to get rid of everything in the next else block
 				self.previous_entries = self.entries[:-self.count_from_first_moving]
-				self.entries = [-self.count_from_first_moving:]
-				self.frames = self.count_from_first_moving
+				self.entries = self.entries[-self.count_from_first_moving:]
+				self.frames = len([x for x in self.entries if len(x.moving_trains) > 0])
 				#self.save_train_event(entries)
 				self.save_train_event(self.previous_entries, self.collect_rate_stat)
-			else: # get rid of everything
-				self.frames = 0
-				self.count_from_first_moving = 0
-				self.save_train_event(self.entries, self.collect_rate_stat)
+			# else: # get rid of everything
+			# 	self.frames = 0
+			# 	self.count_from_first_moving = 0
+			# 	self.save_train_event(self.entries, self.collect_rate_stat)
+			elif len(moving_trains) > 0:
+				self.frames += 1
+				self.count_from_first_moving += 1 if self.count_from_first_moving == 0 else 0
 
 	@threaded
 	def save_train_event(self, entries, collect_rate):
@@ -445,6 +443,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 
 	stationary_trains = trains()
 	previous_trains = trains()
+	logger = Logger()
 
 	total_moving_detects = 0
 	while STREAM.isOpened():
@@ -482,6 +481,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
 		# total_moving_detects += current_trains.len()
 		previous_trains.extend(current_trains)
+		if current_trains.len() + stationary_trains.len() > 0:
+			logger.Log(image = image, moving_trains = current_trains, stationary_trains = stationary_trains)
 		if DEBUG and not DFPS:
 			debug_mul(train_detects, stationary_centroids[0], image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
