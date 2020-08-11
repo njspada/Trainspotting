@@ -23,6 +23,7 @@ import heapq
 from scipy.spatial import distance as dist
 
 import copy
+import sys
 
 # for fps calculations
 start_t = time.time()
@@ -118,6 +119,7 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 		return
 
 def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
+	# print('called debug_mul')
 	def put_lines(IMAGE, BOX, LABEL, SCORE, BOX_COLOR_BGR):
 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), BOX_COLOR_BGR, 5)
 		(startX, startY, endX, endY) = BOX
@@ -125,11 +127,12 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 		text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
-	for d in MOVING_DETECTS:
-		put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (0,0,255)) # moving box is red color
-	for st in STAT_DETECTS:
+	for i,box in enumerate(MOVING_DETECTS.bounding_boxes):
+		put_lines(IMAGE, box.flatten().astype('int'), 'train', MOVING_DETECTS.scores[i], (0,0,255)) # moving box is red color
+	for i,box in enumerate(STAT_DETECTS.bounding_boxes):
+		put_lines(IMAGE, box.flatten().astype('int'), 'train', STAT_DETECTS.scores[i], (255,0,0))
 		#put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
-		cv2.circle(IMAGE, (int(st[0]),int(st[1])), radius=10, color=(0, 0, 255), thickness=-1)
+		# cv2.circle(IMAGE, (int(st[0]),int(st[1])), radius=10, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	# font = cv2.FONT_HERSHEY_SIMPLEX
 	# pa_data = pa.get_latest_data()
@@ -144,7 +147,7 @@ def run_insert_query(query, data):
 	CNX = database_config.connection()
 	try:
 		cursor = CNX.cursor()
-		cursor.execute(query, [start_timestamp,end_timestamp])
+		cursor.execute(query, data)
 	except mysql.connector.Error as err:
 		print(err)
 		return -1
@@ -159,6 +162,12 @@ class LogEntry:
 	moving_trains = None
 	stationary_trains = None
 
+	def __init__(self,t,i,mt,st):
+		self.image = i
+		self.timestamp = t
+		self.moving_trains = mt
+		self.stationary_trains = st
+
 class Logger:
 	train_event_on = False
 	frames = 0 # when train_event_on: count consecutive empty frames, else count moving frames
@@ -169,9 +178,9 @@ class Logger:
 	count_from_first_moving = 0 # number of frames 
 	max_stat_entries = 200
 	collect_rate_moving = 0.1
-	collect_rate_stat = 0.001
+	collect_rate_stat = 0.1
 
-	def __init__(self, collect_rate_moving=0.1, collect_rate_stat=0.001, empty_frames_limit=20, max_stat_entries=200, moving_trains_conf=0.7):
+	def __init__(self, collect_rate_moving=0.1, collect_rate_stat=0.1, empty_frames_limit=20, max_stat_entries=20, moving_trains_conf=0.7):
 		self.empty_frames_limit = empty_frames_limit
 		self.moving_trains_conf = moving_trains_conf
 		self.max_stat_entries = max_stat_entries
@@ -181,7 +190,8 @@ class Logger:
 	def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
 		entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
 		self.entries.append(entry)
-		if train_event_on:
+		if self.train_event_on:
+			print('train event')
 			# check if we hit max empty frames
 			if len(moving_trains) == 0:
 				self.frames += 1
@@ -194,10 +204,13 @@ class Logger:
 				self.save_train_event(self.entries, self.collect_rate_moving)
 				self.save_train_event(self.previous_entries, self.collect_rate_stat)
 		else:
+			# print(str(len(self.entries)))
 			if self.count_from_first_moving > 0:
+				print(sys._getframe().f_lineno)
 				self.count_from_first_moving += 1
-			if self.frames/self.count_from_first_moving >= moving_trains_conf:
+			if self.count_from_first_moving > 0 and self.frames/self.count_from_first_moving >= self.moving_trains_conf:
 				# switch to train_event_on
+				print(sys._getframe().f_lineno)
 				self.frames = 0
 				self.train_event_on = True
 				self.count_from_first_moving = 0
@@ -206,25 +219,38 @@ class Logger:
 				self.entries = self.entries[-self.count_from_first_moving:]
 			elif len(self.entries) > self.max_stat_entries:
 				# get rid of older entries that are not part of potential moving event
-				self.previous_entries = self.entries[:-self.count_from_first_moving]
-				self.entries = self.entries[-self.count_from_first_moving:]
-				self.frames = len([x for x in self.entries if len(x.moving_trains) > 0])
+				print(sys._getframe().f_lineno)
+				# self.previous_entries = self.entries[:-self.count_from_first_moving]
+				# self.entries = self.entries[-self.count_from_first_moving:]
+				# self.frames = len([x for x in self.entries if x.moving_trains.len() > 0])
 				#self.save_train_event(entries)
-				self.save_train_event(self.previous_entries, self.collect_rate_stat)
+				self.save_train_event(self.entries, self.collect_rate_stat)
+				self.entries = []
+				self.frames = 0
+				self.count_from_first_moving = 0
 			# else: # get rid of everything
 			# 	self.frames = 0
 			# 	self.count_from_first_moving = 0
 			# 	self.save_train_event(self.entries, self.collect_rate_stat)
-			elif len(moving_trains) > 0:
+			elif moving_trains.len() > 0:
+				print(sys._getframe().f_lineno)
 				self.frames += 1
 				self.count_from_first_moving += 1 if self.count_from_first_moving == 0 else 0
 
-	@threaded
+	# @threaded
 	def save_train_event(self, entries, collect_rate):
 		# first downsize entries
-		indices = np.random.randint(len(entries), int(collect_rate*len(entries)))
+		start_timestamp = int(math.ceil(entries[0].timestamp))
+		end_timestamp = int(math.floor(entries[-1].timestamp))
+		print('saving train event - 1111')
+		print('len entries = ' + str(len(entries)))
+		print('collect_rate = ' + str(collect_rate))
+		print('len(entries)*collect_rate=' + str(int(collect_rate*len(entries))))
+		indices = np.random.randint(len(entries), size=int(collect_rate*len(entries)))
+		print(indices)
 		entries = [entry for i,entry in enumerate(entries) if i in indices]
 		if len(entries) > 0:
+			print('len entries > 0')
 			# save moving trains
 			#first setup event start and end timestamps
 			start_timestamp = int(math.ceil(entries[0].timestamp))
@@ -236,14 +262,15 @@ class Logger:
 			"""
 			event_id = run_insert_query(query, [start_timestamp,end_timestamp]).result()
 			# now insert images into database ans save them on disk
+			print('returned event_id = ' + str(event_id))
 			for entry in entries:
 				self.insert_entry(entry, event_id)
-	@threaded
+	# @threaded
 	def insert_entry(self, entry, event_id):
 		t = datetime.fromtimestamp(entry.timestamp)
-		date = t.strftime('%Y-%m%d')
+		date = t.strftime('%Y-%m-%d')
 		hour = t.strftime('%H')
-		filename = date + '/' + hour + '/' + event_id + '/' + timestamp + '.jpg'
+		filename = date + '/' + hour + '/' + str(event_id) + '/' + str(entry.timestamp) + '.jpg'
 		self.save_image(entry.image, filename)
 		query = """INSERT INTO train_images
 				(filename)
@@ -264,6 +291,7 @@ class Logger:
 				(event_id, type, image_id, label, score, x0, y0, x1, y1)
 				VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);
 		"""
+		CNX = database_config.connection()
 		try:
 			cursor = CNX.cursor()
 			cursor.executemany(query, DATA)
@@ -271,11 +299,12 @@ class Logger:
 			print(err)
 			return
 		CNX.commit()
-	@threaded
+	# @threaded
 	def save_image(self, IMAGE, FILENAME):
 		print('saving image')
 		output_path = "/home/coal/Desktop/output/"
-		cv2.imwrite(output_path+FILENAME, IMAGE)
+		if not cv2.imwrite(output_path+FILENAME, IMAGE):
+			print('----error saving image----')
 
 
 
@@ -317,7 +346,11 @@ class trains: # object to hold info about detected trains
 		self.bounding_boxes = l_bounding_box
 		self.centroids = l_centroid
 		self.empty_frames = [0 for _ in range(len(self.centroids))]
+		# print("len centroids = " + str(len(self.centroids)))
+		# print("len empty_frames = " + str(len(self.empty_frames)))
 		self.scores = l_scores
+		# print('l_bounding_box = ' + str(len(l_bounding_box)))
+		#self.print_lens()
 
 	def add(self, bounding_box, centroid, score, frames = 0):
 		self.bounding_boxes.append(bounding_box)
@@ -335,11 +368,11 @@ class trains: # object to hold info about detected trains
 	def len(self):
 		return len(self.centroids)
 
-	# def copy(self, target):
-	# 	self.bounding_boxes = copy.deepcopy(target.bounding_boxes)
-	# 	self.centroids = copy.deepcopy(target.centroids)
-	# 	self.empty_frames = copy.deepcopy(target.empty_frames)
-	# 	self.scores = copy.deepcopy(target.scores)
+	def copy(self, target):
+		self.bounding_boxes = copy.deepcopy(target.bounding_boxes)
+		self.centroids = copy.deepcopy(target.centroids)
+		self.empty_frames = copy.deepcopy(target.empty_frames)
+		self.scores = copy.deepcopy(target.scores)
 
 	def extend(self, target, refresh = False):
 		if refresh:
@@ -363,13 +396,16 @@ class trains: # object to hold info about detected trains
 		# We need to retain those.
 		# Also retain centroids that have not been detected for up
 		# to EFD frames (Empty Frames for Detection).
-		temp = trains()
+		# print('[[[[[init temp]]]]]')
+		temp = trains(l_bounding_box = [], l_centroid = [], l_scores = [])
+		# print('#########----' + str(temp.len()) + '----########')
 		for i in range(self.len()):
 			if i in used_indices:
 				temp.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], 0)
 			elif self.empty_frames[i] < EFD:
 				temp.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], self.empty_frames[i]+1)
-		self.extend(temp, refresh = True)
+		
+		self.copy(temp)
 		#return temp
 
 	def filter_previous(self, used_indices, EFT, stat_trains):
@@ -377,14 +413,22 @@ class trains: # object to hold info about detected trains
 		# these previous centroids need to be marked as stationary trains.
 		# previous centroids not matched with a train detect for more \
 		# than EFT (Empty Frames for Tracking) consecutive frames will be discarded.
-		temp_previous = trains()
+		temp_previous = trains(l_bounding_box = [], l_centroid = [], l_scores = [])
 		# temp_stat = trains()
 		for i in range(self.len()):
 			if i in used_indices:
 				stat_trains.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], 0)
 			elif self.empty_frames[i] < EFT:
 				temp_previous.add(self.bounding_boxes[i], self.centroids[i], self.scores[i], self.empty_frames[i]+1)
-		self.extend(temp_previous, refresh = True)
+		# self.extend(temp_previous, refresh = True)
+		self.copy(temp_previous)
+
+	def print_lens(self):
+		print('-----lenghts------')
+		print('bounding_boxes = ' + str(len(self.bounding_boxes)))
+		print('centroids = ' + str(len(self.centroids)))
+		print('empty_frames = ' + str(len(self.empty_frames)))
+		print('scores = ' + str(len(self.scores)))
 
 
 def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
@@ -399,8 +443,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 	total_moving_detects = 0
 	while STREAM.isOpened():
 		fps = get_fps()
-		if DFPS and not DEBUG:
-			print('fps = ' + str(fps))
+		# if DFPS and not DEBUG:
+		# print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
 		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
@@ -420,7 +464,10 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 			(used_rows, used_cols) = match_min_dist(row_vector=np.array(stationary_trains.centroids),
 													col_vector=current_trains.centroids, dist_limit=DDS)
 			current_trains.filter_out(used_cols)
-			stationary_trains.filter_stationary(used_rows)
+			# print('----440----')
+			# stationary_trains.print_lens()
+			stationary_trains.filter_stationary(used_rows, EFD)
+			# stationary_trains.print_lens()
 		# Step 2 - Recognizing new stationary trains by comparing centroids from previous frames
 		if previous_trains.len() > 0 and current_trains.len() > 0:
 			# Calculate distances between each pair of (filtered) train detect centroids and stationary centroids.
@@ -429,18 +476,24 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 			(used_rows, used_cols) = match_min_dist(row_vector=np.array(previous_trains.centroids),
 													col_vector=np.array(current_trains.centroids), dist_limit=DTS)
 			current_trains.filter_out(used_cols)
+			# print('----452----')
+			# stationary_trains.print_lens()
 			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
+			# stationary_trains.print_lens()
 		# total_moving_detects += current_trains.len()
 		previous_trains.extend(current_trains)
 		if current_trains.len() + stationary_trains.len() > 0:
-			print('logging')
+			# print('logging')
 			logger.log(image = image, moving_trains = current_trains, stationary_trains = stationary_trains)
 		if DEBUG and not DFPS:
-			debug_mul(train_detects, stationary_centroids[0], image, fps)
+			# print(".........")
+			# print(str(current_trains.len()) + ',  ' + str(previous_trains.len()) + ',  ' + str(stationary_trains.len()))
+			debug_mul(current_trains, stationary_trains, image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
+		# print("....!....")
 		if DEBUG and DFPS:
 			print('total_moving_detects = ' + str(total_moving_detects))
 
@@ -456,7 +509,7 @@ if __name__ == "__main__":
 	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
 	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=20, help="Detection confidence level out of 100.")
 	PARSER.add_argument('-dts', '--dts', action='store', type=int, default=1, help="distance tracking to stationary.")
-	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=5, help="distance detect to stationary.")
+	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=10, help="distance detect to stationary.")
 	PARSER.add_argument('-eft', '--eft', action='store', type=int, default=20, help="empty frames allowed for tracking.")
 	PARSER.add_argument('-efd', '--efd', action='store', type=int, default=40, help="empty frames allowed for detection.")
 	
