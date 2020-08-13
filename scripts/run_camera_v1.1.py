@@ -180,7 +180,7 @@ class Logger:
 	collect_rate_moving = 0.1
 	collect_rate_stat = 0.001
 
-	def __init__(self, collect_rate_moving=0.1, collect_rate_stat=0.001, empty_frames_limit=20, max_stat_entries=2000, moving_trains_conf=0.7):
+	def __init__(self, collect_rate_moving=0.1, collect_rate_stat=0.001, empty_frames_limit=50, max_stat_entries=2000, moving_trains_conf=0.7):
 		self.empty_frames_limit = empty_frames_limit
 		self.moving_trains_conf = moving_trains_conf
 		self.max_stat_entries = max_stat_entries
@@ -191,7 +191,7 @@ class Logger:
 		if moving_trains.len() + stationary_trains.len() > 0:
 			entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
 			self.entries.append(entry)
-		print(sys._getframe().f_lineno)
+		# print(sys._getframe().f_lineno)
 		if self.train_event_on:
 			# check if we hit max empty frames
 			if moving_trains.len() == 0:
@@ -210,14 +210,8 @@ class Logger:
 				self.save_train_event(self.previous_entries, self.collect_rate_stat)
 				self.previous_entries = []
 		elif moving_trains.len() + stationary_trains.len() > 0:
-			# print(str(len(self.entries)))
-			# if self.count_from_first_moving > 0:
-			# 	print(sys._getframe().f_lineno)
-			# 	self.count_from_first_moving += 1
-			# if self.count_from_first_moving > 0 and self.frames/self.count_from_first_moving >= self.moving_trains_conf:
 			if moving_trains.len() > 0:
 				# switch to train_event_on
-				print(sys._getframe().f_lineno)
 				self.frames = 0
 				self.train_event_on = True
 				print('train event on')
@@ -227,23 +221,21 @@ class Logger:
 				self.entries = self.entries[-self.count_from_first_moving:]
 			elif len(self.entries) > self.max_stat_entries:
 				# get rid of older entries that are not part of potential moving event
-				print(sys._getframe().f_lineno)
-				# self.previous_entries = self.entries[:-self.count_from_first_moving]
-				# self.entries = self.entries[-self.count_from_first_moving:]
-				# self.frames = len([x for x in self.entries if x.moving_trains.len() > 0])
-				#self.save_train_event(entries)
 				self.save_train_event(self.entries, self.collect_rate_stat)
 				self.entries = []
 				self.frames = 0
 				self.count_from_first_moving = 0
 			elif moving_trains.len() > 0:
-				print(sys._getframe().f_lineno)
+				# print(sys._getframe().f_lineno)
 				self.frames += 1
 				self.count_from_first_moving += 1 if self.count_from_first_moving == 0 else 0
 
 	@threaded
 	def save_train_event(self, entries, collect_rate):
 		# first downsize entries
+		print('---------')
+		print(entries[0].timestamp)
+		print(entries[-1].timestamp)
 		start_timestamp = int(math.floor(entries[0].timestamp))
 		end_timestamp = int(math.ceil(entries[-1].timestamp))
 		print('saving train event - 1111')
@@ -257,8 +249,8 @@ class Logger:
 			# print('len entries > 0')
 			# save moving trains
 			#first setup event start and end timestamps
-			start_timestamp = int(math.ceil(entries[0].timestamp))
-			end_timestamp = int(math.floor(entries[-1].timestamp))
+			start_timestamp = int(math.floor(entries[0].timestamp))
+			end_timestamp = int(math.ceil(entries[-1].timestamp))
 			# now create a moving train event record in database
 			query = """INSERT INTO train_events
 				(start,end)
@@ -278,10 +270,10 @@ class Logger:
 		filename = filepath + str(entry.timestamp) + '.jpg'
 		self.save_image(entry.image, filename, filepath)
 		query = """INSERT INTO train_images
-				(filename)
-				VALUES (%s);
+				(filename, event_id)
+				VALUES (%s,%s);
 		"""				
-		image_id = run_insert_query(query, [filename]).result()
+		image_id = run_insert_query(query, [filename, event_id]).result()
 		# now insert into train_detects, moving trains and stationary trains
 		DATA = []
 		for i in range(entry.moving_trains.len()):
