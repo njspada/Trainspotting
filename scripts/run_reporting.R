@@ -268,11 +268,11 @@ get_logs <- function(day) {
   
   if (!is.null(met) & !is.null(camera) & !is.null(pa)) {
     # Combine into final dataset
-    total <- met %>%
-      left_join(camera, 'dateTime') %>%
+    da <- met %>%
+      left_join(camera$train_events, 'dateTime') %>%
       left_join(pa, 'dateTime')
     
-    return(total)
+    return(list("da"=da,"train_images"=camera$train_images,"train_detects"=camera$train_detects))
   }
   return(data.frame())
 }
