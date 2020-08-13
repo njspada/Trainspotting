@@ -21,6 +21,8 @@ keyLoc <- paste0("/usr/local/controller/setup/reporting/",
 
 out.dir <- "/mnt/p1/output/"
 
+pipe_print = function(data) {print(tail(data)); data}
+
 # Get latest upload date
 get_latest <- function() {
   reported <- readLines(paste0(out.dir, 'reporting.log'))
@@ -88,56 +90,88 @@ expand_event <- function(events, eventStart) {
 
 get_camera <- function(day) {
 
-	# returning empty data for now
-	camera.names <- c('trainEventID', 'numMoving', 'numStat')
-	startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                            format = '%Y-%m-%d %H:%M:%S')
-    endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                          format = '%Y-%m-%d %H:%M:%S')
+# 	y = pmap_df(dates, ~data.frame(t=seq(..1,..2),
+# + v=..3))
+# 	y[!duplicated(y$t),]
+
+
+	startTime <- as.POSIXct(paste(format(day), '00:00:00'))
+                            # format = '%Y-%m-%d %H:%M:%S')
+    endTime <- as.POSIXct(paste(format(day), '23:59:59'))
+                          # format = '%Y-%m-%d %H:%M:%S')
 	startTime <- as.numeric(startTime)
   	endTime <- as.numeric(endTime)
+  	print(startTime)
+  	print(endTime)
+  	timestamp_seq <- data.frame(dateTime = seq(startTime, endTime))
 
-  	camera.initial = data.frame(matrix(ncol=4,nrow=0, dimnames=list(NULL, c("trainEventID", "numMoving", "numStat", "dateTime"))))
-  	camera.out <- data.frame(dateTime = seq(startTime, endTime)) %>% 
-					left_join(camera.initial, 'dateTime')
-	camera.out[is.na(camera.out)] <- 0
-	return(camera.out)
-  
-  # fname <- paste0(out.dir, "camera_", format(day), ".log")
-  
-  # if (file.exists(fname)) {
-    
-  #   camera.names <- c('detects', 'startEvent', 'endEvent')
-    
-  #   camera <- read.csv(fname,
-  #                      header = F, stringsAsFactors = F,
-  #                      col.names = camera.names) %>%
-  #     mutate(startEvent = as.POSIXct(startEvent, format = "%Y-%m-%dT%H:%M:%S"),
-  #            endEvent = as.POSIXct(endEvent, format = "%Y-%m-%dT%H:%M:%S"),
-  #            TrainDetected = ifelse('train' %in% unlist(strsplit(detects, '_')),
-  #                                   1, 0)) %>%
-  #     filter(TrainDetected == 1)
-    
-  #   # For each event, expand out to one second resolution
-  #   camera.expanded <- do.call(
-  #     'rbind',
-  #     lapply(camera$startEvent, function(x) expand_event(camera, x))) %>%
-  #     distinct()
-    
-  #   # Initialize one second data frame, join with met, then fill down
-  #   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-  #                           format = '%Y-%m-%d %H:%M:%S')
-  #   endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-  #                         format = '%Y-%m-%d %H:%M:%S')
-  #   camera.out <- data.frame(
-  #     datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-  #     left_join(camera.expanded, 'datetime') %>%
-  #     mutate(TrainDetected = ifelse(is.na(TrainDetected), 0, 1))
-    
-  #   return(camera.out)
-    
-  # }
-  # return(NULL)
+  	train_db_con <- dbConnect(RMariaDB::MariaDB(),
+			                user = mysql_user,
+			                password = mysql_pw,
+			                dbname = mysql_db_trainspotting,
+			                host= mysql_host)
+
+  	# first get all train events - event_id, start_time, end_time
+	# then create a timestamp sequence for the whole day by seconds
+	# then create a sequence of train events - (start_time,end_time,event_id) -> [(start_time,event_id),(start_time+1,event_id),...,(end_time,event_id)]
+	# and then left join train events to timestamp sequence
+  	query <- paste("SELECT *
+  			FROM train_events
+  			WHERE start >= ", startTime, 
+  			"AND end <= ", endTime, ";")
+
+  	res <- dbSendQuery(train_db_con, query)
+  	train_events <- dbFetch(res) %>%
+  					pipe_print() %>%
+  					pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1)) %>%
+  					# pipe_print() %>%
+  					mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
+  					group_by(dateTime) %>%
+  					summarize(event_id = min(event_id), .groups = 'drop')
+
+  	start_event_id <- head(train_events,1)$event_id
+  	end_event_id <- tail(train_events,1)$event_id
+  	train_events <- timestamp_seq %>%
+  					# mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
+  					left_join(train_events, "dateTime") %>%
+  					mutate(event_id = ifelse(is.na(event_id), -1, event_id))
+  	# names(train_events)[names(train_events)=="id"] <- "event_id"
+
+  	# now fetch train_detects, and transform that
+  	query <- paste("SELECT *
+  			FROM train_detects
+  			WHERE event_id >= ", start_event_id, 
+  			"AND event_id <= ", end_event_id, ";")
+  	res <- dbSendQuery(train_db_con, query)
+  	train_detects <- dbFetch(res)
+  	train_detect_for_events <- select(train_detects, event_id, type)
+
+  	train_events <- train_events %>%
+  					left_join(subset(train_detect_for_events, type == 2), 'event_id') %>%
+  					mutate(type = ifelse(is.na(type), -1, type)) %>%
+  					mutate(is_stat = ifelse(type == 2, TRUE, FALSE)) %>%
+  					select(-type)
+
+  	train_events <- train_events %>%
+  					left_join(subset(train_detect_for_events, type == 1), 'event_id') %>%
+  					mutate(type = ifelse(is.na(type), -1, type)) %>%
+  					mutate(is_moving = ifelse(type == 1, TRUE, FALSE)) %>%
+  					select(-type)
+
+  	train_events <- train_events[!duplicated(train_events$dateTime), ]
+
+  	query <- query <- paste("SELECT *
+  			FROM train_images
+  			WHERE event_id >= ", start_event_id, 
+  			"AND event_id <= ", end_event_id, ";")
+  	print(paste("start_event_id=", start_event_id))
+  	print(paste("end_event_id=", end_event_id))
+  	res <- dbSendQuery(train_db_con, query)
+  	train_images <- dbFetch(res)
+
+  	rvalue <- list("train_events_da" = train_events, "train_detects" = train_detects, "train_images" = train_images)
+
+  	return(rvalue) # also return train_detects, train_images
 }
 
 get_pa_data <- function(day) {
