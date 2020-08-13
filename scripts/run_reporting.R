@@ -90,9 +90,11 @@ expand_event <- function(events, eventStart) {
 
 get_camera <- function(day) {
 
-# 	y = pmap_df(dates, ~data.frame(t=seq(..1,..2),
-# + v=..3))
-# 	y[!duplicated(y$t),]
+	# return 3 data frames - 
+	# 1. train_events - timestamp sequence with event id for every second. (event_id=-1 for no event)
+	# 		Also add columns `is_stat` and `is_moving`.
+	# 2. train_detetcs - exact copy of the sql table `train_detects`
+	# 3. train_images - exact copy of the sql table `train_images`
 
 
 	startTime <- as.POSIXct(paste(format(day), '00:00:00'))
@@ -101,8 +103,8 @@ get_camera <- function(day) {
                           # format = '%Y-%m-%d %H:%M:%S')
 	startTime <- as.numeric(startTime)
   	endTime <- as.numeric(endTime)
-  	print(startTime)
-  	print(endTime)
+  	# print(startTime)
+  	# print(endTime)
   	timestamp_seq <- data.frame(dateTime = seq(startTime, endTime))
 
   	train_db_con <- dbConnect(RMariaDB::MariaDB(),
@@ -132,10 +134,8 @@ get_camera <- function(day) {
   	start_event_id <- head(train_events,1)$event_id
   	end_event_id <- tail(train_events,1)$event_id
   	train_events <- timestamp_seq %>%
-  					# mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
   					left_join(train_events, "dateTime") %>%
   					mutate(event_id = ifelse(is.na(event_id), -1, event_id))
-  	# names(train_events)[names(train_events)=="id"] <- "event_id"
 
   	# now fetch train_detects, and transform that
   	query <- paste("SELECT *
@@ -146,12 +146,14 @@ get_camera <- function(day) {
   	train_detects <- dbFetch(res)
   	train_detect_for_events <- select(train_detects, event_id, type)
 
+  	# add `is_stat` to train_events
   	train_events <- train_events %>%
   					left_join(subset(train_detect_for_events, type == 2), 'event_id') %>%
   					mutate(type = ifelse(is.na(type), -1, type)) %>%
   					mutate(is_stat = ifelse(type == 2, TRUE, FALSE)) %>%
   					select(-type)
 
+  	# add `is_moving` to train events
   	train_events <- train_events %>%
   					left_join(subset(train_detect_for_events, type == 1), 'event_id') %>%
   					mutate(type = ifelse(is.na(type), -1, type)) %>%
@@ -164,8 +166,8 @@ get_camera <- function(day) {
   			FROM train_images
   			WHERE event_id >= ", start_event_id, 
   			"AND event_id <= ", end_event_id, ";")
-  	print(paste("start_event_id=", start_event_id))
-  	print(paste("end_event_id=", end_event_id))
+  	# print(paste("start_event_id=", start_event_id))
+  	# print(paste("end_event_id=", end_event_id))
   	res <- dbSendQuery(train_db_con, query)
   	train_images <- dbFetch(res)
 
