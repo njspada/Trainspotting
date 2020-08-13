@@ -19,7 +19,33 @@ keyLoc <- paste0("/usr/local/controller/setup/reporting/",
 
 #td <- drive_find(team_drive = "Trainspotting")$id
 
-out.dir <- "/mnt/p1/output/"
+out.dir <- "/Desktop/output/logs/"
+post_url <- "192.168.10.120"
+
+save_da <- function(da, day) {
+	# 1. save each dataframe in a csv file
+	# 2. upload/post each csv file to cloud
+	# 3. upload/post each image from train_images to cloud
+	post_df <- function(df, fpath, fname, type) {
+		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname)
+		POST(post_url, body=body, encode"multipart")
+	}
+	save_df <- function(df, name) {
+		fname <- paste0('daily_', format(day), '.csv')
+    	fpath <- paste0(out.dir, fname)
+    	write.csv(df, fpath, row.names = F)
+    	return(list(fpath=fpath, fname=fname))
+	}
+	da_file <- save_df(da$da, "da")
+	train_detects_file <- save_df(da$train_detect, "train_detects")
+	train_images_file <- save_df(da$train_images, "train_images")
+
+	post_df(da$da, da_file$fpath, da_file$fname, "da")
+	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
+	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
+	
+
+}
 
 pipe_print = function(data) {print(tail(data)); data}
 
