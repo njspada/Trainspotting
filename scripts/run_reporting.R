@@ -21,6 +21,7 @@ keyLoc <- paste0("/usr/local/controller/setup/reporting/",
 
 out.dir <- "/Desktop/output/logs/"
 post_url <- "192.168.10.120"
+images_dir <- "Desktop/output/"
 
 save_da <- function(da, day) {
 	# 1. save each dataframe in a csv file
@@ -44,7 +45,12 @@ save_da <- function(da, day) {
 	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
 	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
 	
+	post_image <- function(filename) {
+		body = list(type="image", file=upload_file(paste(images_dir,filename)), device_id="0", filename=filename)
+		POST(post_url, body=body, encode="multipart")
+	}
 
+	sapply(da$train_images$filename, post_image)
 }
 
 pipe_print = function(data) {print(tail(data)); data}
