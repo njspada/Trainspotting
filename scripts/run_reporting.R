@@ -27,7 +27,7 @@ save_da <- function(da, day) {
 	# 2. upload/post each csv file to cloud
 	# 3. upload/post each image from train_images to cloud
 	post_df <- function(df, fpath, fname, type) {
-		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname)
+		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname, tablename=type)
 		POST(post_url, body=body, encode"multipart")
 	}
 	save_df <- function(df, name) {
@@ -36,7 +36,7 @@ save_da <- function(da, day) {
     	write.csv(df, fpath, row.names = F)
     	return(list(fpath=fpath, fname=fname))
 	}
-	da_file <- save_df(da$da, "da")
+	da_file <- save_df(da$da, "daily_aggregate")
 	train_detects_file <- save_df(da$train_detect, "train_detects")
 	train_images_file <- save_df(da$train_images, "train_images")
 
