@@ -156,9 +156,7 @@ get_camera <- function(day) {
 
   	res <- dbSendQuery(train_db_con, query)
   	train_events <- dbFetch(res) %>%
-  					pipe_print() %>%
   					pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1)) %>%
-  					# pipe_print() %>%
   					mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
   					group_by(dateTime) %>%
   					summarize(event_id = min(event_id), .groups = 'drop')
@@ -198,39 +196,13 @@ get_camera <- function(day) {
   			FROM train_images
   			WHERE event_id >= ", start_event_id, 
   			"AND event_id <= ", end_event_id, ";")
-  	# print(paste("start_event_id=", start_event_id))
-  	# print(paste("end_event_id=", end_event_id))
+
   	res <- dbSendQuery(train_db_con, query)
   	train_images <- dbFetch(res)
 
-  	rvalue <- list("train_events_da" = train_events, "train_detects" = train_detects, "train_images" = train_images)
+  	rvalue <- list("train_events" = train_events, "train_detects" = train_detects, "train_images" = train_images)
 
-  	return(rvalue) # also return train_detects, train_images
-}
-
-get_pa_data <- function(day) {
-  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                            format = '%Y-%m-%d %H:%M:%S')
-  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                          format = '%Y-%m-%d %H:%M:%S')
-  startTime <- as.numeric(startTime)
-  endTime <- as.numeric(endTime)
-
-
-  pa_db_con <- dbConnect(RMariaDB::MariaDB(),
-                        user = mysql_user,
-                        password = mysql_pw,
-                        dbname = mysql_db_trainspotting,
-                        host= mysql_host)
-  query <- paste("SELECT *
-          FROM purple_air 
-          WHERE dateTime >=", startTime, 
-          "AND dateTime < ", endTime, 
-          "ORDER BY dateTime ;")
-
-  res <- dbSendQuery(pa_db_con, query)
-  pa <- dbFetch(res)
-  return(pa)
+  	return(rvalue)
 }
 
 get_pa <- function(day) {
@@ -241,7 +213,6 @@ get_pa <- function(day) {
                           format = '%Y-%m-%d %H:%M:%S')
   startTime <- as.numeric(startTime)
   endTime <- as.numeric(endTime)
-
 
   pa_db_con <- dbConnect(RMariaDB::MariaDB(),
                         user = mysql_user,
