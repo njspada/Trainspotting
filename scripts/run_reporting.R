@@ -74,6 +74,9 @@ update_latest <- function() {
 # Each log file will be converted into this one second format
 # then all combined
 get_met <- function(day) {
+  # returns dataframe with the following headers (9) - 
+  # dateTime,outTemp,outHumidity,rain,windSpeed,windDir,windGust,windGustDir,inTemp
+
   # First setup a connection to the 'archive' table in database 'weewx'
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
@@ -125,9 +128,12 @@ get_camera <- function(day) {
 	# return 3 data frames - 
 	# 1. train_events - timestamp sequence with event id for every second. (event_id=-1 for no event)
 	# 		Also add columns `is_stat` and `is_moving`.
+  #      headers(4) - dateTime, event_id, is_stat, is_moving
+  #     
 	# 2. train_detetcs - exact copy of the sql table `train_detects`
+  #     headers(10) - id, event_id, type, image_id, label, score, x0, y0, x1, y1
 	# 3. train_images - exact copy of the sql table `train_images`
-
+  #     headers(3) -  id, filename, event_id
 
 	startTime <- as.POSIXct(paste(format(day), '00:00:00'))
                             # format = '%Y-%m-%d %H:%M:%S')
@@ -153,8 +159,10 @@ get_camera <- function(day) {
   			FROM train_events
   			WHERE start >= ", startTime, 
   			"AND end <= ", endTime, ";")
+    # table `train_events` has columns - id, start, end
 
   	res <- dbSendQuery(train_db_con, query)
+    # following line mutates train_events to have fields - dateTime, event_id
   	train_events <- dbFetch(res) %>%
   					pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1)) %>%
   					mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
@@ -180,14 +188,14 @@ get_camera <- function(day) {
   	train_events <- train_events %>%
   					left_join(subset(train_detect_for_events, type == 2), 'event_id') %>%
   					mutate(type = ifelse(is.na(type), -1, type)) %>%
-  					mutate(is_stat = ifelse(type == 2, TRUE, FALSE)) %>%
+  					mutate(is_stat = ifelse(type == 2, 1, 0)) %>% # here 1=TRUE, 0=FALSE
   					select(-type)
 
   	# add `is_moving` to train events
   	train_events <- train_events %>%
   					left_join(subset(train_detect_for_events, type == 1), 'event_id') %>%
   					mutate(type = ifelse(is.na(type), -1, type)) %>%
-  					mutate(is_moving = ifelse(type == 1, TRUE, FALSE)) %>%
+  					mutate(is_moving = ifelse(type == 1, 1, 0)) %>% # here 1=TRUE, 0=FALSE
   					select(-type)
 
   	train_events <- train_events[!duplicated(train_events$dateTime), ]
@@ -206,6 +214,9 @@ get_camera <- function(day) {
 }
 
 get_pa <- function(day) {
+
+  # returns 1 dataframe
+  #  headers(10) - dateTime, pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10
 
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
@@ -264,6 +275,19 @@ get_pa <- function(day) {
 
 get_logs <- function(day) {
   
+  # returns 3 dataframes - 
+  # 1. da (daily_aggregate)
+  #  headers(21) - 
+  #   from met - dateTime, outTemp, outHumidity, rain, windSpeed, windDir, windGust, windGustDir, inTemp
+  #   from camera - event_id, is_stat, is_moving
+  #   from pa - pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10
+  
+  # 2. train_detetcs - exact copy of the sql table `train_detects`
+  #     headers(10) - id, event_id, type, image_id, label, score, x0, y0, x1, y1
+
+  # 3. train_images - exact copy of the sql table `train_images`
+  #     headers(3) -  id, filename, event_id
+
   # Collect and process log files
   met <- get_met(day = day)
   camera <- get_camera(day = day)
@@ -272,8 +296,8 @@ get_logs <- function(day) {
   if (!is.null(met) & !is.null(camera) & !is.null(pa)) {
     # Combine into final dataset
     da <- met %>%
-      left_join(camera$train_events, 'dateTime') %>%
-      left_join(pa, 'dateTime')
+      left_join(pa, 'dateTime') %>%
+      left_join(camera$train_events, 'dateTime')
     
     return(list("da"=da,"train_images"=camera$train_images,"train_detects"=camera$train_detects))
   }
