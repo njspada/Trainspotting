@@ -314,7 +314,7 @@ report_daily <- function(day) {
   # Collect and process log files for the day
   total <- get_logs(day = day)
   
-  if (nrow(total) > 0) {
+  if (nrow(total$da) > 0) {
     
     fname <- paste0('daily_', format(day), '.csv')
     fpath <- paste0(out.dir, 'logs/', fname)
