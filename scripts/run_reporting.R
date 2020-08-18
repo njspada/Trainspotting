@@ -38,6 +38,7 @@ save_da <- function(da, day) {
     	write.csv(df, fpath, row.names = F)
     	return(list(fpath=fpath, fname=fname))
 	}
+  print(nrow(da$da))
 	da_file <- save_df(da$da, "daily_aggregate")
 	train_detects_file <- save_df(da$train_detect, "train_detects")
 	train_images_file <- save_df(da$train_images, "train_images")
