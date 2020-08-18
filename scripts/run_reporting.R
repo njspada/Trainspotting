@@ -318,7 +318,7 @@ report_daily <- function(day) {
     
     fname <- paste0('daily_', format(day), '.csv')
     fpath <- paste0(out.dir, 'logs/', fname)
-    write.csv(total, fpath, row.names = F)
+    write.csv(total$da, fpath, row.names = F)
     save_da(total, day)
     
     # Now upload file to Google Drive
