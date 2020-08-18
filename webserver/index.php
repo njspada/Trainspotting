@@ -3,12 +3,13 @@
 function save_da(){
     $query = "";
     $filename = $_POST["filename"];
-    $device_id = $_POST["device_id"];
+    // $device_id = $_POST["device_id"];
     $file = $_FILES['file']['tmp_name'];
     $tablename = $_POST["tablename"];
     
     // first save the file
-    save_file($file, "logs/".$device_id.$filename);
+    // save_file($file, "logs/".$device_id.$filename);
+    save_file($file, "logs/".$filename);
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));
@@ -47,7 +48,8 @@ function save_file($source, $destination){
 
 if(isset($_POST["type"])){
     if($_POST["type"] == "image"){
-        save_file($_FILES['file']['tmp_name'], "images/".$_POST['device_id'].$_POST['filename']);
+        // save_file($_FILES['file']['tmp_name'], "images/".$_POST['device_id'].$_POST['filename']);
+        save_file($_FILES['file']['tmp_name'], "images/".$_POST['filename']);
     }
     else{
         save_da();
