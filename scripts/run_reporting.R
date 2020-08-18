@@ -163,7 +163,7 @@ get_camera <- function(day) {
 
   	res <- dbSendQuery(train_db_con, query)
     # following line mutates train_events to have fields - dateTime, event_id
-    ef <- rbind(c(-1, startTime, endTime)) # empty frame
+    ef <- data.frame(rbind(c(-1, startTime, endTime))) # empty frame
   	train_events <- dbFetch(res)
     train_events <- ifelse(nrow(train_events)==0, ef, train_events) %>%
                     pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1))
