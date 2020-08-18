@@ -281,7 +281,7 @@ get_logs <- function(day) {
   #   from met - dateTime, outTemp, outHumidity, rain, windSpeed, windDir, windGust, windGustDir, inTemp
   #   from camera - event_id, is_stat, is_moving
   #   from pa - pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10
-  
+
   # 2. train_detetcs - exact copy of the sql table `train_detects`
   #     headers(10) - id, event_id, type, image_id, label, score, x0, y0, x1, y1
 
@@ -313,8 +313,9 @@ report_daily <- function(day) {
   if (nrow(total) > 0) {
     
     fname <- paste0('daily_', format(day), '.csv')
-    fpath <- paste0(out.dir, 'gDriveSync/', fname)
+    fpath <- paste0(out.dir, 'logs/', fname)
     write.csv(total, fpath, row.names = F)
+    save_da(total, day)
     
     # Now upload file to Google Drive
     #drive_upload(fpath, path = as_id(td))
