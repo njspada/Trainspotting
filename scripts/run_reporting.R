@@ -165,7 +165,9 @@ get_camera <- function(day) {
     # following line mutates train_events to have fields - dateTime, event_id
     ef <- data.frame(rbind(c(-1, startTime, endTime))) # empty frame
   	train_events <- dbFetch(res)
-    train_events <- ifelse(nrow(train_events)==0, ef, train_events) %>%
+    train_events <- ifelse(nrow(train_events)==0, ef, train_events)
+    print(train_events)
+    train_events <- train_events %>%
                     pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1))
           					mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
           					group_by(dateTime) %>%
