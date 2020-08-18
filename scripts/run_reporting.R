@@ -19,9 +19,9 @@ keyLoc <- paste0("/usr/local/controller/setup/reporting/",
 
 #td <- drive_find(team_drive = "Trainspotting")$id
 
-out.dir <- "/Desktop/output/logs/"
+out.dir <- "/home/coal/Desktop/output/logs/"
 post_url <- "192.168.10.120"
-images_dir <- "Desktop/output/"
+images_dir <- "/home/coal/Desktop/output/"
 
 save_da <- function(da, day) {
 	# 1. save each dataframe in a csv file
