@@ -4,6 +4,7 @@ require(tidyverse)
 #require(dplyr)
 require(DBI)
 require(RMariaDB)
+require(httr)
 #require(googledrive)
 
 mysql_user = "dhawal"
