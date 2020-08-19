@@ -30,8 +30,9 @@ function save_da(){
     // create field list from file header
     $header = fgets(fopen($file,'r'));
     $header_array = explode(",",$header);
-    $header_array[count($header_array)-1] = explode("\n",$header_array[count($header_array)-1])[0];
-    $header_array = array_map(function($s) {return '`'.$s.'`'; }, $header_array);
+
+    //$header_array[count($header_array)-1] = explode("\n",$header_array[count($header_array)-1])[0];
+    $header_array = array_map(function($s) {return '`'.(str_replce("\"", "", $s)).'`'; }, $header_array);
     $header = implode(',',$header_array);
 
     // create sql query to insert file
@@ -43,7 +44,7 @@ function save_da(){
          ($header)"; 
     echo $query;
 
-    /*$mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
+    $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
     if($mysqli->connect_errno) {
         echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
     }
@@ -54,7 +55,7 @@ function save_da(){
     else{
         echo "there was an error\n";
         echo $mysqli->error;
-    }*/
+    }
 }
 
 ?>
