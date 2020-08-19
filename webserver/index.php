@@ -35,14 +35,12 @@ function save_da(){
     $header = implode(',',$header_array);
 
     // create sql query to insert file
-    $query = <<<eof
-        LOAD DATA LOCAL INFILE '$file'
+    $query = "LOAD DATA LOCAL INFILE '$file'
          INTO TABLE '$tablename'
-         FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+         FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
          LINES TERMINATED BY '\n'
          IGNORE 1 LINES
-         ($header)
-    eof; 
+         ($header)"; 
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
     if($mysqli->connect_errno) {
@@ -56,6 +54,6 @@ function save_da(){
         echo "there was an error\n";
         echo $mysqli->error;
     }
-} }
+}
 
 ?>
