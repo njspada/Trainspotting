@@ -31,7 +31,7 @@ save_da <- function(da, day) {
 	post_df <- function(df, fpath, fname, type) {
 		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname, tablename=type)
 		r <- POST(post_url, body=body, encode="multipart")
-    print(str(content(r)))
+    print(r)
 	}
 	save_df <- function(df, name) {
 		fname <- paste0(name, '_', format(day), '.csv')
