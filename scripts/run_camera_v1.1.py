@@ -9,8 +9,8 @@ from datetime import datetime
 import database_config
 import mysql.connector
 from mysql.connector import errorcode
-import purple_air_sql as pa
-import met_sql as met
+# import purple_air_sql as pa
+# import met_sql as met
 
 import time
 from threading import Thread
@@ -77,24 +77,24 @@ def gstreamer_pipeline(
 		)
 	)
 
-# for debuggin
-def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
-	if TRACKING:
-		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
-	else:
-		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
-	(startX, startY, endX, endY) = BOX
-	y = startY - 40 if startY - 40 > 40 else startY + 40
-	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
-	font = cv2.FONT_HERSHEY_SIMPLEX
-	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
-	pa_data = pa.get_latest_data()
-	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	met_data = met.get_latest_data()
-	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	cv2.imshow('Trainspotting', IMAGE)
+# # for debuggin
+# def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
+# 	if TRACKING:
+# 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
+# 	else:
+# 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
+# 	(startX, startY, endX, endY) = BOX
+# 	y = startY - 40 if startY - 40 > 40 else startY + 40
+# 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
+# 	font = cv2.FONT_HERSHEY_SIMPLEX
+# 	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+# 	pa_data = pa.get_latest_data()
+# 	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+# 	met_data = met.get_latest_data()
+# 	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+# 	cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+# 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
+# 	cv2.imshow('Trainspotting', IMAGE)
 
 # for debugging
 def get_fps() -> float: # returns (fps,start_t)

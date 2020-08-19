@@ -15,7 +15,8 @@ if(isset($_POST["type"])) {
 
 
 function save_file($source, $destination){
-	echo "trying to save faile";
+	echo "trying to save file";
+	chmod($destination, 0777);
     move_uploaded_file($source, $destination);
 }
 
