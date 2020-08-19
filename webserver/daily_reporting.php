@@ -26,7 +26,8 @@ function save_da(){
     // $device_id = $_POST["device_id"];
     $file = $_FILES['file']['tmp_name'];
     $tablename = $_POST["tablename"];
-    echo $tablename;
+    // echo $tablename;
+    $output_dir = "/home/bitnami/output/";
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
     save_file($file, $output_dir."logs/".$filename);
