@@ -1,0 +1,7 @@
+- We need to create a new user with privileges in mysql!
+- SSH into the instance.
+- Then login to mysql with username="root", password="qqYLnQ2mQACw" (this is the bitnami application password).
+- mysql> CREATE USER 'dhawal'@'%' IDENTIFIED BY '{password}';
+- mysql> GRANT ALL PRIVILEGES ON * . * TO 'dhawal'@'%';
+- mysql> FLUSH PRIVILEGES;
+- mysql> exit;
