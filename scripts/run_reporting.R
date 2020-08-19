@@ -33,7 +33,8 @@ save_da <- function(da, day) {
 	
 	post_image <- function(filename) {
 		body = list(type="image", file=upload_file(paste(images_dir,filename)), device_id="0", filename=filename)
-		POST(post_url, body=body, encode="multipart")
+		r <- POST(post_url, body=body, encode="multipart")
+    print(content(r,"text"))
 	}
 
 	sapply(da$train_images$filename, post_image)
