@@ -1,28 +1,11 @@
 # Script to gather log data and push to Google Sheet
 
 require(tidyverse)
-#require(dplyr)
 require(DBI)
 require(RMariaDB)
 require(httr)
-#require(googledrive)
 
-mysql_user = "dhawal"
-mysql_pw = "april+1Hitmonlee"
-mysql_db_trainspotting = "trainspotting"
-mysql_db_weewx = "weewx"
-mysql_host = "localhost"
-
-keyLoc <- paste0("/usr/local/controller/setup/reporting/",
-		 "Trainspotting-de6353d6caf4.json")
-
-#drive_auth(path = keyLoc)
-
-#td <- drive_find(team_drive = "Trainspotting")$id
-
-out.dir <- "/home/coal/Desktop/output/logs/"
-post_url <- "192.168.10.120"
-images_dir <- "/home/coal/Desktop/output/"
+source('config_run_reporting.R')
 
 save_da <- function(da, day) {
 	# 1. save each dataframe in a csv file
