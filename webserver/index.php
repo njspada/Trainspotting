@@ -25,7 +25,7 @@ function save_da(){
     
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
-    save_file($file, "logs/".$filename);
+    // save_file($file, "logs/".$filename);
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));
