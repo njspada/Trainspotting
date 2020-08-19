@@ -41,8 +41,9 @@ function save_da(){
          LINES TERMINATED BY '\n'
          IGNORE 1 LINES
          ($header)"; 
+    echo $query;
 
-    $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
+    /*$mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
     if($mysqli->connect_errno) {
         echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
     }
@@ -53,7 +54,7 @@ function save_da(){
     else{
         echo "there was an error\n";
         echo $mysqli->error;
-    }
+    }*/
 }
 
 ?>
