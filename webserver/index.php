@@ -56,6 +56,6 @@ function save_da(){
         echo "there was an error\n";
         echo $mysqli->error;
     }
-}
+} }
 
 ?>
