@@ -1,0 +1,9 @@
+1. checkout - https://docs.bitnami.com/aws/infrastructure/lamp/get-started/access-phpmyadmin/
+
+2. Basically, we need to create an ssh tunnel to the aws instance.
+	- this will forward a port from this computer to the instance and then we can log on to phpmyadmin
+
+how?
+1. ssh -N -L 8888:127.0.0.1:80 -i key.pem bitnami@54.188.2.207
+2. go to http://127.0.0.1:8888/phpmyadmin
+3. username - "root", password - (run `cat bitnami_application_password` using ssh on the instance) "qqYLnQ2mQACw"
