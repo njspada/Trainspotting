@@ -4,6 +4,6 @@ mysql_db_trainspotting = "trainspotting"
 mysql_db_weewx = "weewx"
 mysql_host = "localhost"
 
-post_url <- "192.168.10.120"
+post_url <- "http://54.188.2.207/daily_reporting.php"
 out.dir <- "/home/coal/Desktop/output/logs/"
 images_dir <- "/home/coal/Desktop/output/"
