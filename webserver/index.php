@@ -41,7 +41,7 @@ function save_da(){
          FIELDS TERMINATED BY ','
          LINES TERMINATED BY '\n'
          IGNORE 1 LINES
-         ($header)"; 
+         ($header);"; 
     echo $query;
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
