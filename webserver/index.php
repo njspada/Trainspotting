@@ -31,7 +31,7 @@ function save_da(){
     $header = fgets(fopen($file,'r'));
     $header_array = explode(",",$header);
 
-    //$header_array[count($header_array)-1] = explode("\n",$header_array[count($header_array)-1])[0];
+    $header_array[count($header_array)-1] = explode("\n",$header_array[count($header_array)-1])[0];
     $header_array = array_map(function($s) {return '`'.(str_replace("\"", "", $s)).'`'; }, $header_array);
     $header = implode(',',$header_array);
 
