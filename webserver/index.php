@@ -36,12 +36,12 @@ function save_da(){
     $header = implode(',',$header_array);
 
     // create sql query to insert file
-    $query = "LOAD DATA LOCAL INFILE '$file'
-         INTO TABLE '$tablename'
-         FIELDS TERMINATED BY ','
-         LINES TERMINATED BY '\n'
-         IGNORE 1 LINES
-         ($header);"; 
+    $query = "LOAD DATA LOCAL INFILE '$file' ".
+         "INTO TABLE '$tablename' ".
+         "FIELDS TERMINATED BY ',' ".
+         "LINES TERMINATED BY '\n' ".
+         "IGNORE 1 LINES ".
+         "($header);"; 
     echo $query;
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
