@@ -1,0 +1,21 @@
+- run weewx_setup.sh
+- download tar package from http://weewx.com/downloads/weewx-4.1.1.tar.gz
+- tar -xvzf weewx...
+- cd weewx...
+- python3 ./setup.py build
+- sudo python3 ./setup.py install
+
+- update /home/weewx/weewx.conf
+	- change database to archive_mysql
+	- update mysql credntials
+	- change archive_interval to 5
+	- disable all StdReporting
+
+- then we can start weewx
+- setup as daemon
+
+cd /home/weewx
+sudo cp util/init.d/weewx.debian /etc/init.d/weewx
+sudo chmod +x /etc/init.d/weewx
+sudo update-rc.d weewx defaults 98
+sudo /etc/init.d/weewx start
