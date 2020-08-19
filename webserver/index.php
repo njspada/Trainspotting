@@ -30,7 +30,7 @@ function save_da(){
     // create field list from file header
     $header = fgets(fopen($file,'r'));
     $header_array = explode(",",$header);
-    $header_array[count($header_array)-1] = explode("\n",$header_array[count($headr_array)-1])[0];
+    $header_array[count($header_array)-1] = explode("\n",$header_array[count($header_array)-1])[0];
     $header_array = array_map(function($s) {return '`'.$s.'`'; }, $header_array);
     $header = implode(',',$header_array);
 
