@@ -30,7 +30,8 @@ save_da <- function(da, day) {
 	# 3. upload/post each image from train_images to cloud
 	post_df <- function(df, fpath, fname, type) {
 		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname, tablename=type)
-		POST(post_url, body=body, encode="multipart")
+		r <- POST(post_url, body=body, encode="multipart")
+    print(str(content(r)))
 	}
 	save_df <- function(df, name) {
 		fname <- paste0(name, '_', format(day), '.csv')
