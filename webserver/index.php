@@ -37,7 +37,7 @@ function save_da(){
     // create sql query to insert file
     $query = "LOAD DATA LOCAL INFILE '$file'
          INTO TABLE '$tablename'
-         FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
+         FIELDS TERMINATED BY ','
          LINES TERMINATED BY '\n'
          IGNORE 1 LINES
          ($header)"; 
