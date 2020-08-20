@@ -9,8 +9,6 @@ from datetime import datetime
 import database_config
 import mysql.connector
 from mysql.connector import errorcode
-# import purple_air_sql as pa
-# import met_sql as met
 
 import time
 from threading import Thread
@@ -30,9 +28,7 @@ start_t = time.time()
 frame_times = []
 last_time = time.time()
 
-DATA_ARR = []
 LABELS = []
-COLLECT_FREQUENCY = 10
 
 # threading related source from - 
 # https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
@@ -77,25 +73,6 @@ def gstreamer_pipeline(
 		)
 	)
 
-# # for debuggin
-# def display_image(IMAGE, BOX, LABEL, SCORE, FPS, TRACKING):
-# 	if TRACKING:
-# 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (0,0,255), 5)
-# 	else:
-# 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), (255,0,0), 5)
-# 	(startX, startY, endX, endY) = BOX
-# 	y = startY - 40 if startY - 40 > 40 else startY + 40
-# 	text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
-# 	font = cv2.FONT_HERSHEY_SIMPLEX
-# 	cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
-# 	pa_data = pa.get_latest_data()
-# 	cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-# 	met_data = met.get_latest_data()
-# 	cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-# 	cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-# 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-# 	cv2.imshow('Trainspotting', IMAGE)
-
 # for debugging
 def get_fps() -> float: # returns (fps,start_t)
 	global frame_times
@@ -109,9 +86,6 @@ def get_fps() -> float: # returns (fps,start_t)
 	return fps
 
 def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
-	# coords = dict(zip(['startX', 'startY', 'endX', 'endY'], BOX))
-	# dataline = str(TIMESTAMP) + ', ' + LABELS[DETECT.label_id] + ', conf = ' + str(DETECT.score) + ', coords = ' + str(coords) + '\n'
-	# print(dataline)
 	BOX = list(BOX)
 	BOX = [int(_) for _ in BOX]
 	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS, TRACKING)
@@ -119,7 +93,6 @@ def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
 		return
 
 def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
-	# print('called debug_mul')
 	def put_lines(IMAGE, BOX, LABEL, SCORE, BOX_COLOR_BGR):
 		cv2.rectangle(IMAGE, (BOX[0],BOX[1]), (BOX[2],BOX[3]), BOX_COLOR_BGR, 5)
 		(startX, startY, endX, endY) = BOX
@@ -127,19 +100,12 @@ def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 		text = "{}: {:.2f}%".format(LABEL, SCORE * 100)
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(IMAGE, text, (startX, y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+
 	for i,box in enumerate(MOVING_DETECTS.bounding_boxes):
 		put_lines(IMAGE, box.flatten().astype('int'), 'train', MOVING_DETECTS.scores[i], (0,0,255)) # moving box is red color
 	for i,box in enumerate(STAT_DETECTS.bounding_boxes):
 		put_lines(IMAGE, box.flatten().astype('int'), 'train', STAT_DETECTS.scores[i], (255,0,0))
-		#put_lines(IMAGE, d.bounding_box.flatten().astype('int'), 'train', d.score, (255,0,0)) # stat box is bllue color
-		# cv2.circle(IMAGE, (int(st[0]),int(st[1])), radius=10, color=(0, 0, 255), thickness=-1)
 	cv2.putText(IMAGE, 'fps=' + str(FPS), (20,240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	# font = cv2.FONT_HERSHEY_SIMPLEX
-	# pa_data = pa.get_latest_data()
-	# cv2.putText(IMAGE, 'pm2.5=' + str(pa_data['pm2.5']), (20,20), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	# met_data = met.get_latest_data()
-	# cv2.putText(IMAGE, 'windGust=' + str(met_data['windGust']) + 'mph', (20,40), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
-	# cv2.putText(IMAGE, 'wgDir=' + str(met_data['windGustDir'] if met_data['windGustDir'] else 'null'), (20,60), font, 0.5, (200,255,155), 2, cv2.LINE_AA)
 	cv2.imshow('Trainspotting', IMAGE)
 
 @threaded
@@ -152,7 +118,6 @@ def run_insert_query(query, data):
 		print(err)
 		return -1
 	CNX.commit()
-	#event_id = dict(zip(cursor.column_names, cursor.fetchone()))[id]
 	return cursor.lastrowid
 
 class LogEntry:
@@ -240,13 +205,10 @@ class Logger:
 		end_timestamp = int(math.ceil(entries[-1].timestamp))
 		print('saving train event - 1111')
 		print('len entries = ' + str(len(entries)))
-		# print('collect_rate = ' + str(collect_rate))
-		# print('len(entries)*collect_rate=' + str(int(collect_rate*len(entries))))
 		indices = np.random.randint(len(entries), size=max(int(collect_rate*len(entries)),1))
 		print(indices)
 		entries = [entry for i,entry in enumerate(entries) if i in indices]
 		if len(entries) > 0:
-			# print('len entries > 0')
 			# save moving trains
 			#first setup event start and end timestamps
 			start_timestamp = int(math.floor(entries[0].timestamp))
@@ -349,11 +311,7 @@ class trains: # object to hold info about detected trains
 		self.bounding_boxes = l_bounding_box
 		self.centroids = l_centroid
 		self.empty_frames = l_empty_frames
-		# print("len centroids = " + str(len(self.centroids)))
-		# print("len empty_frames = " + str(len(self.empty_frames)))
 		self.scores = l_scores
-		# print('l_bounding_box = ' + str(len(l_bounding_box)))
-		#self.print_lens()
 
 	def add(self, bounding_box, centroid, score, frames = 0):
 		self.bounding_boxes.append(bounding_box)
@@ -440,8 +398,8 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 
 	total_moving_detects = 0
 	while STREAM.isOpened():
-		fps = get_fps()
 		if DFPS and not DEBUG:
+			fps = get_fps()
 			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
@@ -499,23 +457,24 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS):
 
 
 if __name__ == "__main__":
-	PARSER = argparse.ArgumentParser(description='Run detection on trains.')
-	PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
-	PARSER.add_argument('-l', '--label', action='store', default='/usr/share/edgetpu/examples/models/coco_labels.txt', help="Path to labels text file.")
-	PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/', help="Path to output directory.")
-	PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
-	PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
-	PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
-	PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=20, help="Detection confidence level out of 100.")
-	PARSER.add_argument('-dts', '--dts', action='store', type=float, default=1, help="distance tracking to stationary.")
-	PARSER.add_argument('-dds', '--dds', action='store', type=int, default=1, help="distance detect to stationary.")
-	PARSER.add_argument('-eft', '--eft', action='store', type=int, default=20, help="empty frames allowed for tracking.")
-	PARSER.add_argument('-efd', '--efd', action='store', type=int, default=40, help="empty frames allowed for detection.")
+	# PARSER = argparse.ArgumentParser(description='Run detection on trains.')
+	# PARSER.add_argument('-m', '--model', action='store', default='/usr/share/edgetpu/examples/models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite', help="Path to detection model.")
+	# PARSER.add_argument('-l', '--label', action='store', default='/usr/share/edgetpu/examples/models/coco_labels.txt', help="Path to labels text file.")
+	# PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/', help="Path to output directory.")
+	# PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help="Capture Width")
+	# PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
+	# PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
+	# PARSER.add_argument('-conf', '--confidence', action='store', type=int, default=20, help="Detection confidence level out of 100.")
+	# PARSER.add_argument('-dts', '--dts', action='store', type=float, default=1, help="distance tracking to stationary.")
+	# PARSER.add_argument('-dds', '--dds', action='store', type=int, default=1, help="distance detect to stationary.")
+	# PARSER.add_argument('-eft', '--eft', action='store', type=int, default=20, help="empty frames allowed for tracking.")
+	# PARSER.add_argument('-efd', '--efd', action='store', type=int, default=40, help="empty frames allowed for detection.")
 	
-	PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
-	PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
+	# PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
+	# PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
 
-	ARGS = PARSER.parse_args()
+	# ARGS = PARSER.parse_args()
+	
 	# Load the DetectionEngine
 	ENGINE = DetectionEngine(ARGS.model)
 	if not ENGINE:
