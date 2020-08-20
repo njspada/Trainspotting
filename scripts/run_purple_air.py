@@ -156,21 +156,21 @@ def loop(purpleair, output_folder_path, upload_data):
         # now = datetime.now()
         now = int(time.time())
         if PurpleAir.dataline_is_minute_data(dataline):
-            print('+ ' + dataline)
+            # print('+ ' + dataline)
             # write data out to file
             # filename = 'purpleair_{}.log'.format((datetime.now()).strftime('%Y-%m-%d'))
             # fullpath = os.path.join(output_folder_path, filename)
             # with open(fullpath, "a") as fh:
-            print('trying to push to db')
+            # print('trying to push to db')
                 # fh.write('{},{}\n'.format(now, dataline))
             database.write_to_db(now, dataline)
-            print() # add extra space
+            # print() # add extra space
         elif PurpleAir.dataline_is_url(dataline) and upload_data:
             purpleair.upload_url_dataline(dataline)
-            print()
+            # print()
         else:
-            print('- ' + dataline)
-            print() # add extra blankspace, makes things easier to read
+            # print('- ' + dataline)
+            # print() # add extra blankspace, makes things easier to read
 
 
 if __name__ == "__main__":
