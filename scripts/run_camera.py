@@ -1,22 +1,15 @@
-from config import camera_config
 from edgetpu.detection.engine import DetectionEngine
 from edgetpu.utils import dataset_utils
 from PIL import Image
 import cv2
 import numpy as np
 from datetime import datetime
-import database_config
-import mysql.connector
-from mysql.connector import errorcode
-
 import time
-
-from os import makedirs
-
-import math
 import heapq
 from scipy.spatial import distance as dist
 
+from config import camera_config
+import database_config
 from camera_utils import trains
 from camera_utils import train_logger
 
@@ -24,6 +17,7 @@ from camera_utils import train_logger
 start_t = time.time()
 frame_times = []
 last_time = time.time()
+fps = 0
 
 LABELS = []
 
@@ -65,13 +59,6 @@ def get_fps() -> float: # returns (fps,start_t)
 	fps = 20 / sum(frame_times)
 	start_t = time.time()
 	return fps
-
-def debug(DETECT, BOX, FPS, IMAGE, TIMESTAMP, TRACKING):
-	BOX = list(BOX)
-	BOX = [int(_) for _ in BOX]
-	display_image(IMAGE, BOX, LABELS[DETECT.label_id], DETECT.score, FPS, TRACKING)
-	if cv2.waitKey(1) & 0xFF == ord('q'):
-		return
 
 def debug_mul(MOVING_DETECTS, STAT_DETECTS, IMAGE, FPS):
 	def put_lines(IMAGE, BOX, LABEL, SCORE, BOX_COLOR_BGR):
