@@ -32,7 +32,7 @@ save_da <- function(da, day) {
 	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
 	
 	post_image <- function(filename) {
-		body = list(type="image", file=upload_file(paste(images_dir,filename)), device_id="0", filename=filename)
+		body = list(type="image", file=upload_file(paste0(images.dir,filename)), device_id="0", filename=filename)
 		r <- POST(post_url, body=body, encode="multipart")
     print(content(r,"text"))
 	}
