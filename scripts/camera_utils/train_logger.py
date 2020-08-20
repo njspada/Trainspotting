@@ -1,5 +1,11 @@
 from threading import Thread
 from concurrent.futures import Future
+import cv2
+import numpy as np
+from datetime import datetime
+import mysql.connector
+from mysql.connector import errorcode
+from os import makedirs
 
 # threading related source from - 
 # https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
@@ -54,7 +60,7 @@ class Logger:
     collect_rate_moving = 0.1
     collect_rate_stat = 0.001
     database_config = []
-    ARGS = []
+    debug = False
 
     def __init__(self, ARGS, database_config):
         self.empty_frames_limit  = ARGS.empty_frames_limit
@@ -63,11 +69,12 @@ class Logger:
         self.collect_rate_moving = ARGS.collect_rate_moving
         self.collect_rate_stat   = ARGS.collect_rate_stat
         self.database_config     = database_config
-        self.ARGS                = ARGS
+        self.debug               = ARGS.debug
+        self.output_path         = ARGS.output_path
 
     # prints only when debugging
     def print(self, to_print):
-        if self.ARGS.debug:
+        if self.debug:
             print(to_print)
 
     def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
@@ -179,10 +186,9 @@ class Logger:
     @threaded
     def save_image(self, IMAGE, FILENAME, FILEPATH):
         self.print('saving image')
-        output_path = "/home/coal/Desktop/output/"
         try:
-            makedirs(output_path + FILEPATH)
+            makedirs(self.output_path + FILEPATH)
         except FileExistsError:
             _=1
-        if not cv2.imwrite(output_path+FILENAME, IMAGE):
+        if not cv2.imwrite(self.output_path+FILENAME, IMAGE):
             print('----error saving image----')
