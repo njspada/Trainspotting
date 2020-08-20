@@ -31,6 +31,7 @@ function save_da(){
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
     save_file($file, $output_dir."logs/".$filename);
+    $file = $output_dir."logs/".$filename;
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));
@@ -47,7 +48,7 @@ function save_da(){
          "LINES TERMINATED BY '\n' ".
          "IGNORE 1 LINES ".
          "($header);"; 
-    echo $query;
+    // echo $query;
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
     if($mysqli->connect_errno) {
@@ -55,7 +56,7 @@ function save_da(){
     }
 
     if($mysqli->query($query) === TRUE){
-        echo "successfully inserted";
+        // echo "successfully inserted";
     }
     else{
         echo "there was an error\n";

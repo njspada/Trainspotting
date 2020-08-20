@@ -14,7 +14,7 @@ save_da <- function(da, day) {
 	post_df <- function(df, fpath, fname, type) {
 		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname, tablename=type)
 		r <- POST(post_url, body=body, encode="multipart")
-    print(content(r,"text"))
+    # print(content(r,"text"))
 	}
 	save_df <- function(df, name) {
 		fname <- paste0(name, '_', format(day), '.csv')
@@ -22,7 +22,7 @@ save_da <- function(da, day) {
     	write.csv(df, fpath, row.names = F)
     	return(list(fpath=fpath, fname=fname))
 	}
-  print(nrow(da$da))
+  # print(nrow(da$da))
 	da_file <- save_df(da$da, "daily_aggregate")
 	train_detects_file <- save_df(da$train_detect, "train_detects")
 	train_images_file <- save_df(da$train_images, "train_images")
@@ -34,7 +34,7 @@ save_da <- function(da, day) {
 	post_image <- function(filename) {
 		body = list(type="image", file=upload_file(paste0(images.dir,filename)), device_id="0", filename=filename)
 		r <- POST(post_url, body=body, encode="multipart")
-    print(content(r,"text"))
+    # print(content(r,"text"))
 	}
 
 	sapply(da$train_images$filename, post_image)
