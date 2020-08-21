@@ -21,7 +21,7 @@ PARSER.add_argument('-empty_frames_limit' , '--empty_frames_limit' , action='sto
 PARSER.add_argument('-max_stat_entries'   , '--max_stat_entries'   , action='store', type=int, default=2000, help="Logger")
 PARSER.add_argument('-collect_rate_moving', '--collect_rate_moving', action='store', type=float, default=0.1, help="Logger")
 PARSER.add_argument('-collect_rate_stat'  , '--collect_rate_stat'  , action='store', type=float, default=0.001, help="Logger")
-PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/images', help="Path to output directory.")
+PARSER.add_argument('-o', '--output_path', action='store', default='/home/coal/Desktop/output/images/', help="Path to output directory.")
 
 PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
