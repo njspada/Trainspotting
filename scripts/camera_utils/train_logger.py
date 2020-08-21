@@ -121,14 +121,14 @@ class Logger:
     def save_train_event(self, entries, collect_rate):
         # first downsize entries
         self.print('---------')
+        self.print('len entries = ' + str(len(entries)))
         self.print(entries[0].timestamp)
         self.print(entries[-1].timestamp)
         start_timestamp = int(math.floor(entries[0].timestamp))
         end_timestamp = int(math.ceil(entries[-1].timestamp))
         self.print('saving train event - 1111')
-        self.print('len entries = ' + str(len(entries)))
         indices = np.random.randint(len(entries), size=max(int(collect_rate*len(entries)),1))
-        print(indices)
+        self.print(indices)
         entries = [entry for i,entry in enumerate(entries) if i in indices]
         if len(entries) > 0:
             # save moving trains
