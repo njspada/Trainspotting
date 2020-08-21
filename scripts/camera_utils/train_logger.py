@@ -122,8 +122,8 @@ class Logger:
         # first downsize entries
         self.print('---------')
         self.print('len entries = ' + str(len(entries)))
-        self.print(entries[0].timestamp)
-        self.print(entries[-1].timestamp)
+        self.print(str(entries[0].timestamp))
+        self.print(str(entries[-1].timestamp))
         start_timestamp = int(math.floor(entries[0].timestamp))
         end_timestamp = int(math.ceil(entries[-1].timestamp))
         self.print('saving train event - 1111')
