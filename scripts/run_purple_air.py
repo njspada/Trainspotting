@@ -21,7 +21,7 @@ import csv
 import re
 from glob import glob
 from datetime import datetime
-import purple_air_database as database
+from purple_air_utils import purple_air_database as database
 import local_database_connector as database_config
 import time
 
