@@ -4,6 +4,7 @@ Description=Trainspotting
 [Service]
 ExecStart=/home/coal/Desktop/cloud/Trainspotting/scripts/run_trainspotting.sh
 Restart=always
+WorkingDirectory=/home/coal/Desktop/cloud/Trainspotting/scripts
 
 [Install]
 WantedBy=multi-user.target
