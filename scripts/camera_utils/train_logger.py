@@ -122,12 +122,16 @@ class Logger:
         # first downsize entries
         if len(entries) == 0:
             return
-        self.print('---------')
+        self.print('-----0----')
         self.print('len entries = ' + str(len(entries)))
         self.print(str(entries[0].timestamp))
+        self.print('-----1----')
         self.print(str(entries[-1].timestamp))
+        self.print('----2-----')
         start_timestamp = int(math.floor(entries[0].timestamp))
+        self.print('----3-----')
         end_timestamp = int(math.ceil(entries[-1].timestamp))
+        self.print('----4-----')
         self.print('saving train event - 1111')
         indices = np.random.randint(len(entries), size=max(int(collect_rate*len(entries)),1))
         self.print(indices)
