@@ -21,7 +21,8 @@ import csv
 import re
 from glob import glob
 from datetime import datetime
-import purple_air_sql as database
+import purple_air_database as database
+import local_database_connector as database_config
 import time
 
 class PurpleAir(object):
@@ -163,7 +164,7 @@ def loop(purpleair, output_folder_path, upload_data):
             # with open(fullpath, "a") as fh:
             # print('trying to push to db')
                 # fh.write('{},{}\n'.format(now, dataline))
-            database.write_to_db(now, dataline)
+            database.write_to_db(now, dataline, database_config)
             # print() # add extra space
         elif PurpleAir.dataline_is_url(dataline) and upload_data:
             purpleair.upload_url_dataline(dataline)
