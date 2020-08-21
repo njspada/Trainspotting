@@ -120,6 +120,8 @@ class Logger:
     @threaded
     def save_train_event(self, entries, collect_rate):
         # first downsize entries
+        if len(entries) == 0:
+            return
         self.print('---------')
         self.print('len entries = ' + str(len(entries)))
         self.print(str(entries[0].timestamp))
