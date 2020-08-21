@@ -169,10 +169,9 @@ def loop(purpleair, output_folder_path, upload_data):
         elif PurpleAir.dataline_is_url(dataline) and upload_data:
             purpleair.upload_url_dataline(dataline)
             # print()
-        else:
+        # else:
             # print('- ' + dataline)
             # print() # add extra blankspace, makes things easier to read
-
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Log readings from a purple air sensor')
