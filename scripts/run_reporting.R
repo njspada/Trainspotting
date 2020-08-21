@@ -5,7 +5,7 @@ require(DBI)
 require(RMariaDB)
 require(httr)
 
-source('config_run_reporting.R')
+source('config/reporting_config.R')
 
 save_da <- function(da, day) {
 	# 1. save each dataframe in a csv file
@@ -151,6 +151,7 @@ get_camera <- function(day) {
   	res <- dbSendQuery(train_db_con, query)
     # following line mutates train_events to have fields - dateTime, event_id 
   	train_events <- dbFetch(res)
+    dbClearResult(res)
     if(nrow(train_events) == 0){
       train_events <- data.frame(rbind(c(-1, startTime, endTime))) # empty frame
     }
@@ -173,6 +174,7 @@ get_camera <- function(day) {
   			"AND event_id <= ", end_event_id, ";")
   	res <- dbSendQuery(train_db_con, query)
   	train_detects <- dbFetch(res)
+    dbClearResult(res)
   	train_detect_for_events <- select(train_detects, event_id, type)
 
   	# add `is_stat` to train_events
@@ -198,6 +200,7 @@ get_camera <- function(day) {
 
   	res <- dbSendQuery(train_db_con, query)
   	train_images <- dbFetch(res)
+    dbClearResult(res)
 
   	rvalue <- list("train_events" = train_events, "train_detects" = train_detects, "train_images" = train_images)
 
@@ -349,3 +352,4 @@ run_service <- function() {
 
 
 # run_service()
+report_daily(Sys.Date())

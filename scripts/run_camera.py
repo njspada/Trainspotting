@@ -9,7 +9,7 @@ import heapq
 from scipy.spatial import distance as dist
 
 from config import camera_config
-import database_config
+import local_database_connector as database_config
 from camera_utils import trains
 from camera_utils import train_logger
 
