@@ -1,0 +1,16 @@
+[Unit]
+Description=Share local port(s) with ngrok
+After=syslog.target network.target
+
+[Service]
+PrivateTmp=true
+Type=simple
+Restart=always
+RestartSec=1min
+StandardOutput=null
+StandardError=null
+ExecStart=/home/coal/Desktop/cloud/scripts/ngrok start -config /home/coal/Desktop/cloud/scripts/config/run_ngrok.yml --all
+ExecStop=/usr/bin/killall ngrok
+
+[Install]
+WantedBy=multi-user.target
