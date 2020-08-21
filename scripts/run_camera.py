@@ -17,7 +17,6 @@ from camera_utils import train_logger
 start_t = time.time()
 frame_times = []
 last_time = time.time()
-fps = 0
 
 LABELS = []
 
@@ -113,11 +112,12 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 	stationary_trains = trains.trains()
 	previous_trains = trains.trains()
 	logger = train_logger.Logger(ARGS = ARGS, database_config = database_config)
-
+	fps = 0
 	total_moving_detects = 0
 	while STREAM.isOpened():
-		if DFPS and not DEBUG:
+		if DEBUG:
 			fps = get_fps()
+		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
 		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
