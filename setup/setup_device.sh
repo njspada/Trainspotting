@@ -6,14 +6,14 @@ export DEBIAN_FRONTEND=noninteractive
 
 # 0. git clone from production branch
 sudo mkdir /home/trainspotting
-sudo cd /home/trainspotting
+cd /home/trainspotting
 sudo git clone --single-branch --branch production https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
 ##############################################################
 
 # 1. install python3, pip3, curl
+sudo apt-get update
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get update
 sudo apt-get install python3.8
 sudo apt-get install curl
 sudo apt install python3-pip
@@ -26,37 +26,37 @@ export SSDPATH
 ##############################################################
 
 # 3. Install & configure MySQL
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_mysql.sh
 sudo ./setup_mysql.sh
 ##############################################################
 
 # 4. setup weewx
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_weewx.sh
 sudo ./setup_weewx.sh
 ##############################################################
 
 # 5. Setup utils for run_camera
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_camera.sh
 sudo ./setup_camera.sh
 ##############################################################
 
 # 6. Setup utils for run_purple_air
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_purple_air.sh
 sudo ./setup_purple_air.sh
 ##############################################################
 
 # 7. Setup utils for run_reporting
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_reporting.sh
 sudo ./setup_reporting.sh
 ##############################################################
 
 # 8. Setup ngrok
-sudo cd Trainspotting/setup
+cd Trainspotting/setup
 sudo chmod u+x setup_ngrok.sh
 sudo ./setup_ngrok.sh
 ##############################################################

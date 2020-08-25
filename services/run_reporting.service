@@ -10,7 +10,7 @@ sudo Rscript /home/trainspotting/Trainspotting/scripts/run_reporting.R
 ##############################################################
 
 # 3. git pull
-sudo cd /home/trainspotting/Trainspotting
+cd /home/trainspotting/Trainspotting
 OUTPUT=$(git status -uno | grep "Your branch is up to date")
 if [ -z "$OUTPUT" ]
 then

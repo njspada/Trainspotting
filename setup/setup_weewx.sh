@@ -11,10 +11,10 @@ sudo apt install python3-mysqldb
 ##############################################################
 
 # 2. download archive, unzip, run setup
-sudo cd /home/trainspotting
+cd /home/trainspotting
 sudo curl http://weewx.com/downloads/weewx-4.1.1.tar.gz -o weewx_archive.tgz
 sudo tar -xvzf weewx_archive.tgz
-sudo cd weewx-*
+cd weewx-*
 sudo python3 ./setup.py build
 sudo python3 ./setup.py install --no-prompt
 ##############################################################
@@ -37,7 +37,7 @@ sudo /home/weewx/bin/wee_device --set-interval=1
 ##############################################################
 
 #4. enable daemon service
-sudo cd /home/weewx
+cd /home/weewx
 sudo cp util/init.d/weewx.debian /etc/init.d/weewx
 sudo chmod +x /etc/init.d/weewx
 sudo update-rc.d weewx defaults 98
