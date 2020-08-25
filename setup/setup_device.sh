@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 # 0. git clone from production branch
 sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --single-branch --branch production https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
+sudo git clone --depth=1 --single-branch --branch production https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
 ##############################################################
 
 # 1. install python3, pip3, curl
