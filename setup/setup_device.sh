@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1. install python3, pip3, curl
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
@@ -27,4 +28,13 @@ sudo chmod u+x setup_camera.sh
 sudo ./setup_camera.sh
 ##############################################################
 
+# 6. Setup utils for run_purple_air
+sudo chmod u+x setup_purple_air.sh
+sudo ./setup_purple_air.sh
+##############################################################
+
+# 7. Setup utils for run_reporting
+sudo chmod u+x setup_reporting.sh
+sudo ./setup_reporting.sh
+##############################################################
 

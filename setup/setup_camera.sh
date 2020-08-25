@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1. Utils
 sudo apt-get install libpython3-dev
 ##############################################################
@@ -24,8 +25,17 @@ sudo chmod a+w /usr/share/edgetpu/examples
 ##############################################################
 
 # 3. Configure ssd location
+CAMERACONF="/home/trainspotting/Trainspotting/scripts/config/camera_config.py"
+mv "$CAMERACONF" "$CAMERACONF.bak"
+cat "$CAMERACONF.bak" | grep -v "^default_output_path=" > "$CAMERACONF"
+echo "default_output_path=${SSDPATH}/trainspotting/images" >> "$CAMERACONF"
+##############################################################
 
+# 4. Install MySQL for Python3
+pip3 install mysql-connector-python
+##############################################################
 
-# 3. Setup systemd service
+# 5. Setup systemd service
 sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/system/systemd
 sudo chmod +x /etc/system/systemd/run_camera.service
+##############################################################

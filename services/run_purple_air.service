@@ -1,0 +1,10 @@
+[Unit]
+Description=Trainspotting-Run-Purple-Air
+
+[Service]
+ExecStart=sudo python3 /home/trainspotting/Trainspotting/scripts/run_purple_air.py
+Restart=always
+WorkingDirectory=/home/coal/Desktop/cloud/Trainspotting/scripts
+
+[Install]
+WantedBy=multi-user.target
