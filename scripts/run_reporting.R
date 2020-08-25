@@ -1,25 +1,46 @@
 # Script to gather log data and push to Google Sheet
 
 require(tidyverse)
-#require(dplyr)
 require(DBI)
 require(RMariaDB)
-#require(googledrive)
+require(httr)
 
-mysql_user = "dhawal"
-mysql_pw = "april+1Hitmonlee"
-mysql_db_trainspotting = "trainspotting"
-mysql_db_weewx = "weewx"
-mysql_host = "localhost"
+source('config/reporting_config.R')
 
-keyLoc <- paste0("/usr/local/controller/setup/reporting/",
-		 "Trainspotting-de6353d6caf4.json")
+save_da <- function(da, day) {
+	# 1. save each dataframe in a csv file
+	# 2. upload/post each csv file to cloud
+	# 3. upload/post each image from train_images to cloud
+	post_df <- function(df, fpath, fname, type) {
+		body = list(type=type, file=upload_file(fpath), device_id=device_id, filename=fname, tablename=type)
+		r <- POST(post_url, body=body, encode="multipart")
+    # print(content(r,"text"))
+	}
+	save_df <- function(df, name) {
+		fname <- paste0(name, '/', format(day), '.csv')
+    	fpath <- paste0(dir_logs, fname)
+    	write.csv(df, fpath, row.names = F)
+    	return(list(fpath=fpath, fname=fname))
+	}
+  # print(nrow(da$da))
+	da_file <- save_df(da$da, "daily_aggregate")
+	train_detects_file <- save_df(da$train_detect, "train_detects")
+	train_images_file <- save_df(da$train_images, "train_images")
 
-#drive_auth(path = keyLoc)
+	post_df(da$da, da_file$fpath, da_file$fname, "daily_aggregate")
+	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
+	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
+	
+	post_image <- function(filename) {
+		body = list(type="image", file=upload_file(paste0(dir_images,filename)), device_id=device_id, filename=filename)
+		r <- POST(post_url, body=body, encode="multipart")
+    # print(content(r,"text"))
+	}
 
-#td <- drive_find(team_drive = "Trainspotting")$id
+	sapply(da$train_images$filename, post_image)
+}
 
-out.dir <- "/mnt/p1/output/"
+pipe_print = function(data) {print(tail(data)); data}
 
 # Get latest upload date
 get_latest <- function() {
@@ -40,6 +61,9 @@ update_latest <- function() {
 # Each log file will be converted into this one second format
 # then all combined
 get_met <- function(day) {
+  # returns dataframe with the following headers (9) - 
+  # dateTime,outTemp,outHumidity,rain,windSpeed,windDir,windGust,windGustDir,inTemp
+
   # First setup a connection to the 'archive' table in database 'weewx'
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
@@ -87,78 +111,113 @@ expand_event <- function(events, eventStart) {
 }
 
 get_camera <- function(day) {
-  
-  fname <- paste0(out.dir, "camera_", format(day), ".log")
-  
-  if (file.exists(fname)) {
-    
-    camera.names <- c('detects', 'startEvent', 'endEvent')
-    
-    camera <- read.csv(fname,
-                       header = F, stringsAsFactors = F,
-                       col.names = camera.names) %>%
-      mutate(startEvent = as.POSIXct(startEvent, format = "%Y-%m-%dT%H:%M:%S"),
-             endEvent = as.POSIXct(endEvent, format = "%Y-%m-%dT%H:%M:%S"),
-             TrainDetected = ifelse('train' %in% unlist(strsplit(detects, '_')),
-                                    1, 0)) %>%
-      filter(TrainDetected == 1)
-    
-    # For each event, expand out to one second resolution
-    camera.expanded <- do.call(
-      'rbind',
-      lapply(camera$startEvent, function(x) expand_event(camera, x))) %>%
-      distinct()
-    
-    # Initialize one second data frame, join with met, then fill down
-    startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                            format = '%Y-%m-%d %H:%M:%S')
-    endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                          format = '%Y-%m-%d %H:%M:%S')
-    camera.out <- data.frame(
-      datetime = seq.POSIXt(startTime, endTime, '1 sec')) %>%
-      left_join(camera.expanded, 'datetime') %>%
-      mutate(TrainDetected = ifelse(is.na(TrainDetected), 0, 1))
-    
-    return(camera.out)
-    
-  }
-  return(NULL)
-}
 
-get_pa_data <- function(day) {
-  startTime <- as.POSIXct(paste(format(day), '00:00:00'),
-                            format = '%Y-%m-%d %H:%M:%S')
-  endTime <- as.POSIXct(paste(format(day), '23:59:59'),
-                          format = '%Y-%m-%d %H:%M:%S')
-  startTime <- as.numeric(startTime)
-  endTime <- as.numeric(endTime)
+	# return 3 data frames - 
+	# 1. train_events - timestamp sequence with event id for every second. (event_id=-1 for no event)
+	# 		Also add columns `is_stat` and `is_moving`.
+  #      headers(4) - dateTime, event_id, is_stat, is_moving
+  #     
+	# 2. train_detetcs - exact copy of the sql table `train_detects`
+  #     headers(10) - id, event_id, type, image_id, label, score, x0, y0, x1, y1
+	# 3. train_images - exact copy of the sql table `train_images`
+  #     headers(3) -  id, filename, event_id
 
+	startTime <- as.POSIXct(paste(format(day), '00:00:00'))
+                            # format = '%Y-%m-%d %H:%M:%S')
+    endTime <- as.POSIXct(paste(format(day), '23:59:59'))
+                          # format = '%Y-%m-%d %H:%M:%S')
+	startTime <- as.numeric(startTime)
+  	endTime <- as.numeric(endTime)
+  	# print(startTime)
+  	# print(endTime)
+  	timestamp_seq <- data.frame(dateTime = seq(startTime, endTime))
 
-  pa_db_con <- dbConnect(RMariaDB::MariaDB(),
-                        user = mysql_user,
-                        password = mysql_pw,
-                        dbname = mysql_db_trainspotting,
-                        host= mysql_host)
-  query <- paste("SELECT *
-          FROM purple_air 
-          WHERE dateTime >=", startTime, 
-          "AND dateTime < ", endTime, 
-          "ORDER BY dateTime ;")
+  	train_db_con <- dbConnect(RMariaDB::MariaDB(),
+			                user = mysql_user,
+			                password = mysql_pw,
+			                dbname = mysql_db_trainspotting,
+			                host= mysql_host)
 
-  res <- dbSendQuery(pa_db_con, query)
-  pa <- dbFetch(res)
-  return(pa)
+  	# first get all train events - event_id, start_time, end_time
+	# then create a timestamp sequence for the whole day by seconds
+	# then create a sequence of train events - (start_time,end_time,event_id) -> [(start_time,event_id),(start_time+1,event_id),...,(end_time,event_id)]
+	# and then left join train events to timestamp sequence
+  	query <- paste("SELECT *
+  			FROM train_events
+  			WHERE start >= ", startTime, 
+  			"AND end <= ", endTime, ";")
+    # table `train_events` has columns - id, start, end
+
+  	res <- dbSendQuery(train_db_con, query)
+    # following line mutates train_events to have fields - dateTime, event_id 
+  	train_events <- dbFetch(res)
+    dbClearResult(res)
+    if(nrow(train_events) == 0){
+      train_events <- data.frame(rbind(c(-1, startTime, endTime))) # empty frame
+    }
+    train_events <- train_events %>%
+                    pmap_df(~data.frame(dateTime=seq(..2,..3), event_id=..1)) %>%
+          					mutate(event_id = ifelse(is.na(event_id), -1, event_id)) %>%
+          					group_by(dateTime) %>%
+          					summarize(event_id = min(event_id), .groups = 'drop')
+
+  	start_event_id <- head(train_events,1)$event_id
+  	end_event_id <- tail(train_events,1)$event_id
+  	train_events <- timestamp_seq %>%
+  					left_join(train_events, "dateTime") %>%
+  					mutate(event_id = ifelse(is.na(event_id), -1, event_id))
+
+  	# now fetch train_detects, and transform that
+  	query <- paste("SELECT *
+  			FROM train_detects
+  			WHERE event_id >= ", start_event_id, 
+  			"AND event_id <= ", end_event_id, ";")
+  	res <- dbSendQuery(train_db_con, query)
+  	train_detects <- dbFetch(res)
+    dbClearResult(res)
+  	train_detect_for_events <- select(train_detects, event_id, type)
+
+  	# add `is_stat` to train_events
+  	train_events <- train_events %>%
+  					left_join(subset(train_detect_for_events, type == 2), 'event_id') %>%
+  					mutate(type = ifelse(is.na(type), -1, type)) %>%
+  					mutate(is_stat = ifelse(type == 2, 1, 0)) %>% # here 1=TRUE, 0=FALSE
+  					select(-type)
+
+  	# add `is_moving` to train events
+  	train_events <- train_events %>%
+  					left_join(subset(train_detect_for_events, type == 1), 'event_id') %>%
+  					mutate(type = ifelse(is.na(type), -1, type)) %>%
+  					mutate(is_moving = ifelse(type == 1, 1, 0)) %>% # here 1=TRUE, 0=FALSE
+  					select(-type)
+
+  	train_events <- train_events[!duplicated(train_events$dateTime), ]
+
+  	query <- query <- paste("SELECT *
+  			FROM train_images
+  			WHERE event_id >= ", start_event_id, 
+  			"AND event_id <= ", end_event_id, ";")
+
+  	res <- dbSendQuery(train_db_con, query)
+  	train_images <- dbFetch(res)
+    dbClearResult(res)
+
+  	rvalue <- list("train_events" = train_events, "train_detects" = train_detects, "train_images" = train_images)
+
+  	return(rvalue)
 }
 
 get_pa <- function(day) {
 
+  # returns 1 dataframe
+  #  headers(10) - dateTime, pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10
+
   startTime <- as.POSIXct(paste(format(day), '00:00:00'),
                             format = '%Y-%m-%d %H:%M:%S')
   endTime <- as.POSIXct(paste(format(day), '23:59:59'),
                           format = '%Y-%m-%d %H:%M:%S')
   startTime <- as.numeric(startTime)
   endTime <- as.numeric(endTime)
-
 
   pa_db_con <- dbConnect(RMariaDB::MariaDB(),
                         user = mysql_user,
@@ -210,6 +269,19 @@ get_pa <- function(day) {
 
 get_logs <- function(day) {
   
+  # returns 3 dataframes - 
+  # 1. da (daily_aggregate)
+  #  headers(21) - 
+  #   from met - dateTime, outTemp, outHumidity, rain, windSpeed, windDir, windGust, windGustDir, inTemp
+  #   from camera - event_id, is_stat, is_moving
+  #   from pa - pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10
+
+  # 2. train_detetcs - exact copy of the sql table `train_detects`
+  #     headers(10) - id, event_id, type, image_id, label, score, x0, y0, x1, y1
+
+  # 3. train_images - exact copy of the sql table `train_images`
+  #     headers(3) -  id, filename, event_id
+
   # Collect and process log files
   met <- get_met(day = day)
   camera <- get_camera(day = day)
@@ -217,11 +289,11 @@ get_logs <- function(day) {
   
   if (!is.null(met) & !is.null(camera) & !is.null(pa)) {
     # Combine into final dataset
-    total <- met %>%
-      left_join(camera, 'datetime') %>%
-      left_join(pa, 'datetime')
+    da <- met %>%
+      left_join(pa, 'dateTime') %>%
+      left_join(camera$train_events, 'dateTime')
     
-    return(total)
+    return(list("da"=da,"train_images"=camera$train_images,"train_detects"=camera$train_detects))
   }
   return(data.frame())
 }
@@ -232,11 +304,12 @@ report_daily <- function(day) {
   # Collect and process log files for the day
   total <- get_logs(day = day)
   
-  if (nrow(total) > 0) {
+  if (nrow(total$da) > 0) {
     
-    fname <- paste0('daily_', format(day), '.csv')
-    fpath <- paste0(out.dir, 'gDriveSync/', fname)
-    write.csv(total, fpath, row.names = F)
+    # fname <- paste0('daily_', format(day), '.csv')
+    # fpath <- paste0(out.dir, 'logs/', fname)
+    # write.csv(total$da, fpath, row.names = F)
+    save_da(total, day)
     
     # Now upload file to Google Drive
     #drive_upload(fpath, path = as_id(td))
@@ -279,3 +352,4 @@ run_service <- function() {
 
 
 # run_service()
+report_daily(Sys.Date())
