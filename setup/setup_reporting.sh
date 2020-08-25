@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # 1. install R for ubuntu
 sudo apt-get install aptitude
 sudo aptitude install r-base
@@ -12,13 +13,15 @@ echo "install.packages('RMariaDB',repos = 'http://cran.us.r-project.org')" | R -
 
 # 3. update config
 REPCONF="/home/trainspotting/Trainspotting/scripts/config/reporting_config.R"
-mv "$REPCONF" "$REPCONF.bak"
-cat "$REPCONF.bak" | grep -v "^output_path=" > "$REPCONF"
-echo "output_path=${SSDPATH}/trainspotting/" >> "$REPCONF"
+search="output_path="
+replace="output_path=${SSDPATH}/trainspotting/\n# output_path="
+sed -i 's~${search}~${replace}~g' $REPCONF
 ##############################################################
 
 # 4. Setup cron job/tab
-chmod u+x /home/trainspotting/Trainspotting/services/run_reporting.sh
+chmod u+x /home/trainspotting/Trainspotting/services/run_reporting.service
 sudo crontab -l > tabs
-echo "55 23 * * * /home/trainspotting/Trainspotting/services/run_reporting.sh"
-##############################################################
+sudo echo "55 23 * * * /home/trainspotting/Trainspotting/services/run_reporting.service >> ${SSDPATH}/trainspotting/service_logs/run_reporting_service.log 2>&1" >> tabs
+sudo crontab tabs
+sudo rm tabs
+#############################################################
