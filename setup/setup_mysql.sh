@@ -2,7 +2,7 @@
 
 # 1. Install MySQL package
 sudo apt update
-sudo apt-get install mysql-server
+sudo apt-get install -yq mysql-server
 ##############################################################
 
 # 2. Custom run for `mysql_secure_installation`.

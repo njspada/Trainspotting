@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 1. install R for ubuntu
-sudo apt-get install aptitude
-sudo aptitude install r-base
+sudo apt-get install -yq aptitude
+sudo aptitude install -y -q r-base
 ##############################################################
 
 # 2. install reqs

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. Install reqs
-sudo apt-get install python3-serial
+sudo apt-get install -yq python3-serial
 sudo pip3 install argparse
 ##############################################################
 

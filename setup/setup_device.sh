@@ -12,11 +12,13 @@ sudo git clone --depth=1 --single-branch --branch production https://dmmajithia:
 
 # 1. install python3, pip3, curl
 sudo apt-get update
-sudo apt-get install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get install python3.8
-sudo apt-get install curl
-sudo apt install python3-pip
+# 'After this operation additional disk space .... Do you want to continue? Y/n'
+# sudo apt-get install -yq software-properties-common
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt-get install -yq python3.8
+# ^ jetson comes with python3.6.9 preinstalled
+sudo apt-get install -yq curl
+sudo apt-get install -yq python3-pip
 ##############################################################
 
 # 2. Find external ssd path

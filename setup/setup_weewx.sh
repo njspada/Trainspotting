@@ -2,12 +2,12 @@
 
 # 1. install reqs
 sudo apt update
-sudo apt install python3-configobj
-sudo apt install python3-pil
-sudo apt install python3-serial
-sudo apt install python3-usb
+sudo apt install -yq python3-configobj
+sudo apt install -yq python3-pil
+sudo apt install -yq python3-serial
+sudo apt install -yq python3-usb
 sudo /usr/bin/python3 -m pip install Cheetah3
-sudo apt install python3-mysqldb
+sudo apt install -yq python3-mysqldb
 ##############################################################
 
 # 2. download archive, unzip, run setup
