@@ -11,7 +11,7 @@ mysql -sfu root < "mysql_secure_installation.sql"
 ##############################################################
 
 # 3. Create trainspotting database and tables from template file.
-mysql -u dhawal -p april+1Hitmonlee < "field_database_template.sql"
+mysql -u dhawal -papril+1Hitmonlee < "field_database_template.sql"
 ##############################################################
 
 # 3. Move MySQL data directory to ssd
