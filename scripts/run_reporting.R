@@ -17,7 +17,7 @@ save_da <- function(da, day) {
     # print(content(r,"text"))
 	}
 	save_df <- function(df, name) {
-		fname <- paste0(name, '_', format(day), '.csv')
+		fname <- paste0(name, '/', format(day), '.csv')
     	fpath <- paste0(out.dir, fname)
     	write.csv(df, fpath, row.names = F)
     	return(list(fpath=fpath, fname=fname))
