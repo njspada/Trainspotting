@@ -12,13 +12,13 @@ save_da <- function(da, day) {
 	# 2. upload/post each csv file to cloud
 	# 3. upload/post each image from train_images to cloud
 	post_df <- function(df, fpath, fname, type) {
-		body = list(type=type, file=upload_file(fpath), device_id="0", filename=fname, tablename=type)
+		body = list(type=type, file=upload_file(fpath), device_id=device_id, filename=fname, tablename=type)
 		r <- POST(post_url, body=body, encode="multipart")
     # print(content(r,"text"))
 	}
 	save_df <- function(df, name) {
 		fname <- paste0(name, '/', format(day), '.csv')
-    	fpath <- paste0(out.dir, fname)
+    	fpath <- paste0(dir_logs, fname)
     	write.csv(df, fpath, row.names = F)
     	return(list(fpath=fpath, fname=fname))
 	}
@@ -32,7 +32,7 @@ save_da <- function(da, day) {
 	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
 	
 	post_image <- function(filename) {
-		body = list(type="image", file=upload_file(paste0(images.dir,filename)), device_id="0", filename=filename)
+		body = list(type="image", file=upload_file(paste0(dir_images,filename)), device_id=device_id, filename=filename)
 		r <- POST(post_url, body=body, encode="multipart")
     # print(content(r,"text"))
 	}
