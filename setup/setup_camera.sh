@@ -4,8 +4,8 @@ sudo apt-get install libpython3-dev
 ##############################################################
 
 # 2. Edgetpu reqs from https://www.pyimagesearch.com/2019/04/22/getting-started-with-google-corals-tpu-usb-accelerator/
-echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+sudo curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install libedgetpu1-std
 sudo apt-get install python3-edgetpu
@@ -26,9 +26,9 @@ sudo chmod a+w /usr/share/edgetpu/examples
 
 # 3. Configure ssd location
 CAMERACONF="/home/trainspotting/Trainspotting/scripts/config/camera_config.py"
-mv "$CAMERACONF" "$CAMERACONF.bak"
-cat "$CAMERACONF.bak" | grep -v "^default_output_path=" > "$CAMERACONF"
-echo "default_output_path=${SSDPATH}/trainspotting/images" >> "$CAMERACONF"
+search="default_output_path="
+replace="default_output_path=${SSDPATH}/trainspotting/images/\n# default_output_path="
+sudo sed -i 's~${search}~${replace}~g' $CAMERACONF
 ##############################################################
 
 # 4. Install MySQL for Python3
@@ -37,5 +37,5 @@ pip3 install mysql-connector-python
 
 # 5. Setup systemd service
 sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/system/systemd
-sudo chmod +x /etc/system/systemd/run_camera.service
+sudo chmod +x /etc/systemd/system/run_camera.service
 ##############################################################

@@ -1,27 +1,39 @@
-# 1. Install MySQL
+#!/bin/bash
+
+# 1. Install MySQL package
 sudo apt update
 sudo apt-get install mysql-server
-export DEBIAN_FRONTEND=noninteractive
+##############################################################
+
+# 2. Custom run for `mysql_secure_installation`.
+#    This will set root's password to `root` and create new user "dhawal".
 mysql -sfu root < "mysql_secure_installation.sql"
+##############################################################
+
+# 3. Create trainspotting database and tables from template file.
 mysql -u dhawal -p april+1Hitmonlee < "field_database_template.sql"
 ##############################################################
 
-# 2. Move MySQL data directory to ssd
+# 3. Move MySQL data directory to ssd
 sudo systemctl stop mysql
-# copy the datadir to new location
 sudo cp -r /var/lib/mysql "${SSDPATH}/trainspotting"
 sudo mv /var/lib/mysql /var/lib/mysql.bak
+##############################################################
 
-# update mysql config with new location
+# 4. Update MySQL config with new datadir location
 MYSQLCONF="/etc/mysql/mysql.conf.d/mysqld.cnf"
-mv "$MYSQLCONF" "$MYSQLCONF.bak"
-cat "$MYSQLCONF.bak" | grep -v "^datadir=" > "$MYSQLCONF"
-echo "data=${SSDPATH}/trainspotting/mysql" >> "$MYSQLCONF"
+search="datadir="
+replace="data=${SSDPATH}/trainspotting/mysql\n# datadir="
+sudo sed -i 's~${search}~${replace}~g' $MYSQLCONF
+##############################################################
 
-# update apparmor with new location
+# 4. update apparmor with new location
 echo "alias /var/lib/mysql/ -> ${SSDPATH}/trainspotting/mysql/," >> /etc/apparmor.d/tunables/alias
 sudo systemctl restart apparmor
+##############################################################
 
-# create empty dir to silence mysql error
+# 5. create empty dir to silence mysql error
 sudo mkdir /var/lib/mysql/mysql -p
+sudo systemctl enable mysql
 sudo systemctl start mysql
+##############################################################
