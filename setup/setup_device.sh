@@ -26,7 +26,7 @@ SSDPATH=$(sudo lsblk | grep /media* | rev | cut -d' ' -f1 | rev)
 echo "ssd_path <- ${SSDPATH}" > /home/trainspotting/ssd_path.R
 export SSDPATH
 ##############################################################
-
+exit -1
 # 3. Install & configure MySQL
 cd Trainspotting/setup
 sudo chmod u+x setup_mysql.sh
