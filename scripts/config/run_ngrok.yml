@@ -3,7 +3,7 @@ json_resolver_url: ""
 dns_resolver_ips: []
 console_ui: false
 log_format: logfmt
-log: /home/coal/Desktop/output/ngrok.log
+log: /media/coal/sickboyT5/post_covid/service_logs/ngrok.log
 region: us
 web_addr: false
 tunnels:

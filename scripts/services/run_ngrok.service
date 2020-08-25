@@ -9,7 +9,7 @@ Restart=always
 RestartSec=1min
 StandardOutput=null
 StandardError=null
-ExecStart=/home/coal/Desktop/cloud/scripts/ngrok start -config /home/coal/Desktop/cloud/scripts/config/run_ngrok.yml --all
+ExecStart=./home/coal/Desktop/cloud/scripts/ngrok start --config /home/coal/Desktop/cloud/scripts/config/run_ngrok.yml --all
 ExecStop=/usr/bin/killall ngrok
 
 [Install]

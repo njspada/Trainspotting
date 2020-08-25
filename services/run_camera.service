@@ -1,0 +1,10 @@
+[Unit]
+Description=Trainspotting-Run-Camera
+
+[Service]
+ExecStart=python3 /home/trainspotting/Trainspotting/scripts/run_camera.py
+Restart=always
+WorkingDirectory=/home/coal/Desktop/cloud/Trainspotting/scripts
+
+[Install]
+WantedBy=multi-user.target
