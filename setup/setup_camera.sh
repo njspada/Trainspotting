@@ -14,11 +14,11 @@ sudo apt-get install -yq python3-edgetpu
 # sudo python3 get-pip.py
 # sudo rm -rf ~/.cache/pip
 # no need to install a virtual env for now
-sudo pip3 install numpy
-sudo pip3 install opencv-contrib-python==4.1.0.25
-sudo pip3 install imutils
-sudo pip3 install pillow
-sudo pip3 install scipy
+sudo -H pip3 install numpy
+sudo -H pip3 install opencv-contrib-python==4.1.0.25
+sudo -H pip3 install imutils
+sudo -H pip3 install pillow
+sudo -H pip3 install scipy
 sudo apt-get install -yq edgetpu-examples
 sudo chmod a+w /usr/share/edgetpu/examples
 # models and label files stored in /usr/share/edgetpu/examples/models
@@ -32,7 +32,7 @@ sudo sed -i 's~${search}~${replace}~g' $CAMERACONF
 ##############################################################
 
 # 4. Install MySQL for Python3
-pip3 install mysql-connector-python
+sudo -H pip3 install mysql-connector-python
 ##############################################################
 
 # 5. Setup systemd service

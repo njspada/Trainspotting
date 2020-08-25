@@ -2,7 +2,7 @@
 
 # 1. Install reqs
 sudo apt-get install -yq python3-serial
-sudo pip3 install argparse
+sudo -H pip3 install argparse
 ##############################################################
 
 # 2. Setup systemd service

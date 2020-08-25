@@ -6,7 +6,7 @@ sudo apt install -yq python3-configobj
 sudo apt install -yq python3-pil
 sudo apt install -yq python3-serial
 sudo apt install -yq python3-usb
-sudo /usr/bin/python3 -m pip install Cheetah3
+sudo -H /usr/bin/python3 -m pip install Cheetah3
 sudo apt install -yq python3-mysqldb
 ##############################################################
 
@@ -25,7 +25,7 @@ sudo cp /home/trainspotting/Trainspotting/scripts/config/weewx.conf /home/weewx
 ##############################################################
 
 # 4. update device usb location
-LOC=$(ls sys/bus/usb/drivers/cp210x/1-*/tty*/tty)
+LOC=$(ls /sys/bus/usb/drivers/cp210x/1-*/tty*/tty)
 WEEWXCONF="/home/weewx/weewx.conf"
 search="port ="
 replace="port = /dev/${LOC}\n# port ="
