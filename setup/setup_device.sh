@@ -23,14 +23,14 @@ sudo apt-get install -yq python3-pip
 
 # 2. Find external ssd path
 SSDPATH=$(sudo lsblk | grep /media* | rev | cut -d' ' -f1 | rev)
-echo "ssd_path <- ${SSDPATH}" > /home/trainspotting/ssd_path.R
+echo "ssd_path <- ${SSDPATH}" > /home/Desktop/ssd_path.R
 export SSDPATH
 ##############################################################
 exit -1
 # 3. Install & configure MySQL
 cd Trainspotting/setup
 sudo chmod u+x setup_mysql.sh
-sudo ./setup_mysql.sh
+sudo ./setup_mysql.sh $SSDPATH
 ##############################################################
 
 # 4. setup weewx
@@ -42,7 +42,7 @@ sudo ./setup_weewx.sh
 # 5. Setup utils for run_camera
 cd Trainspotting/setup
 sudo chmod u+x setup_camera.sh
-sudo ./setup_camera.sh
+sudo ./setup_camera.sh $SSDPATH
 ##############################################################
 
 # 6. Setup utils for run_purple_air
@@ -54,13 +54,13 @@ sudo ./setup_purple_air.sh
 # 7. Setup utils for run_reporting
 cd Trainspotting/setup
 sudo chmod u+x setup_reporting.sh
-sudo ./setup_reporting.sh
+sudo ./setup_reporting.sh $SSDPATH
 ##############################################################
 
 # 8. Setup ngrok
 cd Trainspotting/setup
 sudo chmod u+x setup_ngrok.sh
-sudo ./setup_ngrok.sh
+sudo ./setup_ngrok.sh $SSDPATH
 ##############################################################
 
 # 9. Enable all services for auto start on boot

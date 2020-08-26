@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SSDPATH=$1
+
 # 1. download ngrok
 cd /home/trainspotting
 sudo curl https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok_archive.zip

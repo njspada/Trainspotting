@@ -1,4 +1,7 @@
 #!/bin/bash
+
+SSDPATH=$1
+
 # 1. Utils
 sudo apt-get install -yq libpython3-dev
 ##############################################################
