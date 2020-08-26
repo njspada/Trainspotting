@@ -24,7 +24,7 @@ function save_file($source, $destination){
 function save_da(){
     $query = "";
     $filename = $_POST["filename"];
-    // $device_id = $_POST["device_id"];
+    $device_id = $_POST["device_id"];
     $file = $_FILES['file']['tmp_name'];
     $tablename = $_POST["tablename"];
     $output_dir = "/home/bitnami/output/";
@@ -47,7 +47,8 @@ function save_da(){
          "FIELDS TERMINATED BY ',' ".
          "LINES TERMINATED BY '\n' ".
          "IGNORE 1 LINES ".
-         "($header);"; 
+         "($header) "
+         "SET device_id=$device_id;"; 
     // echo $query;
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");

@@ -8,6 +8,8 @@ sudo aptitude install -y -q r-base
 ##############################################################
 
 # 2. install reqs
+sudo apt-get install -yq libcurl4-openssl-dev
+sudo apt-get install -yq libmysqlclient-dev
 echo "install.packages('tidyverse',repos = 'http://cran.us.r-project.org')" | R --no-save --silent
 echo "install.packages('DBI',repos = 'http://cran.us.r-project.org')" | R --no-save --silent
 echo "install.packages('RMariaDB',repos = 'http://cran.us.r-project.org')" | R --no-save --silent
@@ -17,7 +19,7 @@ echo "install.packages('RMariaDB',repos = 'http://cran.us.r-project.org')" | R -
 REPCONF="/home/trainspotting/Trainspotting/scripts/config/reporting_config.R"
 search="output_path="
 replace="output_path=${SSDPATH}/trainspotting/\n# output_path="
-sed -i 's~${search}~${replace}~g' $REPCONF
+sed -i "s~${search}~${replace}~g" $REPCONF
 ##############################################################
 
 # 4. Setup cron job/tab

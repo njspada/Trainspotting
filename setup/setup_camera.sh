@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# unplug coral before running this script!
 SSDPATH=$1
 
 # 1. Utils
@@ -39,6 +39,6 @@ sudo -H pip3 install mysql-connector-python
 ##############################################################
 
 # 5. Setup systemd service
-sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/system/systemd
+sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/systemd/system
 sudo chmod +x /etc/systemd/system/run_camera.service
 ##############################################################

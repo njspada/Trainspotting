@@ -4,7 +4,7 @@ SSDPATH=$1
 
 # 1. download ngrok
 cd /home/trainspotting
-sudo curl https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok_archive.zip
+sudo curl https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.zip -o ngrok_archive.zip
 unzip ngrok_archive.zip
 chmod u+x ngrok
 ##############################################################
@@ -19,5 +19,5 @@ sudo sed -i 's#${search}#${replace}#g' ngrok_config.yml
 # 3. setup ngrok service
 cd /home/trainspotting/Trainspotting/services
 sudo cp run_ngrok.service /etc/systemd/system
-sudo chmod /etc/systemd/system/run_ngrok.service
+sudo chmod u+x /etc/systemd/system/run_ngrok.service
 ##############################################################

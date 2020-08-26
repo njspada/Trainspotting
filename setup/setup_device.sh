@@ -1,8 +1,12 @@
 #!/bin/bash
+# dont forget to reboot device before running this script!!!
 
-# -1. set noninteractive frontend
+# -2. set noninteractive frontend
 export DEBIAN_FRONTEND=noninteractive
 ##############################################################
+
+# -1. Set device name and location info
+
 
 # 0. git clone from production branch
 sudo mkdir /home/trainspotting
@@ -12,21 +16,16 @@ sudo git clone --depth=1 --single-branch --branch production https://dmmajithia:
 
 # 1. install python3, pip3, curl
 sudo apt-get update
-# 'After this operation additional disk space .... Do you want to continue? Y/n'
-# sudo apt-get install -yq software-properties-common
-# sudo add-apt-repository ppa:deadsnakes/ppa
-# sudo apt-get install -yq python3.8
-# ^ jetson comes with python3.6.9 preinstalled
 sudo apt-get install -yq curl
 sudo apt-get install -yq python3-pip
 ##############################################################
 
 # 2. Find external ssd path
 SSDPATH=$(sudo lsblk | grep /media* | rev | cut -d' ' -f1 | rev)
-echo "ssd_path <- ${SSDPATH}" > /home/Desktop/ssd_path.R
+echo "ssd_path <- ${SSDPATH}" > /home/coal/Desktop/ssd_path.R
 export SSDPATH
 ##############################################################
-exit -1
+
 # 3. Install & configure MySQL
 cd Trainspotting/setup
 sudo chmod u+x setup_mysql.sh
