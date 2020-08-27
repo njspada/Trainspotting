@@ -176,6 +176,11 @@ ALTER TABLE `train_types`
 ALTER TABLE `train_detects`
   ADD CONSTRAINT `train_detects_ibfk_1` FOREIGN KEY (`type`) REFERENCES `train_types` (`id`);
 SET FOREIGN_KEY_CHECKS=1;
+--
+--
+--
+INSERT INTO train_types VALUES(1,"moving");
+INSERT INTO train_types VALUES(2,"stationary");
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

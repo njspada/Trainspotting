@@ -15,8 +15,7 @@ OUTPUT=$(git status -uno | grep "Your branch is up to date")
 if [ -z "$OUTPUT" ]
 then
 	git pull
-	sudo chmod u+x setup/setup_device.sh
-	sudo ./setup/setup_device.sh
+	(sudo chmod -f u+x setup/update.sh && sudo ./setup/update.sh) || true
 else
 	echo "No updates."
 fi
