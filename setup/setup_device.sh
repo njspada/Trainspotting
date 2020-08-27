@@ -62,6 +62,13 @@ sudo chmod u+x setup_ngrok.sh
 sudo ./setup_ngrok.sh $SSDPATH
 ##############################################################
 
+# 4. Create directories for logs and images
+mkdir -p $SSDPATH/trainspotting/logs/daily_aggregate
+mkdir -p $SSDPATH/trainspotting/logs/train_detects
+mkdir -p $SSDPATH/trainspotting/logs/train_images
+mkdir -p $SSDPATH/trainspotting/images
+#############################################################
+
 # 9. Enable all services for auto start on boot
 sudo systemctl enable weewx
 sudo systemctl enable run_camera.service

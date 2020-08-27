@@ -47,7 +47,7 @@ function save_da(){
          "FIELDS TERMINATED BY ',' ".
          "LINES TERMINATED BY '\n' ".
          "IGNORE 1 LINES ".
-         "($header) "
+         "($header) ".
          "SET device_id=$device_id;"; 
     // echo $query;
 

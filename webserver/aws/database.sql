@@ -9,7 +9,7 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
+-- SET time_zone = "+00:00";
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -32,6 +32,7 @@ USE `trainspotting`;
 
 DROP TABLE IF EXISTS `daily_aggregate`;
 CREATE TABLE `daily_aggregate` (
+  `device_id` int(11) NOT NULL,
   `dateTime` int(11) NOT NULL,
   `outTemp` float NOT NULL,
   `outHumidity` float NOT NULL,
@@ -78,6 +79,7 @@ CREATE TABLE `field_devices` (
 
 DROP TABLE IF EXISTS `train_detects`;
 CREATE TABLE `train_detects` (
+  `device_id` int(11) NOT NULL,
   `id` int(11) NOT NULL,
   `event_id` int(11) NOT NULL,
   `type` int(11) NOT NULL,
@@ -98,6 +100,7 @@ CREATE TABLE `train_detects` (
 
 DROP TABLE IF EXISTS `train_images`;
 CREATE TABLE `train_images` (
+  `device_id` int(11) NOT NULL,
   `id` int(11) NOT NULL,
   `filename` varchar(100) NOT NULL,
   `event_id` int(11) NOT NULL
@@ -123,7 +126,7 @@ CREATE TABLE `train_types` (
 -- Indexes for table `daily_aggregate`
 --
 ALTER TABLE `daily_aggregate`
-  ADD KEY `da_index` (`dateTime`);
+  ADD PRIMARY KEY `da_index` (`device_id`,`dateTime`);
 
 --
 -- Indexes for table `field_devices`
@@ -135,14 +138,13 @@ ALTER TABLE `field_devices`
 -- Indexes for table `train_detects`
 --
 ALTER TABLE `train_detects`
-  ADD KEY `type` (`type`),
-  ADD KEY `td_index` (`id`);
+  ADD PRIMARY KEY `td_index` (`device_id`,`id`);
 
 --
 -- Indexes for table `train_images`
 --
 ALTER TABLE `train_images`
-  ADD KEY `ti_index` (`id`);
+  ADD PRIMARY KEY `ti_index` (`device_id`,`id`);
 
 --
 -- Indexes for table `train_types`

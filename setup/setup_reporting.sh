@@ -18,8 +18,8 @@ echo "install.packages('RMariaDB',repos = 'http://cran.us.r-project.org')" | R -
 # 3. update config
 REPCONF="/home/trainspotting/Trainspotting/scripts/config/reporting_config.R"
 search="output_path="
-replace="output_path=${SSDPATH}/trainspotting/\n# output_path="
-sed -i "s~${search}~${replace}~g" $REPCONF
+replace="output_path='${SSDPATH}/trainspotting/'\n# output_path="
+sudo sed -i "s~${search}~${replace}~g" $REPCONF
 ##############################################################
 
 # 4. Setup cron job/tab
