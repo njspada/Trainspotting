@@ -1,0 +1,21 @@
+# systemd configuration for weewx
+
+[Unit]
+Description=weewx weather system
+Requires=time-sync.target
+After=time-sync.target
+RequiresMountsFor=/home
+
+[Service]
+ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
+
+ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --dump -y'
+
+ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --clear-memory -y'
+
+Restart=always
+
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

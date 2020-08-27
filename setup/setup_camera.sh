@@ -31,7 +31,7 @@ sudo chmod a+w /usr/share/edgetpu/examples
 CAMERACONF="/home/trainspotting/Trainspotting/scripts/config/camera_config.py"
 search="default_output_path="
 replace="default_output_path=${SSDPATH}/trainspotting/images/\n# default_output_path="
-sudo sed -i 's~${search}~${replace}~g' $CAMERACONF
+sudo sed -i "s~${search}~${replace}~g" $CAMERACONF
 ##############################################################
 
 # 4. Install MySQL for Python3

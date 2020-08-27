@@ -5,6 +5,7 @@ Description=Trainspotting-Run-Camera
 ExecStart=/usr/bin/python3 /home/trainspotting/Trainspotting/scripts/run_camera.py
 Restart=always
 WorkingDirectory=/home/trainspotting/Trainspotting/scripts
+KillSignal=SIGINT
 
 [Install]
 WantedBy=multi-user.target

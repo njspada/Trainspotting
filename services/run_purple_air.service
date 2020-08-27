@@ -5,6 +5,7 @@ Description=Trainspotting-Run-Purple-Air
 ExecStart=/usr/bin/python3 /home/trainspotting/Trainspotting/scripts/run_purple_air.py
 Restart=always
 WorkingDirectory=/home/trainspotting/Trainspotting/scripts
+KillSignal=SIGINT
 
 [Install]
 WantedBy=multi-user.target

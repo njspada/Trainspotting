@@ -36,10 +36,8 @@ sed -i "s~${search}~${replace}~g" $WEEWXCONF
 sudo /home/weewx/bin/wee_device --set-interval=1
 ##############################################################
 
-#4. enable daemon service
-cd /home/weewx
-sudo cp util/init.d/weewx.debian /etc/init.d/weewx
-sudo chmod +x /etc/init.d/weewx
-sudo update-rc.d weewx defaults 98
-sudo /etc/init.d/weewx start
+#4. Setup systemd service
+cd /home/trainspotting/Trainspotting/services
+sudo cp run_weewx.service /etc/systemd/system
+sudo chmod u+x /etc/systemd/system/run_weewx.service
 ##############################################################
