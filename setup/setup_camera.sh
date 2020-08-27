@@ -40,5 +40,5 @@ sudo -H pip3 install mysql-connector-python
 
 # 5. Setup systemd service
 sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/systemd/system
-sudo chmod +x /etc/systemd/system/run_camera.service
+# sudo chmod +x /etc/systemd/system/run_camera.service
 ##############################################################

@@ -19,5 +19,5 @@ sudo sed -i 's#${search}#${replace}#g' ngrok_config.yml
 # 3. setup ngrok service
 cd /home/trainspotting/Trainspotting/services
 sudo cp run_ngrok.service /etc/systemd/system
-sudo chmod u+x /etc/systemd/system/run_ngrok.service
+# sudo chmod u+x /etc/systemd/system/run_ngrok.service
 ##############################################################

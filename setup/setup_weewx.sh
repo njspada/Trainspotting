@@ -39,5 +39,5 @@ sudo /home/weewx/bin/wee_device --set-interval=1
 #4. Setup systemd service
 cd /home/trainspotting/Trainspotting/services
 sudo cp run_weewx.service /etc/systemd/system
-sudo chmod u+x /etc/systemd/system/run_weewx.service
+# sudo chmod u+x /etc/systemd/system/run_weewx.service
 ##############################################################
