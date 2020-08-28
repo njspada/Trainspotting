@@ -21,7 +21,7 @@ sudo python3 ./setup.py install --no-prompt
 
 # 3. replace default configuration with backup
 sudo rm /home/weewx/weewx.conf
-sudo cp /home/trainspotting/Trainspotting/scripts/config/weewx.conf /home/weewx
+sudo cp /home/trainspotting/scripts/config/weewx.conf /home/weewx
 ##############################################################
 
 # 4. update device usb location
@@ -37,7 +37,7 @@ sudo /home/weewx/bin/wee_device --set-interval=1
 ##############################################################
 
 #4. Setup systemd service
-cd /home/trainspotting/Trainspotting/services
+cd /home/trainspotting/services
 sudo cp run_weewx.service /etc/systemd/system
 # sudo chmod u+x /etc/systemd/system/run_weewx.service
 ##############################################################

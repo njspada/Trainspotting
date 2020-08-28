@@ -6,16 +6,17 @@ sudo systemctl stop weewx
 ##############################################################
 
 # 2. run reporting R script
-sudo Rscript /home/trainspotting/Trainspotting/scripts/run_reporting.R
+sudo Rscript /home/trainspotting/scripts/run_reporting.R
 ##############################################################
 
 # 3. git pull
 cd /home/trainspotting/Trainspotting
-OUTPUT=$(git status -uno | grep "Your branch is up to date")
+sudo git fetch
+OUTPUT=$(sudo git status -uno | grep "Your branch is up to date")
 if [ -z "$OUTPUT" ]
 then
-	git pull
-	(sudo chmod -f u+x setup/update.sh && sudo ./setup/update.sh) || true
+	sudo git pull
+	(sudo chmod -f u+x update.sh && sudo ./update.sh) || true
 else
 	echo "No updates."
 fi

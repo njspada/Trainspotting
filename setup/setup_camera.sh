@@ -28,7 +28,7 @@ sudo chmod a+w /usr/share/edgetpu/examples
 ##############################################################
 
 # 3. Configure ssd location
-CAMERACONF="/home/trainspotting/Trainspotting/scripts/config/camera_config.py"
+CAMERACONF="/home/trainspotting/scripts/config/camera_config.py"
 search="default_output_path="
 replace="default_output_path=${SSDPATH}/trainspotting/images/\n# default_output_path="
 sudo sed -i "s~${search}~${replace}~g" $CAMERACONF
@@ -39,6 +39,6 @@ sudo -H pip3 install mysql-connector-python
 ##############################################################
 
 # 5. Setup systemd service
-sudo cp /home/trainspotting/Trainspotting/services/run_camera.service /etc/systemd/system
+sudo cp /home/trainspotting/services/run_camera.service /etc/systemd/system
 # sudo chmod +x /etc/systemd/system/run_camera.service
 ##############################################################

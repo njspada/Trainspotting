@@ -2,9 +2,12 @@
 Description=Trainspotting-Run-Purple-Air
 
 [Service]
-ExecStart=/usr/bin/python3 /home/trainspotting/Trainspotting/scripts/run_purple_air.py
+ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_purple_air.py
+
 Restart=always
-WorkingDirectory=/home/trainspotting/Trainspotting/scripts
+
+WorkingDirectory=/home/trainspotting/scripts
+
 KillSignal=SIGINT
 
 [Install]
