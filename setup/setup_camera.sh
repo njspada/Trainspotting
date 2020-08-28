@@ -18,7 +18,7 @@ sudo apt-get install -yq python3-edgetpu
 # sudo rm -rf ~/.cache/pip
 # no need to install a virtual env for now
 sudo -H pip3 install numpy
-sudo -H pip3 install opencv-contrib-python==4.1.0.25
+# sudo -H pip3 install opencv-contrib-python==4.1.0.25
 sudo -H pip3 install imutils
 sudo -H pip3 install pillow
 sudo -H pip3 install scipy
@@ -30,7 +30,7 @@ sudo chmod a+w /usr/share/edgetpu/examples
 # 3. Configure ssd location
 CAMERACONF="/home/trainspotting/scripts/config/camera_config.py"
 search="default_output_path="
-replace="default_output_path=${SSDPATH}/trainspotting/images/\n# default_output_path="
+replace="default_output_path='${SSDPATH}/trainspotting/images/'\n# default_output_path="
 sudo sed -i "s~${search}~${replace}~g" $CAMERACONF
 ##############################################################
 

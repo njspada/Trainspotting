@@ -18,7 +18,7 @@ mysql -u dhawal -papril+1Hitmonlee < "field_database_template.sql"
 
 # 3. Move MySQL data directory to ssd
 sudo systemctl stop mysql
-sudo cp -rp /var/lib/mysql "${SSDPATH}/trainspotting/"
+sudo cp -rp /var/lib/mysql "${SSDPATH}/trainspotting/mysql"
 sudo mv /var/lib/mysql /var/lib/mysql.bak
 ##############################################################
 
