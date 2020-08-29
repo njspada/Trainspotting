@@ -1,5 +1,6 @@
 [Unit]
 Description=Trainspotting-Run-Camera
+After=mysql.service
 
 [Service]
 ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_camera.py

@@ -1,8 +1,9 @@
 <?php
 
-if(isset($_GET['name'])){
+if(isset($_GET['name']) and isset($_GET['report_time'])){
 	$name = $_GET['name'];
-	$query = "INSERT INTO field_devices (name) VALUES ('$name');";
+    $report_time = $_GET['report_time'];
+	$query = "INSERT INTO field_devices (name,report_time) VALUES ('$name','$report_time');";
 	$mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
     if($mysqli->connect_errno) {
         echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;

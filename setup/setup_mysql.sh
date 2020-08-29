@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SSDPATH=$1
+MOUNTUNIT=$2
 
 # 1. Install MySQL package
 sudo apt update
@@ -29,13 +30,22 @@ replace="datadir=${SSDPATH}/trainspotting/mysql\n# datadir="
 sudo sed -i "s~${search}~${replace}~g" $MYSQLCONF
 ##############################################################
 
-# 4. update apparmor with new location
+# 4. Update apparmor with new location
 echo "alias /var/lib/mysql/ -> ${SSDPATH}/trainspotting/mysql/," >> /etc/apparmor.d/tunables/alias
 sudo systemctl restart apparmor
 ##############################################################
 
-# 5. create empty dir to silence mysql error
+# 5. Create empty dir to silence mysql data dir not found error
 sudo mkdir /var/lib/mysql/mysql -p
-sudo systemctl enable mysql
-sudo systemctl start mysql
+##############################################################
+
+# 6. Add ssd path and mount unit to mysql systemd service file.
+# Then reenable mysql service with this custom service file
+MYSQLSERVICE="/home/trainspotting/services/mysql.service"
+search="ssd-path-here"
+sudo sed -i "s~${search}~${SSDPATH}~g" $MYSQLSERVICE
+search="mount-unit-here"
+sudo sed -i "s~${search}~${MOUNTUNIT}~g" $MYSQLSERVICE
+sudo cp /home/trainspotting/services/mysql.service /etc/systemd/system
+sudo systemctl reenable mysql.service
 ##############################################################

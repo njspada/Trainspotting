@@ -1,0 +1,15 @@
+#!/bin/bash
+DEVICE_ID=$1
+DEBUG=$2
+services=('mysql' 'run_weewx' 'run_ngrok' 'run_camera' 'run_purple_air')
+
+for s in ${services[@]}; do
+	STATUS=$(systemctl show -p LoadState,ActiveState,SubState $s | cut -d= -f2 | awk 1 ORS=',')
+	DSTR=$(date +%s)
+	STATUS="${DSTR},${DEVICE_ID},${s},${STATUS::-1}"
+	echo $STATUS
+	echo $STATUS >> tmp
+done
+
+cat tmp
+rm tmp

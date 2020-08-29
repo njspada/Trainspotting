@@ -3,6 +3,7 @@
 SSDPATH=$1
 DEVICE_ID=$2
 DEVICE_NAME=$3
+REPORT_TIME=$4
 
 # 1. install R for ubuntu
 sudo apt-get install -yq aptitude
@@ -35,7 +36,7 @@ sudo sed -i "s~${search}~${replace}~g" $REPCONF
 # 4. Setup cron job/tab
 chmod u+x /home/trainspotting/services/run_reporting.service
 sudo crontab -l > tabs
-sudo echo "55 23 * * * /home/trainspotting/services/run_reporting.service >> ${SSDPATH}/trainspotting/service_logs/run_reporting_service.log 2>&1" >> tabs
+sudo echo "$REPORT_TIME * * * /home/trainspotting/services/run_reporting.service >> ${SSDPATH}/trainspotting/service_logs/run_reporting_service.log 2>&1" >> tabs
 sudo crontab tabs
 sudo rm tabs
 #############################################################

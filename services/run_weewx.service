@@ -3,15 +3,15 @@
 [Unit]
 Description=weewx weather system
 Requires=time-sync.target
-After=time-sync.target
+After=time-sync.target mysql.service
 RequiresMountsFor=/home
 
 [Service]
 ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
 
-ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --dump -y'
+ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --dump -y; fi'
 
-ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --clear-memory -y'
+ExecStopPost=/bin/bash -c 'if [ "$$SERVICE_RESULT" != "success" ]; then ./home/weewx/bin/wee_device --clear-memory -y; fi'
 
 Restart=always
 

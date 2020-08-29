@@ -2,10 +2,11 @@
 # 1. stop all scripts/services
 sudo systemctl stop run_camera.service
 sudo systemctl stop run_purple_air.service
-sudo systemctl stop weewx
+sudo systemctl stop run_weewx
 ##############################################################
 
 # 2. run reporting R script
+cd /home/trainspotting/scripts
 sudo Rscript /home/trainspotting/scripts/run_reporting.R
 ##############################################################
 
@@ -22,11 +23,13 @@ else
 fi
 ##############################################################
 
-# 4. enable services
+# 4. stop mysql service and enable all services
+sudo systemctl stop mysql
+sudo systemctl enable mysql
 sudo systemctl enable run_camera
 sudo systemctl enable run_purple_air
 sudo systemctl enable run_ngrok
-sudo systemctl enable weewx
+sudo systemctl enable run_weewx
 
 # 5. reboot
 sudo systemctl reboot

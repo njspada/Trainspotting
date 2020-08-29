@@ -6,6 +6,8 @@
 #	- plug in ssd usb
 #	- reboot
 
+REPORT_TIME="55 23"
+
 # 1. upgrade systemc.install python3, pip3, curl
 sudo apt-get update
 sudo apt-get upgrade -yq
@@ -17,14 +19,20 @@ sudo apt-get install -yq python3-pip
 export DEBIAN_FRONTEND=noninteractive
 ##############################################################
 
-# 3. Set device name
+# 3. Set device name and report_time.
+echo "Printing device names and report times:"
+curl -s http://54.188.2.207/get_report_times.php | cat
 echo -n "Enter a device name: "
 read DEVICE_NAME
-response=$(curl -i http://54.188.2.207/setup_device.php?name=$DEVICE_NAME)
+echo -n "Enter a device report time (MM HH): "
+read REPORT_TIME
+EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
+url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+response=$(curl -i -s $url)
 DEVICE_ID=${response##*=}
 DEVICE_ID=${DEVICE_ID%%;*}
-FS="Failed to setup device name.\nPrinting response and exiting."
-SS="Successfully setup device name. Device id=$DEVICE_ID."
+FS="Failed to setup device.\nPrinting response and exiting."
+SS="Successfully setup device. Device id=$DEVICE_ID."
 if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
 export DEVICE_ID
 export DEVICE_NAME
@@ -39,16 +47,19 @@ sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting
 ##############################################################
 
-# 5. Find external ssd path
-SSDPATH=$(sudo lsblk | grep /media* | rev | cut -d' ' -f1 | rev)
-echo "ssd_path <- ${SSDPATH}" > /home/coal/Desktop/ssd_path.R
+# 5. Find external ssd path and mount unit name
+SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
+MOUNTUNIT=(`systemctl list-units --type=mount | grep /media/A8FE1F9CFE1F61BC`)
+echo "ssd_path <- ${SSDPATH}" >> /home/trainspotting/ssd.txt
+echo "ssd_mount_unit <- ${MOUNTUNIT}" >> /home/trainspotting/ssd.txt
 export SSDPATH
+export MOUNTUNIT
 ##############################################################
 
 # 6. Setup MySQL
 cd /home/trainspotting/setup
 sudo chmod u+x setup_mysql.sh
-sudo ./setup_mysql.sh $SSDPATH
+sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
 ##############################################################
 
 # 7. Setup WeeWX
@@ -72,7 +83,7 @@ sudo ./setup_purple_air.sh
 # 10. Setup utils for run_reporting
 cd /home/trainspotting/setup
 sudo chmod u+x setup_reporting.sh
-sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME
+sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME $REPORT_TIME
 ##############################################################
 
 # 11. Setup Ngrok
