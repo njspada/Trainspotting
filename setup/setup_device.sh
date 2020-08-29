@@ -6,8 +6,6 @@
 #	- plug in ssd usb
 #	- reboot
 
-REPORT_TIME="55 23"
-
 # 1. upgrade systemc.install python3, pip3, curl
 sudo apt-get update
 sudo apt-get upgrade -yq
@@ -20,6 +18,7 @@ export DEBIAN_FRONTEND=noninteractive
 ##############################################################
 
 # 3. Set device name and report_time.
+INFO="/home/trainspotting/info.txt"
 echo "Printing device names and report times:"
 curl -s http://54.188.2.207/get_report_times.php | cat
 echo -n "Enter a device name: "
@@ -34,8 +33,9 @@ DEVICE_ID=${DEVICE_ID%%;*}
 FS="Failed to setup device.\nPrinting response and exiting."
 SS="Successfully setup device. Device id=$DEVICE_ID."
 if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
-export DEVICE_ID
-export DEVICE_NAME
+echo "device_id = ${DEVICE_ID}" >> $INFO
+echo "device_name = ${DEVICE_NAME}" >> $INFO
+echo "report_time = ${REPORT_TIME}" >> $INFO
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
@@ -49,11 +49,9 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 
 # 5. Find external ssd path and mount unit name
 SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
-MOUNTUNIT=(`systemctl list-units --type=mount | grep /media/A8FE1F9CFE1F61BC`)
-echo "ssd_path <- ${SSDPATH}" >> /home/trainspotting/ssd.txt
-echo "ssd_mount_unit <- ${MOUNTUNIT}" >> /home/trainspotting/ssd.txt
-export SSDPATH
-export MOUNTUNIT
+MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
+echo "ssd_path = ${SSDPATH}" >> $INFO
+echo "ssd_mount_unit = ${MOUNTUNIT}" >> $INFO
 ##############################################################
 
 # 6. Setup MySQL
@@ -90,6 +88,15 @@ sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME $REPORT_TIME
 cd /home/trainspotting/setup
 sudo chmod u+x setup_ngrok.sh
 sudo ./setup_ngrok.sh $SSDPATH
+##############################################################
+
+# 12. Setup status checker
+cd /home/trainspotting/services
+sudo chmod u+x status_checker
+sudo crontab -l > tabs
+echo "00 * * * * /home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+sudo crontab tabs
+sudo rm tabs
 ##############################################################
 
 # 12. Create directories for logs and images on SSD

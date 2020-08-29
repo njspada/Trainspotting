@@ -11,5 +11,4 @@ for s in ${services[@]}; do
 	echo $STATUS >> tmp
 done
 
-cat tmp
-rm tmp
+curl -s -F 'status=@tmp' http://54.188.2.207/status_update.php
