@@ -5,6 +5,11 @@
 #	- plug in weewx usb
 #	- plug in ssd usb
 #	- reboot
+# 	- sudo mkdir /home/trainspotting
+# 	- cd /home/trainspotting
+# 	- sudo vi setup_device.sh (and paste this file in)
+# 	- sudo chmod u+x setup_device.sh
+# 	- sudo ./setup_device.sh 2>&1 | tee /home/coal/output.txt
 
 # 1. upgrade system.install python3, pip3, curl
 sudo apt-get update
@@ -33,9 +38,9 @@ DEVICE_ID=${DEVICE_ID%%;*}
 FS="Failed to setup device.\nPrinting response and exiting."
 SS="Successfully setup device. Device id=$DEVICE_ID."
 if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
-echo "device_id = ${DEVICE_ID}" >> $INFO
-echo "device_name = ${DEVICE_NAME}" >> $INFO
-echo "report_time = ${REPORT_TIME}" >> $INFO
+echo "device_id=${DEVICE_ID}" >> $INFO
+echo "device_name=${DEVICE_NAME}" >> $INFO
+echo "report_time=${REPORT_TIME}" >> $INFO
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
@@ -50,8 +55,9 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 # 5. Find external ssd path and mount unit name
 SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
 MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
-echo "ssd_path = ${SSDPATH}" >> $INFO
-echo "ssd_mount_unit = ${MOUNTUNIT}" >> $INFO
+echo "ssd_path=${SSDPATH}" >> $INFO
+echo "ssd_mount_unit=${MOUNTUNIT}" >> $INFO
+sudo mkdir ${SSDPATH}/trainspotting
 ##############################################################
 
 # 6. Setup MySQL
