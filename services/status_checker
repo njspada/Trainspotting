@@ -1,5 +1,5 @@
 #!/bin/bash
-logfile="/media/A8FE1F9CFE1F61BC/trainspotting/service_logs/ngrok.log"
+logfile="ssd-path-here/trainspotting/service_logs/ngrok.log"
 URL=$(grep "started tunnel" ${logfile} | tail -1 | rev | cut -d'=' -f 1 | rev)
 DSTR=$(date +%s)
 DEVICE_ID=$1

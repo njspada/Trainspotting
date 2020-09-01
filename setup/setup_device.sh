@@ -6,7 +6,7 @@
 #	- plug in ssd usb
 #	- reboot
 
-# 1. upgrade systemc.install python3, pip3, curl
+# 1. upgrade system.install python3, pip3, curl
 sudo apt-get update
 sudo apt-get upgrade -yq
 sudo apt-get install -yq curl
@@ -92,10 +92,14 @@ sudo ./setup_ngrok.sh $SSDPATH
 
 # 12. Setup status checker
 cd /home/trainspotting/services
+STATCHECKER=" /home/trainspotting/services/status_checker"
+search="ssd-path-here"
+replace="${SSDPATH}"
+sed -i "s~${search}~${replace}~g" $STATCHECKER
 sudo chmod u+x status_checker
 sudo crontab -l > tabs
-echo "00 * * * * /home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
-echo "@reboot root sleep 60 && /home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+echo "00 * * * * ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+echo "@reboot root sleep 60 && ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
 sudo crontab tabs
 sudo rm tabs
 ##############################################################
@@ -109,10 +113,17 @@ mkdir -p $SSDPATH/trainspotting/service_logs
 #############################################################
 
 # 13. Enable all services for auto start on boot
+sudo systemctl enable mysql
 sudo systemctl enable run_weewx.service
 sudo systemctl enable run_camera.service
 sudo systemctl enable run_purple_air.service
 sudo systemctl enable run_ngrok.service
+##############################################################
+
+# 14. Clean up
+cd /home/trainspotting
+sudo rm -rf ngrok_archive.zip weewx*
+sudo ./home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1
 ##############################################################
 
 echo "Done setup. Please check logs/output for any errors/mishaps."
