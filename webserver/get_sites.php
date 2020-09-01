@@ -1,30 +1,46 @@
 <?php 
 
+require __DIR__ . '/vendor/autoload.php';
+include 'run_query.php';
 
-function get(&$var, $default=null) {
-    return isset($var) ? $var : $default;
-}
-
+$print_attached = get($_GET['attached'],'no');
 $query = "SELECT * FROM sites;";
-$mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");
-if($mysqli->connect_errno) {
-    echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+list($result,$mysqli) = run_query($query);
+$result = $result->fetch_all(MYSQLI_ASSOC);
+$rows=array();
+foreach($result as $site){
+	$row = array('device_id'=>-1,'start'=>-1,'end'=>-1);
+	if($print_attached == 'no'){
+		$rows[]= array_merge($row,$site);
+	}
+	else{
+		$query = "SELECT * FROM site_usage WHERE site_id=$site[site_id] AND end=0;";
+		list($records,$mysqli2) = run_query($query);
+		while($row = $records->fetch_assoc()){
+			$row['start'] = date('r', $row['start']);
+			$rows[]= array_merge($row,$site);
+		}
+	}
 }
 
-$result = $mysqli->query($query);
-$result = $result->fetch_all(MYSQLI_ASSOC);
-echo "site_id    site_code    site_name    site_notes    latitude    longitude    device_id    start\r\n<br>";
-foreach($result as $value){
-	$device_id=-1;
-	$start=-1;
-	$end=-1;
-	$query = "SELECT * FROM site_usage WHERE site_id=$value[site_id] AND end=0;";
-	$r = $mysqli->query($query);
-	if($r = $r->fetch_assoc()){
-		$device_id = $r['device_id'];
-		$start = $r['start'];
-	}
-	echo "$value[site_id]    $value[site_code]    $value[site_name]    $value[site_notes]    $value[latitude]    $value[longitude]    $device_id    $start    $end\n<br>";
+$cols = ['site_id','site_code','site_name','site_notes','latitude','longitude','device_id','start','end'];
+$table = \Donquixote\Cellbrush\Table\Table::create()
+	->addRowName('rhead')
+	->addColNames($cols);
+foreach($cols as $col){
+	$table->th('rhead',$col,$col);
 }
+foreach($rows as $index=>$row){
+	$table->addRowName($index);
+	foreach($cols as $col){
+		$table->td($index,$col,$row[$col]);
+	}
+}
+
+$table->addRowStriping();
+$html = $table->render();
+$style = "<head><style>table,td,th {border:1px black solid; test-align:left;}</style></head>";
+echo $style;
+echo $html;
 
 ?>

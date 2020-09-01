@@ -14,11 +14,12 @@ foreach($devices as $device){
 	list($result,$mysqli) = run_query($query);
 	$row = $result->fetch_assoc();
 	if($row){
+		$row['dateTime'] = date('r', $row['dateTime']);
 		array_push($device_stats, array_merge($device,$row));
 	}
 }
 
-$cols = ['id','url','report_time','mysql','run_ngrok','run_camera','run_purple_air','run_weewx'];
+$cols = ['dateTime','id','url','report_time','mysql','run_ngrok','run_camera','run_purple_air','run_weewx'];
 $table = \Donquixote\Cellbrush\Table\Table::create()
 	->addRowName('rhead')
 	->addColNames($cols);
@@ -35,34 +36,8 @@ foreach($device_stats as $stat){
 
 $table->addRowStriping();
 $html = $table->render();
+$style = "<head><style>table,td,th {border:1px black solid; test-align:left;}</style></head>";
+echo $style;
 echo $html;
-
-
-
-// $table = \Donquixote\Cellbrush\Table\Table::create()
-// 	->addRowName('rhead')
-// 	->addColNames(['id','url','report_time','mysql','run_ngrok','run_camera','run_purple_air','run_weewx'])
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// 	->th('rhead','id','id')
-// foreach($devices as $device){
-
-// }
-
-
-// $table = \Donquixote\Cellbrush\Table\Table::create()
-//   ->addRowNames(['row0', 'row1', 'row2'])
-//   ->addColNames(['col0', 'col1', 'col2'])
-//   ->td('row0', 'col0', 'Diag 0')
-//   ->td('row1', 'col1', 'Diag 1')
-//   ->td('row2', 'col2', 'Diag 2')
-// ;
-// $html = $table->render();
-// echo $html;
 
 ?>

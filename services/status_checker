@@ -9,7 +9,7 @@ services=('mysql' 'run_weewx' 'run_ngrok' 'run_camera' 'run_purple_air')
 for s in ${services[@]}; do
 	#STATUS=$(systemctl show -p LoadState,ActiveState,SubState $s | cut -d= -f2 | awk 1 ORS=',')
 	STATUS=$(systemctl show -p SubState $s | cut -d= -f2 | awk 1 ORS=',')
-	post_url="${post_url}&${s}=${STATUS}"
+	post_url="${post_url}&${s}=${STATUS::-1}"
 	STATUS="${DSTR},${DEVICE_ID},${s},${STATUS::-1}"
 	echo $STATUS
 	echo $STATUS >> tmp

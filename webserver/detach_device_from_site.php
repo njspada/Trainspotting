@@ -22,12 +22,9 @@
 			exit("site_code does not exist. exiting.");
 		}
 	}
-	$start = time();
-	$query = "UPDATE site_usage SET end=$start WHERE device_id=$device_id AND end=0;";
+	$end = time();
+	$query = "UPDATE site_usage SET end=$end WHERE device_id=$device_id AND end=0 AND site_id=$site_id;";
 	list($result,$mysqli) = run_query($query);
 	echo $mysqli->error;
-
-	$query = "INSERT INTO site_usage (device_id,site_id,start) VALUES ($device_id,$site_id,$start);";
-	run_query($query);
 
 ?>
