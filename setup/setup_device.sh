@@ -92,14 +92,21 @@ sudo ./setup_ngrok.sh $SSDPATH
 
 # 12. Setup status checker
 cd /home/trainspotting/services
-STATCHECKER=" /home/trainspotting/services/status_checker"
+STATCHECKER="/home/trainspotting/services/status_checker"
+SERVICE="/home/trainspotting/services/run_status_checker.service"
 search="ssd-path-here"
 replace="${SSDPATH}"
 sed -i "s~${search}~${replace}~g" $STATCHECKER
+sed -i "s~${search}~${replace}~g" $SERVICE
+search="device-id-here"
+replace="${DEVICE_ID}"
+sed -i "s~${search}~${replace}~g" $SERVICE
 sudo chmod u+x status_checker
+sudo cp $SERVICE /etc/systemd/system
 sudo crontab -l > tabs
-echo "00 * * * * ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
-echo "@reboot root sleep 60 && ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+echo "00 * * * * systemctl start run_status_checker" >> tabs
+# echo "00 * * * * ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+# echo "@reboot root sleep 60 && ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
 sudo crontab tabs
 sudo rm tabs
 ##############################################################
@@ -113,17 +120,19 @@ mkdir -p $SSDPATH/trainspotting/service_logs
 #############################################################
 
 # 13. Enable all services for auto start on boot
+sudo systemctl daemon-reload
 sudo systemctl enable mysql
 sudo systemctl enable run_weewx.service
 sudo systemctl enable run_camera.service
 sudo systemctl enable run_purple_air.service
 sudo systemctl enable run_ngrok.service
+sudo systemctl enable run_status_checker.service
 ##############################################################
 
 # 14. Clean up
 cd /home/trainspotting
 sudo rm -rf ngrok_archive.zip weewx*
-sudo ./home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1
+# sudo ./home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1
 ##############################################################
 
 echo "Done setup. Please check logs/output for any errors/mishaps."

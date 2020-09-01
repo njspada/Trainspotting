@@ -30,6 +30,7 @@ sudo systemctl enable run_camera
 sudo systemctl enable run_purple_air
 sudo systemctl enable run_ngrok
 sudo systemctl enable run_weewx
+sudo systemctl enable run_status_checker
 
 # 5. reboot
 sudo systemctl reboot
