@@ -5,7 +5,7 @@ require(DBI)
 require(RMariaDB)
 require(httr)
 
-source('config/reporting_config.R')
+source('/home/trainspotting/scripts/config/reporting_config.R')
 
 save_da <- function(da, day) {
 	# 1. save each dataframe in a csv file

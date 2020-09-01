@@ -2,7 +2,7 @@ authtoken: 1gOH50HUSlthsui4SzrVPqFupv5_5k5uMxHqNXWBiudtocoKj
 json_resolver_url: ""
 dns_resolver_ips: []
 console_ui: false
-log_format: logfmt
+log_format: term
 log:
 region: us
 web_addr: false

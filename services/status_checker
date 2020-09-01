@@ -1,14 +1,21 @@
 #!/bin/bash
+logfile="/media/A8FE1F9CFE1F61BC/trainspotting/service_logs/ngrok.log"
+URL=$(grep "started tunnel" ${logfile} | tail -1 | rev | cut -d'=' -f 1 | rev)
+DSTR=$(date +%s)
 DEVICE_ID=$1
-DEBUG=$2
+post_url="http://54.188.2.207/status_update.php?url=${URL}&device_id=${DEVICE_ID}&dateTime=${DSTR}"
 services=('mysql' 'run_weewx' 'run_ngrok' 'run_camera' 'run_purple_air')
 
 for s in ${services[@]}; do
-	STATUS=$(systemctl show -p LoadState,ActiveState,SubState $s | cut -d= -f2 | awk 1 ORS=',')
-	DSTR=$(date +%s)
+	#STATUS=$(systemctl show -p LoadState,ActiveState,SubState $s | cut -d= -f2 | awk 1 ORS=',')
+	STATUS=$(systemctl show -p SubState $s | cut -d= -f2 | awk 1 ORS=',')
+	post_url="${post_url}&${s}=${STATUS}"
 	STATUS="${DSTR},${DEVICE_ID},${s},${STATUS::-1}"
 	echo $STATUS
 	echo $STATUS >> tmp
 done
 
-curl -s -F 'status=@tmp' http://54.188.2.207/status_update.php
+if [ -z $DEVICE_ID ]; then rm tmp; exit; fi
+
+#echo $post_url
+curl -s -F 'status=@tmp' $post_url

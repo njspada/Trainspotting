@@ -2,7 +2,9 @@
 
 [Unit]
 Description=MySQL Community Server
-ConditionPathIsMountPoint=ssd-path-here
+#ConditionPathIsMountPoint=ssd-path-here
+After=network.target mount-unit-here
+Requires=mount-unit-here
 
 [Install]
 WantedBy=multi-user.target mount-unit-here

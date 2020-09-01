@@ -95,6 +95,7 @@ cd /home/trainspotting/services
 sudo chmod u+x status_checker
 sudo crontab -l > tabs
 echo "00 * * * * /home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
+echo "@reboot root sleep 60 && /home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
 sudo crontab tabs
 sudo rm tabs
 ##############################################################
@@ -115,4 +116,3 @@ sudo systemctl enable run_ngrok.service
 ##############################################################
 
 echo "Done setup. Please check logs/output for any errors/mishaps."
-
