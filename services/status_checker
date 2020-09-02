@@ -3,7 +3,8 @@ logfile="ssd-path-here/trainspotting/service_logs/ngrok.log"
 URL=$(grep "started tunnel" ${logfile} | tail -1 | rev | cut -d'=' -f 1 | rev)
 DSTR=$(date +%s)
 DEVICE_ID=$1
-post_url="http://54.188.2.207/status_update.php?url=${URL}&device_id=${DEVICE_ID}&dateTime=${DSTR}"
+# post_url="http://54.188.2.207/status_update.php?url=${URL}&device_id=${DEVICE_ID}&dateTime=${DSTR}"
+post_url="${AWSURL}status_update.php?url=${URL}&device_id=${DEVICE_ID}&dateTime=${DSTR}"
 services=('mysql' 'run_weewx' 'run_ngrok' 'run_camera' 'run_purple_air')
 
 for s in ${services[@]}; do
@@ -12,10 +13,8 @@ for s in ${services[@]}; do
 	post_url="${post_url}&${s}=${STATUS::-1}"
 	STATUS="${DSTR},${DEVICE_ID},${s},${STATUS::-1}"
 	echo $STATUS
-	echo $STATUS >> tmp
 done
 
-if [ -z $DEVICE_ID ]; then rm tmp; exit; fi
+if [ -z $DEVICE_ID ]; then exit; fi
 
-#echo $post_url
-curl -s -F 'status=@tmp' $post_url
+curl -s $post_url

@@ -3,6 +3,7 @@ Description=status checker service.
 After=network.target
 
 [Service]
+ExecStartPre=/bin/sleep 30
 ExecStart=/home/trainspotting/services/status_checker device-id-here >> ssd-path-here/trainspotting/service_logs/status_checker.log 2>&1
 
 [Install]

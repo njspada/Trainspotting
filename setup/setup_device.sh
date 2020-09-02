@@ -18,20 +18,25 @@ sudo apt-get install -yq curl
 sudo apt-get install -yq python3-pip
 ##############################################################
 
-# 2. set noninteractive frontend
+# 2. set noninteractive frontend, AWSURL, [device]INFO
 export DEBIAN_FRONTEND=noninteractive
+AWSURL="http://35.162.211.43/"
+INFO="/home/trainspotting/info.txt"
+echo "AWSURL=${AWSURL}" >> $INFO
+echo "AWSURL=${AWSURL}" >> ~/.profile
 ##############################################################
 
 # 3. Set device name and report_time.
-INFO="/home/trainspotting/info.txt"
 echo "Printing device names and report times:"
-curl -s http://54.188.2.207/get_report_times.php | cat
+# curl -s http://54.188.2.207/get_report_times.php | cat
+curl -s ${AWSURL}get_report_times.php | cat
 echo -n "Enter a device name: "
 read DEVICE_NAME
 echo -n "Enter a device report time (MM HH): "
 read REPORT_TIME
 EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
-url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+# url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+url="${AWS}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
 response=$(curl -i -s $url)
 DEVICE_ID=${response##*=}
 DEVICE_ID=${DEVICE_ID%%;*}
@@ -41,6 +46,9 @@ if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; els
 echo "device_id=${DEVICE_ID}" >> $INFO
 echo "device_name=${DEVICE_NAME}" >> $INFO
 echo "report_time=${REPORT_TIME}" >> $INFO
+echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
+echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
+echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
@@ -57,6 +65,8 @@ SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
 MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
 echo "ssd_path=${SSDPATH}" >> $INFO
 echo "ssd_mount_unit=${MOUNTUNIT}" >> $INFO
+echo "SSDPATH=${SSDPATH}" >> ~/.profile
+echo "MOUNTUNIT=${MOUNTUNIT}" >> ~/.profile
 sudo mkdir ${SSDPATH}/trainspotting
 ##############################################################
 
