@@ -23,7 +23,7 @@ export DEBIAN_FRONTEND=noninteractive
 AWSURL="http://35.162.211.43/"
 INFO="/home/trainspotting/info.txt"
 echo "AWSURL=${AWSURL}" >> $INFO
-echo "AWSURL=${AWSURL}" >> ~/.profile
+echo "AWSURL=${AWSURL}" >> /etc/environment
 ##############################################################
 
 # 3. Set device name and report_time.
@@ -43,12 +43,15 @@ DEVICE_ID=${DEVICE_ID%%;*}
 FS="Failed to setup device.\nPrinting response and exiting."
 SS="Successfully setup device. Device id=$DEVICE_ID."
 if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
-echo "device_id=${DEVICE_ID}" >> $INFO
-echo "device_name=${DEVICE_NAME}" >> $INFO
-echo "report_time=${REPORT_TIME}" >> $INFO
-echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
-echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
-echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
+echo "DEVICE_ID=${DEVICE_ID}" >> $INFO
+echo "DEVICE_NAME=${DEVICE_NAME}" >> $INFO
+echo "REPORT_TIME=${REPORT_TIME}" >> $INFO
+# echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
+# echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
+# echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
+echo "DEVICE_ID=${DEVICE_ID}" >> /etc/environment
+echo "DEVICE_NAME=${DEVICE_NAME}" >> /etc/environment
+echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
@@ -63,10 +66,12 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 # 5. Find external ssd path and mount unit name
 SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
 MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
-echo "ssd_path=${SSDPATH}" >> $INFO
-echo "ssd_mount_unit=${MOUNTUNIT}" >> $INFO
-echo "SSDPATH=${SSDPATH}" >> ~/.profile
-echo "MOUNTUNIT=${MOUNTUNIT}" >> ~/.profile
+echo "SSDPATH=${SSDPATH}" >> $INFO
+echo "MOUNTUNIT=${MOUNTUNIT}" >> $INFO
+# echo "SSDPATH=${SSDPATH}" >> ~/.profile
+# echo "MOUNTUNIT=${MOUNTUNIT}" >> ~/.profile
+echo "SSDPATH=${SSDPATH}" >> /etc/environment
+echo "MOUNTUNIT=${MOUNTUNIT}" >> /etc/environment
 sudo mkdir ${SSDPATH}/trainspotting
 ##############################################################
 
