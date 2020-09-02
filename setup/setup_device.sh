@@ -132,7 +132,7 @@ sudo crontab tabs
 sudo rm tabs
 ##############################################################
 
-# 12. Create directories for logs and images on SSD
+# 13. Create directories for logs and images on SSD
 mkdir -p $SSDPATH/trainspotting/logs/daily_aggregate
 mkdir -p $SSDPATH/trainspotting/logs/train_detects
 mkdir -p $SSDPATH/trainspotting/logs/train_images
@@ -140,7 +140,7 @@ mkdir -p $SSDPATH/trainspotting/images
 mkdir -p $SSDPATH/trainspotting/service_logs
 #############################################################
 
-# 13. Enable all services for auto start on boot
+# 14. Enable all services for auto start on boot
 sudo systemctl daemon-reload
 sudo systemctl enable mysql
 sudo systemctl enable run_weewx.service
@@ -150,9 +150,14 @@ sudo systemctl enable run_ngrok.service
 sudo systemctl enable run_status_checker.service
 ##############################################################
 
-# 14. Clean up
+# 15. Clean up
 cd /home/trainspotting
 sudo rm -rf ngrok_archive.zip weewx*
+# delete logs at 5am everyweek on monday
+sudo crontab -l > tabs
+echo "0 5 * * 1 rm /var/log/*" >> tabs
+sudo crontab tabs
+sudo rm tabs
 # sudo ./home/trainspotting/services/status_checker ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1
 ##############################################################
 

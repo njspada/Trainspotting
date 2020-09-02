@@ -19,7 +19,7 @@ foreach($devices as $device){
 	}
 }
 
-$cols = ['dateTime','id','url','report_time','mysql','run_ngrok','run_camera','run_purple_air','run_weewx'];
+$cols = ['id','name','dateTime','url','report_time','mysql','run_ngrok','run_camera','run_purple_air','run_weewx'];
 $table = \Donquixote\Cellbrush\Table\Table::create()
 	->addRowName('rhead')
 	->addColNames($cols);

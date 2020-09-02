@@ -25,7 +25,14 @@ sudo cp /home/trainspotting/scripts/config/weewx.conf /home/weewx
 ##############################################################
 
 # 4. update device usb location
-LOC=$(ls /sys/bus/usb/drivers/cp210x/1-*/tty*/tty)
+DRIVER="cp210x"
+WEATHER_DEVICE_NAME="vantage-usb"
+echo "DRIVERS==\"${DRIVER}\",SYMLINK+=\"${WEATHER_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
+udevadm trigger
+echo "WEATHER_DEVICE_NAME=${WEATHER_DEVICE_NAME}" >> /home/trainspotting/info.txt
+
+# LOC=$(ls /sys/bus/usb/drivers/cp210x/1-*/tty*/tty)
+LOC="${WEATHER_DEVICE_NAME}"
 WEEWXCONF="/home/weewx/weewx.conf"
 search="port ="
 replace="port = /dev/${LOC}\n# port ="
