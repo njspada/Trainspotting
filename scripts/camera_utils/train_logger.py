@@ -70,12 +70,13 @@ class Logger:
         self.collect_rate_moving = ARGS.collect_rate_moving
         self.collect_rate_stat   = ARGS.collect_rate_stat
         self.database_config     = database_config
-        self.debug               = ARGS.debug
+        # self.debug               = ARGS.debug
+        self.debug = True
         self.output_path         = ARGS.output_path
 
     # prints only when debugging
-    def print(self, to_print):
-        if self.debug:
+    def print(self, to_print,force=False):
+        if self.debug or forece:
             print(to_print)
 
     def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
@@ -94,6 +95,10 @@ class Logger:
                 self.count_from_first_moving = 0
                 self.train_event_on = False
                 # log entries and previous entries now
+                # don't save stationary trains for moving event
+                # self.entries.stationary_trains = []
+                # make sure entries have at least one moving train
+                self.entries = [LogEntry(e.timestamp,e.image,e.moving_trains,[]) for e in self.entries if e.moving_trains.len() > 0]
                 self.save_train_event(self.entries, self.collect_rate_moving)
                 self.entries = []
                 self.save_train_event(self.previous_entries, self.collect_rate_stat)
@@ -181,12 +186,12 @@ class Logger:
                 (event_id, type, image_id, label, score, x0, y0, x1, y1)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);
         """
-        CNX = database_config.connection()
+        CNX = self.database_config.connection()
         try:
             cursor = CNX.cursor()
             cursor.executemany(query, DATA)
         except mysql.connector.Error as err:
-            print(err)
+            self.print(err,force=True)
             return
         CNX.commit()
 

@@ -5,7 +5,8 @@ $output_dir = "/home/bitnami/output/";
 if(isset($_POST["type"])) {
     if($_POST["type"] == "image"){
         // save_file($_FILES['file']['tmp_name'], "images/".$_POST['device_id'].$_POST['filename']);
-        save_file($_FILES['file']['tmp_name'], $output_dir."images/".$_POST['filename']);
+        $device_id = $_POST["device_id"];
+        save_file($_FILES['file']['tmp_name'], $output_dir."images/".strval($device_id).'/'.$_POST['filename']);
     }
     else{
         save_da();
@@ -30,8 +31,8 @@ function save_da(){
     $output_dir = "/home/bitnami/output/";
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
-    save_file($file, $output_dir."logs/".$filename);
-    $file = $output_dir."logs/".$filename;
+    save_file($file, $output_dir."logs/".strval($device_id).'/'.$filename);
+    $file = $output_dir."logs/".strval($device_id).'/'.$filename;
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));

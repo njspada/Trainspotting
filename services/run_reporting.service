@@ -8,7 +8,7 @@ sudo systemctl stop run_weewx
 # 2. run reporting R script
 cd /home/trainspotting/scripts
 REPCONF="config/reporting_config.R"
-if [ -z grep "post_url='${AWSURL}daily_reporting.php'" $REPCONF ]
+if [ -z $(grep "post_url='${AWSURL}daily_reporting.php'" $REPCONF) ]
 then
 	search="post_url="
 	replace="post_url='${AWSURL}daily_reporting.php'\n# post_url="
