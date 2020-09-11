@@ -12,6 +12,7 @@ from config import camera_config
 import local_database_connector as database_config
 from camera_utils import trains
 from camera_utils import train_logger
+from camera_utils import debug_logger
 
 # for fps calculations
 start_t = time.time()
@@ -112,6 +113,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 	stationary_trains = trains.trains()
 	previous_trains = trains.trains()
 	logger = train_logger.Logger(ARGS = ARGS, database_config = database_config)
+	d_logger = debug_logger.DebugLogger(ARGS = ARGS)
 	fps = 0
 	total_moving_detects = 0
 	while STREAM.isOpened():
@@ -119,10 +121,16 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 			fps = get_fps()
 		if DFPS and not DEBUG:
 			print('fps = ' + str(fps))
-		timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		_, image = STREAM.read()
-		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		# timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+		timestamp = datetime.now().timestamp()
+		# detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=0, top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		# first we try to log for offline debugging purposes. Thats why we keep threshold 0 then filter.
 		train_detects = [d for d in detections if d.label_id == 6]
+		if d_logger.should_log():
+			d_logger.log(image, train_detects, timestamp)
+		train_detects = [d for d in detections if d.score >= CONF]
 		# if len(train_detects) == 0:
 		# 	print('no detects')
 		# 	continue
@@ -162,7 +170,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 		logger.log(image = image,
 				moving_trains = current_trains,
 		 		stationary_trains = stationary_trains,
-		 		timestamp=datetime.now().timestamp())
+		 		timestamp=timestamp)
 		if DEBUG and not DFPS:
 			debug_mul(current_trains, stationary_trains, image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF

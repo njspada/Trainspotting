@@ -1,4 +1,5 @@
 default_output_path='/media/coal/sickboyT5/post_covid/images/'
+default_debug_output_path='/'.join((default_output_path.split('/'))[:-2]) + '/debug/'
 import argparse
 import configparser
 
@@ -26,5 +27,8 @@ PARSER.add_argument('-o', '--output_path', action='store', default=default_outpu
 
 PARSER.add_argument('-d', '--debug', action='store_true', default=False, help="Debug Mode - Display camera feed")
 PARSER.add_argument('-dfps', '--debugonlyfps', action='store_true', default=False, help="Debug Mode - Only FPS")
+PARSER.add_argument('-dskipn'  , '--debug_skip_n'  , action='store', type=int, default=1000, help="Capture one frame per skip_n train detects")
+PARSER.add_argument('-doutputpath', '--debug_output_path', action='store', default=default_debug_output_path, help="Path to debug output directory.")
+
 
 ARGS = PARSER.parse_args()
