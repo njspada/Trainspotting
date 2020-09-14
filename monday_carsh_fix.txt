@@ -2,4 +2,9 @@ List of things to do:
 
 1. Copy setup/60-kernel.conf to /etc/sysctl.d/60-kernel.conf
 
-2. Increase system swap memory to 6GB
+2. Increase swap partition and file - 
+	a. Copy and unzip -
+			i. setup/resizeSwapMemory-master.zip
+		   ii. setup/installSwapfile-master.zip
+	b. resize swap memory to 6GB.
+	c. install swap file at 4GB.
