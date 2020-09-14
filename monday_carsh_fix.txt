@@ -1,0 +1,5 @@
+List of things to do:
+
+1. Copy setup/60-kernel.conf to /etc/sysctl.d/60-kernel.conf
+
+2. Increase system swap memory to 6GB
