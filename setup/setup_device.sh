@@ -11,6 +11,20 @@
 # 	- sudo chmod u+x setup_device.sh
 # 	- sudo ./setup_device.sh 2>&1 | tee /home/coal/output.txt
 
+# 0. add excludes
+# ./setup_device [service]
+# service = to be excluded
+# supports - weewx, purple_air
+setup_weewx=1
+setup_purple_air=1
+for service in "$@"
+do
+	case "${service}" in
+		weewx) setup_weewx=0;;
+		purple_air) setup_purple_air=0;;
+	esac
+done
+
 # 1. upgrade system.install python3, pip3, curl
 sudo apt-get update
 sudo apt-get upgrade -yq
@@ -82,9 +96,13 @@ sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
 ##############################################################
 
 # 7. Setup WeeWX
-cd /home/trainspotting/setup
-sudo chmod u+x setup_weewx.sh
-sudo ./setup_weewx.sh
+if [ $setup_weewx -eq 0 ];then
+	echo "Skipping WeeWX setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_weewx.sh
+	sudo ./setup_weewx.sh
+fi
 ##############################################################
 
 # 8. Setup utils for run_camera
@@ -94,9 +112,13 @@ sudo ./setup_camera.sh $SSDPATH
 ##############################################################
 
 # 9. Setup utils for run_purple_air
-cd /home/trainspotting/setup
-sudo chmod u+x setup_purple_air.sh
-sudo ./setup_purple_air.sh
+if [ $setup_purple_air -eq 0 ]
+	then echo "Skipping Purple Air setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_purple_air.sh
+	sudo ./setup_purple_air.sh
+fi
 ##############################################################
 
 # 10. Setup utils for run_reporting
