@@ -12,7 +12,7 @@ from config import camera_config
 import local_database_connector as database_config
 from camera_utils import trains
 from camera_utils import train_logger
-from camera_utils import debug_logger
+# from camera_utils import debug_logger
 
 # for fps calculations
 start_t = time.time()
@@ -37,7 +37,7 @@ def gstreamer_pipeline(
 		"nvvidconv flip-method=%d ! "
 		"video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
 		"videoconvert ! "
-		"video/x-raw, format=(string)BGR ! appsink"
+		"video/x-raw, format=(string)BGR ! appsink max-buffers=1 drop=True"
 		% (
 			capture_width,
 			capture_height,
@@ -113,24 +113,26 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 	stationary_trains = trains.trains()
 	previous_trains = trains.trains()
 	logger = train_logger.Logger(ARGS = ARGS, database_config = database_config)
-	d_logger = debug_logger.DebugLogger(ARGS = ARGS)
+	# d_logger = debug_logger.DebugLogger(ARGS = ARGS)
 	fps = 0
 	total_moving_detects = 0
 	while STREAM.isOpened():
 		if DEBUG:
 			fps = get_fps()
 		if DFPS and not DEBUG:
+			fps = get_fps()
 			print('fps = ' + str(fps))
 		_, image = STREAM.read()
+		pil_image = Image.fromarray(image)
 		# timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		timestamp = datetime.now().timestamp()
 		# detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
-		detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=0, top_k=10, keep_aspect_ratio=True, relative_coord=False)
+		detections = ENGINE.detect_with_image(pil_image, threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		# first we try to log for offline debugging purposes. Thats why we keep threshold 0 then filter.
 		train_detects = [d for d in detections if d.label_id == 6]
-		if d_logger.should_log():
-			d_logger.log(image, train_detects, timestamp)
-		train_detects = [d for d in detections if d.score >= CONF]
+		# if d_logger.should_log():
+		# 	d_logger.log(image, train_detects, timestamp)
+		# train_detects = [d for d in detections if d.score >= CONF]
 		# if len(train_detects) == 0:
 		# 	print('no detects')
 		# 	continue
@@ -167,7 +169,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 			current_trains.filter_out(used_cols)
 			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
 		previous_trains.extend(current_trains)
-		logger.log(image = image,
+		logger.log(image = pil_image,
 				moving_trains = current_trains,
 		 		stationary_trains = stationary_trains,
 		 		timestamp=timestamp)

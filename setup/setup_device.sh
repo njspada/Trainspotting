@@ -14,14 +14,16 @@
 # 0. add excludes
 # ./setup_device [service]
 # service = to be excluded
-# supports - weewx, purple_air
+# supports - weewx, purple_air, reporting
 setup_weewx=1
 setup_purple_air=1
+setup_reporting=1
 for service in "$@"
 do
 	case "${service}" in
 		weewx) setup_weewx=0;;
 		purple_air) setup_purple_air=0;;
+		reporting) setup_reporting=0;;
 	esac
 done
 
@@ -50,7 +52,8 @@ echo -n "Enter a device report time (MM HH): "
 read REPORT_TIME
 EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
 # url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
-url="${AWS}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+url="${AWSURL}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+echo $url
 response=$(curl -i -s $url)
 DEVICE_ID=${response##*=}
 DEVICE_ID=${DEVICE_ID%%;*}
@@ -80,6 +83,7 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 # 5. Find external ssd path and mount unit name
 SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
 MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
+MOUNTUNIT=$(echo ${MOUNTUNIT} | sed --expression="s/-/\x2d/g")
 echo "SSDPATH=${SSDPATH}" >> $INFO
 echo "MOUNTUNIT=${MOUNTUNIT}" >> $INFO
 # echo "SSDPATH=${SSDPATH}" >> ~/.profile
@@ -122,9 +126,13 @@ fi
 ##############################################################
 
 # 10. Setup utils for run_reporting
-cd /home/trainspotting/setup
-sudo chmod u+x setup_reporting.sh
-sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME $REPORT_TIME
+if [ $setup_reporting -eq 0 ]
+	then echo "Skipping Reporting setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_reporting.sh
+	sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME $REPORT_TIME
+fi
 ##############################################################
 
 # 11. Setup Ngrok

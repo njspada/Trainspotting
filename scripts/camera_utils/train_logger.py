@@ -1,12 +1,14 @@
 from threading import Thread
 from concurrent.futures import Future
-import cv2
+# import cv2
 import numpy as np
 from datetime import datetime
 import mysql.connector
 from mysql.connector import errorcode
 from os import makedirs
 import math
+import trains
+import copy
 
 # threading related source from - 
 # https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
@@ -62,6 +64,8 @@ class Logger:
     collect_rate_stat = 0.001
     database_config = []
     debug = False
+    count_m = 0
+    count_s = 0
 
     def __init__(self, ARGS, database_config):
         self.empty_frames_limit  = ARGS.empty_frames_limit
@@ -80,15 +84,19 @@ class Logger:
             print(to_print)
 
     def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
-        if moving_trains.len() + stationary_trains.len() > 0:
-            entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
-            self.entries.append(entry)
+        # if moving_trains.len() + stationary_trains.len() > 0:
+        #     entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
+        #     self.entries.append(entry)
         if self.train_event_on:
             # check if we hit max empty frames
             if moving_trains.len() == 0:
                 self.frames += 1
             else:
                 self.frames = 0
+                self.count_m += 1
+                if len(self.entries) < math.ceil(self.count_m*self.collect_rate_moving):
+                    entry = LogEntry(timestamp, image, moving_trains, trains.trains())
+                    self.entries.append(entry)
             if self.frames >= self.empty_frames_limit:
                 self.print('-----------------------------train event off-----------------------------')
                 self.frames = 0
@@ -98,30 +106,29 @@ class Logger:
                 # don't save stationary trains for moving event
                 # self.entries.stationary_trains = []
                 # make sure entries have at least one moving train
-                self.entries = [LogEntry(e.timestamp,e.image,e.moving_trains,[]) for e in self.entries if e.moving_trains.len() > 0]
-                self.save_train_event(self.entries, self.collect_rate_moving)
-                self.entries = []
-                self.save_train_event(self.previous_entries, self.collect_rate_stat)
-                self.previous_entries = []
+                # self.entries = [LogEntry(e.timestamp,e.image,e.moving_trains,[]) for e in self.entries if e.moving_trains.len() > 0]
+                self.save_train_event(self.entries)
+                self.entries *= 0
+                self.save_train_event(self.previous_entries)
+                self.previous_entries *= 0
         elif moving_trains.len() + stationary_trains.len() > 0:
             if moving_trains.len() > 0:
                 # switch to train_event_on
                 self.frames = 0
                 self.train_event_on = True
-                self.print('train event on')
-                self.count_from_first_moving = 1
+                self.print('*****************************train event on******************************')
                 # store non train event frames in buffer, write back after train event 
-                self.previous_entries = self.entries[:-self.count_from_first_moving]
-                self.entries = self.entries[-self.count_from_first_moving:]
-            elif len(self.entries) > self.max_stat_entries:
+                self.previous_entries = copy.deepcopy(self.entries)
+                self.entries *= 0
+            else:
+                self.count_s += 1
+                if len(self.entries) < math.ceil(self.count_s*self.collect_rate_stat):
+                    entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
+                    self.entries.append(entry)
+            if len(self.count_s) >= self.max_stat_entries:
                 # get rid of older entries that are not part of potential moving event
-                self.save_train_event(self.entries, self.collect_rate_stat)
-                self.entries = []
-                self.frames = 0
-                self.count_from_first_moving = 0
-            elif moving_trains.len() > 0:
-                self.frames += 1
-                self.count_from_first_moving += 1 if self.count_from_first_moving == 0 else 0
+                self.save_train_event(self.entries)
+                self.entries *= 0
 
     @threaded
     def save_train_event(self, entries, collect_rate):
@@ -139,9 +146,9 @@ class Logger:
         end_timestamp = int(math.ceil(entries[-1].timestamp))
         self.print('----4-----')
         self.print('saving train event - 1111')
-        indices = np.random.randint(len(entries), size=max(int(collect_rate*len(entries)),1))
-        self.print(indices)
-        entries = [entry for i,entry in enumerate(entries) if i in indices]
+        # indices = np.random.randint(len(entries), size=max(int(collect_rate*len(entries)),1))
+        # self.print(indices)
+        # entries = [entry for i,entry in enumerate(entries) if i in indices]
         if len(entries) > 0:
             # save moving trains
             #first setup event start and end timestamps
@@ -202,5 +209,7 @@ class Logger:
             makedirs(self.output_path + FILEPATH)
         except FileExistsError:
             _=1
-        if not cv2.imwrite(self.output_path+FILENAME, IMAGE):
+        # if not cv2.imwrite(self.output_path+FILENAME, IMAGE):
+        if not IMAGE.save(self.output_path+FILENAME):
             print('----error saving image----')
+        del IMAGE
