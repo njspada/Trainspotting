@@ -7,8 +7,9 @@ import mysql.connector
 from mysql.connector import errorcode
 from os import makedirs
 import math
-import trains
+from camera_utils import trains
 import copy
+from PIL import Image
 
 # threading related source from - 
 # https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
@@ -77,10 +78,11 @@ class Logger:
         # self.debug               = ARGS.debug
         self.debug = True
         self.output_path         = ARGS.output_path
+        self.max_moving_entries  = ARGS.max_moving_entries
 
     # prints only when debugging
     def print(self, to_print,force=False):
-        if self.debug or forece:
+        if self.debug or force:
             print(to_print)
 
     def log(self, image, moving_trains, stationary_trains, timestamp = datetime.now().timestamp()):
@@ -97,20 +99,21 @@ class Logger:
                 if len(self.entries) < math.ceil(self.count_m*self.collect_rate_moving):
                     entry = LogEntry(timestamp, image, moving_trains, trains.trains())
                     self.entries.append(entry)
-            if self.frames >= self.empty_frames_limit:
+            if self.frames >= self.empty_frames_limit or len(self.entries) >= self.max_moving_entries:
                 self.print('-----------------------------train event off-----------------------------')
                 self.frames = 0
-                self.count_from_first_moving = 0
                 self.train_event_on = False
                 # log entries and previous entries now
                 # don't save stationary trains for moving event
                 # self.entries.stationary_trains = []
                 # make sure entries have at least one moving train
                 # self.entries = [LogEntry(e.timestamp,e.image,e.moving_trains,[]) for e in self.entries if e.moving_trains.len() > 0]
-                self.save_train_event(self.entries)
+                print(len(self.entries))
+                self.save_train_event(self.entries[:])
                 self.entries *= 0
-                self.save_train_event(self.previous_entries)
+                self.save_train_event(self.previous_entries[:])
                 self.previous_entries *= 0
+                self.count_m = 0
         elif moving_trains.len() + stationary_trains.len() > 0:
             if moving_trains.len() > 0:
                 # switch to train_event_on
@@ -118,20 +121,26 @@ class Logger:
                 self.train_event_on = True
                 self.print('*****************************train event on******************************')
                 # store non train event frames in buffer, write back after train event 
-                self.previous_entries = copy.deepcopy(self.entries)
+                self.previous_entries = self.entries[:]
                 self.entries *= 0
+                entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
+                self.entries.append(entry)
+                self.count_m = 1
+                self.count_s = 0
             else:
                 self.count_s += 1
                 if len(self.entries) < math.ceil(self.count_s*self.collect_rate_stat):
                     entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
                     self.entries.append(entry)
-            if len(self.count_s) >= self.max_stat_entries:
+            if self.count_s >= self.max_stat_entries:
                 # get rid of older entries that are not part of potential moving event
-                self.save_train_event(self.entries)
+                self.save_train_event(self.entries[:])
                 self.entries *= 0
+                self.count_s = 0
+                self.count_m = 0
 
     @threaded
-    def save_train_event(self, entries, collect_rate):
+    def save_train_event(self, entries):
         # first downsize entries
         if len(entries) == 0:
             return
@@ -204,12 +213,14 @@ class Logger:
 
     @threaded
     def save_image(self, IMAGE, FILENAME, FILEPATH):
-        self.print('saving image')
+        print('saving image')
         try:
             makedirs(self.output_path + FILEPATH)
         except FileExistsError:
             _=1
         # if not cv2.imwrite(self.output_path+FILENAME, IMAGE):
-        if not IMAGE.save(self.output_path+FILENAME):
+        if not Image.fromarray(IMAGE).save(self.output_path+FILENAME):
+        # IMAGE.save()
+        # if not IMAGE.save(self.output_path+FILENAME):
             print('----error saving image----')
-        del IMAGE
+        # del IMAGE

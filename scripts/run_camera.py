@@ -130,6 +130,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 		detections = ENGINE.detect_with_image(pil_image, threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		# first we try to log for offline debugging purposes. Thats why we keep threshold 0 then filter.
 		train_detects = [d for d in detections if d.label_id == 6]
+		# print('Detected ' + str(len(train_detects)) + ' trains.')
 		# if d_logger.should_log():
 		# 	d_logger.log(image, train_detects, timestamp)
 		# train_detects = [d for d in detections if d.score >= CONF]
@@ -169,7 +170,7 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 			current_trains.filter_out(used_cols)
 			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
 		previous_trains.extend(current_trains)
-		logger.log(image = pil_image,
+		logger.log(image = image,
 				moving_trains = current_trains,
 		 		stationary_trains = stationary_trains,
 		 		timestamp=timestamp)
