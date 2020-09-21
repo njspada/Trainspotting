@@ -88,9 +88,10 @@ CREATE TABLE `train_events` (
 --
 
 CREATE TABLE `train_images` (
-  `id` int(11) NOT NULL,
-  `filename` varchar(50) NOT NULL,
-  `event_id` int(11) NOT NULL DEFAULT '0'
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `filename` varchar(100) NOT NULL,
+  `dateTime` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
