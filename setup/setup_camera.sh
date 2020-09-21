@@ -38,6 +38,9 @@ sudo sed -i "s~${search}~${replace}~g" $CAMERACONF
 sudo -H pip3 install mysql-connector-python
 ##############################################################
 
+# 5. chmod cache cleaner
+sudo chmod +x /home/trainspotting/scripts/clear_camera_cache.sh
+
 # 5. Setup systemd service
 sudo cp /home/trainspotting/services/run_camera.service /etc/systemd/system
 # sudo chmod +x /etc/systemd/system/run_camera.service

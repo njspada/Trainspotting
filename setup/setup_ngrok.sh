@@ -10,10 +10,10 @@ chmod u+x ngrok
 ##############################################################
 
 # 2. update config file
-cd /home/trainspotting/scripts/config
-search="log:"
-replace="log: ${SSDPATH}/trainspotting/service_logs/ngrok.log"
-sudo sed -i "s#${search}#${replace}#g" ngrok_config.yml
+#cd /home/trainspotting/scripts/config
+#search="log:"
+#replace="log: ${SSDPATH}/trainspotting/service_logs/ngrok.log"
+#sudo sed -i "s#${search}#${replace}#g" ngrok_config.yml
 ##############################################################
 
 # 3. setup ngrok service

@@ -8,3 +8,5 @@ List of things to do:
 		   ii. setup/installSwapfile-master.zip
 	b. resize swap memory to 6GB.
 	c. install swap file at 4GB.
+3. Replace new run_camera, train_logger. Try to calibrate.
+4. Remove SSD dependency in ngrok config.

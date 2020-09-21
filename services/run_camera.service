@@ -4,6 +4,8 @@ After=mysql.service
 
 [Service]
 ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_camera.py
+ExecStartPre=/home/trainspotting/scripts/clear_camera_cache.sh
+ExecStartPre=/home/trainspotting/scripts/clear_camera_cache.sh
 
 Restart=always
 

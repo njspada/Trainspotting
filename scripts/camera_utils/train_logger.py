@@ -10,6 +10,7 @@ import math
 from camera_utils import trains
 import copy
 from PIL import Image
+import sys
 
 # threading related source from - 
 # https://stackoverflow.com/questions/19846332/python-threading-inside-a-class
@@ -97,8 +98,10 @@ class Logger:
                 self.frames = 0
                 self.count_m += 1
                 if len(self.entries) < math.ceil(self.count_m*self.collect_rate_moving):
-                    entry = LogEntry(timestamp, image, moving_trains, trains.trains())
+                    entry = LogEntry(t=timestamp, i=image, mt=moving_trains, st=trains.trains())
                     self.entries.append(entry)
+                    # self.print('moving=' + str(moving_trains.len()),force=True)
+                    # self.print('created=' + str(entry.moving_trains.len()), force=True)
             if self.frames >= self.empty_frames_limit or len(self.entries) >= self.max_moving_entries:
                 self.print('-----------------------------train event off-----------------------------')
                 self.frames = 0
@@ -110,9 +113,9 @@ class Logger:
                 # self.entries = [LogEntry(e.timestamp,e.image,e.moving_trains,[]) for e in self.entries if e.moving_trains.len() > 0]
                 print(len(self.entries))
                 self.save_train_event(self.entries[:])
-                self.entries *= 0
+                self.entries = []
                 self.save_train_event(self.previous_entries[:])
-                self.previous_entries *= 0
+                self.previous_entries = []
                 self.count_m = 0
         elif moving_trains.len() + stationary_trains.len() > 0:
             if moving_trains.len() > 0:
@@ -122,7 +125,7 @@ class Logger:
                 self.print('*****************************train event on******************************')
                 # store non train event frames in buffer, write back after train event 
                 self.previous_entries = self.entries[:]
-                self.entries *= 0
+                self.entries = []
                 entry = LogEntry(timestamp, image, moving_trains, stationary_trains)
                 self.entries.append(entry)
                 self.count_m = 1
@@ -135,7 +138,7 @@ class Logger:
             if self.count_s >= self.max_stat_entries:
                 # get rid of older entries that are not part of potential moving event
                 self.save_train_event(self.entries[:])
-                self.entries *= 0
+                self.entries = []
                 self.count_s = 0
                 self.count_m = 0
 
@@ -213,14 +216,18 @@ class Logger:
 
     @threaded
     def save_image(self, IMAGE, FILENAME, FILEPATH):
-        print('saving image')
+        self.print('saving image')
         try:
             makedirs(self.output_path + FILEPATH)
-        except FileExistsError:
-            _=1
+        except:
+            self.print('Error with makedir!')
+
         # if not cv2.imwrite(self.output_path+FILENAME, IMAGE):
-        if not Image.fromarray(IMAGE).save(self.output_path+FILENAME):
         # IMAGE.save()
         # if not IMAGE.save(self.output_path+FILENAME):
-            print('----error saving image----')
+        try:
+            Image.fromarray(IMAGE).save(self.output_path+FILENAME)
+        except:
+            self.print('----error saving image----')
+            self.print(sys.exc_info()[0])
         # del IMAGE

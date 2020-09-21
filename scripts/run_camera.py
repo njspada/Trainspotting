@@ -107,15 +107,10 @@ def match_min_dist(row_vector, col_vector, dist_limit):
 
 def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 	CONF = CONF/100
-	stationary_centroids = [[],[]] # [centroid][consecutive empty frames]
-	previous_centroids = [[],[]]
-
 	stationary_trains = trains.trains()
 	previous_trains = trains.trains()
 	logger = train_logger.Logger(ARGS = ARGS, database_config = database_config)
-	# d_logger = debug_logger.DebugLogger(ARGS = ARGS)
 	fps = 0
-	total_moving_detects = 0
 	while STREAM.isOpened():
 		if DEBUG:
 			fps = get_fps()
@@ -124,19 +119,11 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 			print('fps = ' + str(fps))
 		_, image = STREAM.read()
 		pil_image = Image.fromarray(image)
-		# timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 		timestamp = datetime.now().timestamp()
-		# detections = ENGINE.detect_with_image(Image.fromarray(image), threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		detections = ENGINE.detect_with_image(pil_image, threshold=CONF, top_k=10, keep_aspect_ratio=True, relative_coord=False)
 		# first we try to log for offline debugging purposes. Thats why we keep threshold 0 then filter.
 		train_detects = [d for d in detections if d.label_id == 6]
-		# print('Detected ' + str(len(train_detects)) + ' trains.')
-		# if d_logger.should_log():
-		# 	d_logger.log(image, train_detects, timestamp)
-		# train_detects = [d for d in detections if d.score >= CONF]
-		# if len(train_detects) == 0:
-		# 	print('no detects')
-		# 	continue
+		# print('Detected ' + str(len(train_detects)) + ' detects.')
 		train_centroids = []
 		current_trains = trains.trains()
 		if len(train_detects) > 0:
@@ -169,19 +156,22 @@ def loop(STREAM, ENGINE, DEBUG, CONF, DTS, DDS, EFT, EFD, DFPS, ARGS):
 													col_vector=np.array(current_trains.centroids), dist_limit=DTS)
 			current_trains.filter_out(used_cols)
 			previous_trains.filter_previous(used_rows, EFT, stationary_trains)
+		if ARGS.caliberate and previous_trains.len()+current_trains.len()+stationary_trains.len() > 0:
+			print(f'{previous_trains.len()}    {current_trains.len()}    {stationary_trains.len()}')
+		if not ARGS.caliberate:
+			logger.log(image = image,
+					moving_trains = current_trains,
+					# moving_trains = previous_trains,
+			 		stationary_trains = stationary_trains,
+			 		timestamp=timestamp)
 		previous_trains.extend(current_trains)
-		logger.log(image = image,
-				moving_trains = current_trains,
-		 		stationary_trains = stationary_trains,
-		 		timestamp=timestamp)
 		if DEBUG and not DFPS:
-			debug_mul(current_trains, stationary_trains, image, fps)
+			#debug_mul(current_trains, stationary_trains, image, fps)
+			debug_mul(previous_trains, stationary_trains, image, fps)
 			keyCode = cv2.waitKey(1) & 0xFF
 			# Stop the program on the 'q' key
 			if keyCode == ord("q"):
 				break
-		if DEBUG and DFPS:
-			print('total_moving_detects = ' + str(total_moving_detects))
 
 
 
