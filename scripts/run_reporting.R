@@ -199,7 +199,7 @@ get_camera <- function(day) {
   	# 		"AND event_id <= ", end_event_id, ";")
 
     query <- paste("SELECT *
-        FROM train_images
+        FROM train_images_simple
         WHERE dateTime >= ", startTime, 
         "AND dateTime <= ", endTime, ";")
 

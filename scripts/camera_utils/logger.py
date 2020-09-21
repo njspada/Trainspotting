@@ -28,7 +28,7 @@ def save_frame(image,args,cnx):
     except:
         self.print('Error with makedir!')
     Image.fromarray(image).save(f"{filepath}/{filename}")
-    query = """INSERT INTO train_images
+    query = """INSERT INTO train_images_simple
             (filename, dateTime)
             VALUES (%s,%s);
     """
