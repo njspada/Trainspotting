@@ -9,10 +9,12 @@ from camera_utils import gstreamer
 def loop(STREAM, ARGS):
 	collect_delta = ARGS.collect_delta
 	end_t = time.time() + collect_delta
-	while True:
+	while STREAM.isOpened():
 		if time.time() >= end_t:
+			print('inside')
 			_,img = STREAM.read()
-			logger.save_frame(image=img,args=ARGS,cnx=database_config.connection())
+			logger.save_frame(image=img,args=ARGS,cnx=database_config)
+			print('outside')
 			end_t = time.time() + collect_delta
 
 if __name__ == "__main__":
@@ -27,7 +29,8 @@ if __name__ == "__main__":
 			loop(STREAM,ARGS)
 		except KeyboardInterrupt:
 			STREAM.release()
-	except:
+	except Exception as e:
+		print(e)
 		print('Exiting')
 	cv2.destroyAllWindows()
 
