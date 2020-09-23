@@ -35,5 +35,5 @@ echo $json >> tmpjson
 
 # if [ -z $DEVICE_ID ]; then exit; fi
 
-curl -s -X POST -H "Content-Type: application/json" -d $json $post_url
+curl -s -X POST -H "Content-Type: application/json" -d @tmpjson $post_url
 rm tmpjson
