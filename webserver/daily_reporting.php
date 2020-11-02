@@ -31,8 +31,10 @@ function save_da(){
     $output_dir = "/home/bitnami/output/";
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
-    save_file($file, $output_dir."logs/".strval($device_id).'/'.$filename);
-    $file = $output_dir."logs/".strval($device_id).'/'.$filename;
+    $destination = $output_dir."logs/".strval($device_id).'/';
+    save_file($file, $destination.$filename.'.tgz');
+    shell_exec("cd $destination && tar -xvzf $filename".".tgz");
+    $file = $destination.$filename;
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));

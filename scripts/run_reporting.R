@@ -1,4 +1,4 @@
-# Script to gather log data and push to Google Sheet
+# Script to gather log data and push to AWS server
 
 require(tidyverse)
 require(DBI)
@@ -12,7 +12,9 @@ save_da <- function(da, day) {
 	# 2. upload/post each csv file to cloud
 	# 3. upload/post each image from train_images to cloud
 	post_df <- function(df, fpath, fname, type) {
-		body = list(type=type, file=upload_file(fpath), device_id=device_id, filename=fname, tablename=type)
+    # first create a tar ball of the file
+    system(paste0('tar -cvzf ',fpath,'.tgz',' ',fpath))
+		body = list(type=type, file=upload_file(paste0(fpath,'.tgz')), device_id=device_id, filename=fname, tablename=type)
 		r <- POST(post_url, body=body, encode="multipart")
     # print(content(r,"text"))
 	}

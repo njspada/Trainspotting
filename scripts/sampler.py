@@ -1,22 +1,16 @@
 import cv2
+from PIL import Image
 import time
 from config import camera_config
-import local_database_connector as database_config
-
-from camera_utils import logger
 from camera_utils import gstreamer
 
-def loop(STREAM, ARGS):
-	collect_delta = ARGS.collect_delta
+def loop(STREAM):
+	collect_delta = 10 # collect for 10 seconds
 	end_t = time.time() + collect_delta
 	while STREAM.isOpened():
-		if time.time() >= end_t:
-			print('inside')
+		if time.time() <= end_t:
 			_,img = STREAM.read()
-			logger.save_frame(image=img,args=ARGS,cnx=database_config)
-			print('outside')
-			end_t = time.time() + collect_delta
-			time.sleep(0.99*collect_delta)
+			
 
 if __name__ == "__main__":
 	try:
@@ -34,11 +28,3 @@ if __name__ == "__main__":
 		print(e)
 		print('Exiting')
 	cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
