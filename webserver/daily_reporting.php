@@ -5,7 +5,8 @@ $output_dir = "/home/bitnami/output/";
 if(isset($_POST["type"])) {
     if($_POST["type"] == "image"){
         // save_file($_FILES['file']['tmp_name'], "images/".$_POST['device_id'].$_POST['filename']);
-        save_file($_FILES['file']['tmp_name'], $output_dir."images/".$_POST['filename']);
+        $device_id = $_POST["device_id"];
+        save_file($_FILES['file']['tmp_name'], $output_dir."images/".strval($device_id).'/'.$_POST['filename']);
     }
     else{
         save_da();
@@ -24,14 +25,16 @@ function save_file($source, $destination){
 function save_da(){
     $query = "";
     $filename = $_POST["filename"];
-    // $device_id = $_POST["device_id"];
+    $device_id = $_POST["device_id"];
     $file = $_FILES['file']['tmp_name'];
     $tablename = $_POST["tablename"];
     $output_dir = "/home/bitnami/output/";
     // first save the file
     // save_file($file, "logs/".$device_id.$filename);
-    save_file($file, $output_dir."logs/".$filename);
-    $file = $output_dir."logs/".$filename;
+    $destination = $output_dir."logs/".strval($device_id).'/';
+    save_file($file, $destination.$filename.'.tgz');
+    shell_exec("cd $destination && tar -xvzf $filename".".tgz");
+    $file = $destination.$filename;
 
     // create field list from file header
     $header = fgets(fopen($file,'r'));
@@ -47,7 +50,8 @@ function save_da(){
          "FIELDS TERMINATED BY ',' ".
          "LINES TERMINATED BY '\n' ".
          "IGNORE 1 LINES ".
-         "($header);"; 
+         "($header) ".
+         "SET device_id=$device_id;"; 
     // echo $query;
 
     $mysqli = new mysqli("localhost", "dhawal", "april+1Hitmonlee", "trainspotting");

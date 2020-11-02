@@ -1,4 +1,4 @@
-# Script to gather log data and push to Google Sheet
+# Script to gather log data and push to AWS server
 
 require(tidyverse)
 require(DBI)
@@ -12,7 +12,9 @@ save_da <- function(da, day) {
 	# 2. upload/post each csv file to cloud
 	# 3. upload/post each image from train_images to cloud
 	post_df <- function(df, fpath, fname, type) {
-		body = list(type=type, file=upload_file(fpath), device_id=device_id, filename=fname, tablename=type)
+    # first create a tar ball of the file
+    system(paste0('tar -cvzf ',fpath,'.tgz',' ',fpath))
+		body = list(type=type, file=upload_file(paste0(fpath,'.tgz')), device_id=device_id, filename=fname, tablename=type)
 		r <- POST(post_url, body=body, encode="multipart")
     # print(content(r,"text"))
 	}
@@ -29,7 +31,7 @@ save_da <- function(da, day) {
 
 	post_df(da$da, da_file$fpath, da_file$fname, "daily_aggregate")
 	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
-	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images")
+	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images_simple")
 	
 	post_image <- function(filename) {
 		body = list(type="image", file=upload_file(paste0(dir_images,filename)), device_id=device_id, filename=filename)
@@ -193,10 +195,15 @@ get_camera <- function(day) {
 
   	train_events <- train_events[!duplicated(train_events$dateTime), ]
 
-  	query <- query <- paste("SELECT *
-  			FROM train_images
-  			WHERE event_id >= ", start_event_id, 
-  			"AND event_id <= ", end_event_id, ";")
+  	# query <- query <- paste("SELECT *
+  	# 		FROM train_images
+  	# 		WHERE event_id >= ", start_event_id, 
+  	# 		"AND event_id <= ", end_event_id, ";")
+
+    query <- paste("SELECT *
+        FROM train_images_simple
+        WHERE dateTime >= ", startTime, 
+        "AND dateTime <= ", endTime, ";")
 
   	res <- dbSendQuery(train_db_con, query)
   	train_images <- dbFetch(res)

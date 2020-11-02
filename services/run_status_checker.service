@@ -1,0 +1,11 @@
+[Unit]
+Description=status checker service.
+After=network.target run_ngrok.service
+
+[Service]
+ExecStartPre=/bin/sleep 65
+ExecStart=/home/trainspotting/services/status_checker device-id-here >> ssd-path-here/trainspotting/service_logs/status_checker.log 2>&1
+EnvironmentFile=/home/trainspotting/info.txt
+
+[Install]
+WantedBy=multi-user.target

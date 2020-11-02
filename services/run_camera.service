@@ -1,10 +1,17 @@
 [Unit]
 Description=Trainspotting-Run-Camera
+After=mysql.service
 
 [Service]
-ExecStart=python3 /home/trainspotting/Trainspotting/scripts/run_camera.py
+ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_camera.py
+ExecStartPre=/home/trainspotting/scripts/clear_camera_cache.sh
+ExecStartPre=/home/trainspotting/scripts/clear_camera_cache.sh
+
 Restart=always
-WorkingDirectory=/home/coal/Desktop/cloud/Trainspotting/scripts
+
+WorkingDirectory=/home/trainspotting/scripts
+
+KillSignal=SIGINT
 
 [Install]
 WantedBy=multi-user.target

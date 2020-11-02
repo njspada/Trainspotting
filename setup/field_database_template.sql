@@ -88,9 +88,10 @@ CREATE TABLE `train_events` (
 --
 
 CREATE TABLE `train_images` (
-  `id` int(11) NOT NULL,
-  `filename` varchar(50) NOT NULL,
-  `event_id` int(11) NOT NULL DEFAULT '0'
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `filename` varchar(100) NOT NULL,
+  `dateTime` int(11) NOT NULL,
+  PRIMARY KEY(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -163,6 +164,11 @@ ALTER TABLE `train_images`
 --
 ALTER TABLE `train_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+--
+--
+--
+INSERT INTO train_types VALUES(1,"moving");
+INSERT INTO train_types VALUES(2,"stationary");
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
