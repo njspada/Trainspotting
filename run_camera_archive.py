@@ -1,19 +1,24 @@
 import cv2
 import time
-from PIL import Image
-from edgetpu.classification.engine import ClassificationEngine
-
 from config import camera_config
 import local_database_connector as database_config
 
 from camera_utils import logger
 from camera_utils import gstreamer
 
+from edgetpu.classification.engine import ClassificationEngine
+
 def loop(STREAM, ARGS):
+	collect_delta = ARGS.collect_delta
+	end_t = time.time() + collect_delta
 	while STREAM.isOpened():
-		_,img = STREAM.read()
-		pred = ENGINE.classify_with_image(Image.fromarray(img))
-		logger.save_frame(image=img,args=ARGS,cnx=database_config)
+		if time.time() >= end_t:
+			print('inside')
+			_,img = STREAM.read()
+			logger.save_frame(image=img,args=ARGS,cnx=database_config)
+			print('outside')
+			end_t = time.time() + collect_delta
+			time.sleep(0.99*collect_delta)
 
 if __name__ == "__main__":
 	try:
