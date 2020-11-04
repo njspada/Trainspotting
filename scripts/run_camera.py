@@ -2,24 +2,22 @@ import cv2
 import time
 from PIL import Image
 from edgetpu.classification.engine import ClassificationEngine
-
 from config import camera_config
-import local_database_connector as database_config
-
 from camera_utils import logger
 from camera_utils import gstreamer
 
 def loop(STREAM, ARGS):
+	Logger = logger.Logger(ARGS)
 	while STREAM.isOpened():
 		_,img = STREAM.read()
-		pred = ENGINE.classify_with_image(Image.fromarray(img))
-		logger.save_frame(image=img,args=ARGS,cnx=database_config)
+		img = Image.fromarray(img)
+		pred = (ENGINE.classify_with_image(img))[0]
+		X = logger.LoggerInput(image=img, is_train_p=pred[1] if pred[0]==1 else 1.-pred[1])
+		Logger.Input(X)
 
 if __name__ == "__main__":
 	try:
-		# load config arguments
 		ARGS = camera_config.ARGS
-		# Setup image capture stream
 		STREAM = cv2.VideoCapture(gstreamer.pipeline(ARGS), cv2.CAP_GSTREAMER)
 		ENGINE = ClassificationEngine(ARGS.model)
 		if not STREAM.isOpened():
