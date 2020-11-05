@@ -7,7 +7,11 @@ PARSER.add_argument('-W', '--width', type=int, action='store', default=300, help
 PARSER.add_argument('-H', '--height', type=int, action='store', default=300, help="Capture Height")
 PARSER.add_argument('-F', '--fps', action='store', type=int, default=60, help="Capture FPS")
 PARSER.add_argument('-D', '--collect_delta', type=int, action='store', default=60, help="Capture interval in seconds")
-PARSER.add_argument('-o', '--outputpath', action='store', default=default_output_path, help="Path to output directory.")
 PARSER.add_argument('-m', '--model', action='store', default='models/custom_mobilenetv2_2class_edgetpu.tflite', help="Relative path to model.")
+
+# Logger parameters
+
+PARSER.add_argument('-o', '--outputpath', action='store', default=default_output_path, help="Path to output directory.")
+len_classify_history_deque
 
 ARGS = PARSER.parse_args()
