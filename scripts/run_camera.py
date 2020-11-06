@@ -3,8 +3,8 @@ import time
 from PIL import Image
 from edgetpu.classification.engine import ClassificationEngine
 from config import camera_config
-from camera_utils import logger
 from camera_utils import gstreamer
+from camera_utils import logger
 
 def loop(STREAM, ARGS):
 	Logger = logger.Logger(ARGS)

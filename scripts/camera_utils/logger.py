@@ -80,7 +80,7 @@ class Logger:
             Input: X.is_train_p: value between 0.0-1.0 - from the main camera script.
             Output: Destination LoggerState
         '''
-        if self.classify_history_deque.count() > 0:
+        if count(self.classify_history_deque) > 0:
             d = self.classify_history_deque.popleft()
             self.classify_history_sum -= d
 
