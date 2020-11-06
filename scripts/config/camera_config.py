@@ -20,3 +20,7 @@ PARSER.add_argument('-o', '--classify_history_p_threshold', action='store', defa
 PARSER.add_argument('-o', '--max_train_event_time', action='store', default=10, help="Max time for train event on.")
 
 ARGS = PARSER.parse_args()
+
+# TODO:
+# 1. Get latest_event_id from train_events
+# 2. Get latest_image_id from train_images

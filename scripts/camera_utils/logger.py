@@ -145,5 +145,7 @@ class Logger:
             SaveFrame(X, self.state, self.event_id, self.next_valid_image_id, self.ARGS.outputpath)
             self.next_valid_image_id += 1
 
-
+# TODO:
+# 1. Implement train_event start and end
+# 2. Validate SQL fields with SQL in code
 
