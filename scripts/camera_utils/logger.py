@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 from collections import deque
 from enum import Enum, auto
-from threading import threaded
+from tthreading import threaded
 import local_database_connector as database
 
 class LoggerState(Enum):
@@ -80,7 +80,7 @@ class Logger:
             Input: X.is_train_p: value between 0.0-1.0 - from the main camera script.
             Output: Destination LoggerState
         '''
-        if count(self.classify_history_deque) > 0:
+        if len(self.classify_history_deque) > 0:
             d = self.classify_history_deque.popleft()
             self.classify_history_sum -= d
 
@@ -107,7 +107,7 @@ class Logger:
             elif dest_state == LoggerState.train_event_off:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_ff
             else:
-                self.frame_threshold = self.ARGS.stationary
+                self.frame_threshold = self.ARGS.frame_threshold_train_event_stationary
 
         # reset event_id when event completes
         if self.state == LoggerState.train_event_on and dest_state != LoggerState.train_event_on:
