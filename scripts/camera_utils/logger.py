@@ -86,9 +86,9 @@ class Logger:
 
         self.classify_history_deque.append(is_train_p)
         self.classify_history_sum += is_train_p
-        classify_history_p_avg = self.classify_history_sum / self.classify_history_deque.count()
+        classify_history_p_avg = self.classify_history_sum / len(self.classify_history_deque)
 
-        if classify_history_p >= self.ARGS.classify_history_p_threshold:
+        if classify_history_p_avg >= self.ARGS.classify_history_p_threshold:
             if time.time() <= self.train_event_start_time + self.ARGS.max_train_event_time:
                 return LoggerState.train_event_on
 
@@ -104,13 +104,17 @@ class Logger:
             self.frame_count = 0
             if dest_state == LoggerState.train_event_on:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_on
+                self.train_event_start_time = time.time()
             elif dest_state == LoggerState.train_event_off:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_ff
+                self.train_event_start_time = -1
             else:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_stationary
+                self.train_event_start_time = -1
 
         # reset event_id when event completes
         if self.state == LoggerState.train_event_on and dest_state != LoggerState.train_event_on:
+            self.classify_history_sum = 0
             self.event_id = -1
         elif self.state == LoggerState.stationary and dest_state == LoggerState.train_event_off:
             self.event_id = -1
@@ -136,7 +140,7 @@ class Logger:
         dest_state = self.G(X.is_train_p)
         self.ChangeState(dest_state)
 
-        if self.ShouldSaveFrame():
+        if self.ShouldSave():
             # Make sure event_id is valid for train_event_on & stationary events
             if self.event_id == -1 and self.state != LoggerState.train_event_off:
                 self.event_id = self.next_valid_event_id
