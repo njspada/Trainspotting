@@ -2,7 +2,7 @@ import mysql.connector
 import sys
 from mysql.connector import errorcode
 from config import local_database_config as ARGS
-from threading import threaded
+from tthreading import threaded
 
 #print(len(sys.argv))
 

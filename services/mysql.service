@@ -3,11 +3,14 @@
 [Unit]
 Description=MySQL Community Server
 #ConditionPathIsMountPoint=ssd-path-here
-After=network.target mount-unit-here
-Requires=mount-unit-here
+#After=network.target mount-unit-here
+#Requires=mount-unit-here
+After=network.target (`systemd-escape -p ssd-path-here`).mount
+Requires=(`systemd-escape -p ssd-path-here`).mount
 
 [Install]
-WantedBy=multi-user.target mount-unit-here
+#WantedBy=multi-user.target mount-unit-here
+WantedBy=multi-user.target (`systemd-escape -p ssd-path-here`).mount
 
 [Service]
 Type=forking

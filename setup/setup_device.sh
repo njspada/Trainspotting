@@ -18,12 +18,18 @@
 setup_weewx=1
 setup_purple_air=1
 setup_reporting=1
+setup_camera=1
+setup_mysql=1
+setup_device=1
 for service in "$@"
 do
 	case "${service}" in
 		weewx) setup_weewx=0;;
 		purple_air) setup_purple_air=0;;
 		reporting) setup_reporting=0;;
+		camera) setup_camera=0;;
+		mysql) setup_mysql=0;;
+		device) setup_device=0;;
 	esac
 done
 
@@ -43,38 +49,42 @@ echo "AWSURL=${AWSURL}" >> /etc/environment
 ##############################################################
 
 # 3. Set device name and report_time.
-echo "Printing device names and report times:"
-# curl -s http://54.188.2.207/get_report_times.php | cat
-curl -s ${AWSURL}get_report_times.php | cat
-echo -n "Enter a device name: "
-read DEVICE_NAME
-echo -n "Enter a device report time (MM HH): "
-read REPORT_TIME
-EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
-# url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
-url="${AWSURL}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
-echo $url
-response=$(curl -i -s $url)
-DEVICE_ID=${response##*=}
-DEVICE_ID=${DEVICE_ID%%;*}
-FS="Failed to setup device.\nPrinting response and exiting."
-SS="Successfully setup device. Device id=$DEVICE_ID."
-if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
-echo "DEVICE_ID=${DEVICE_ID}" >> $INFO
-echo "DEVICE_NAME=${DEVICE_NAME}" >> $INFO
-echo "REPORT_TIME=${REPORT_TIME}" >> $INFO
-# echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
-# echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
-# echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
-echo "DEVICE_ID=${DEVICE_ID}" >> /etc/environment
-echo "DEVICE_NAME=${DEVICE_NAME}" >> /etc/environment
-echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
+if [ $setup_device -eq 0 ];then
+	echo "Skipping Device setup"
+else
+	echo "Printing device names and report times:"
+	# curl -s http://54.188.2.207/get_report_times.php | cat
+	curl -s ${AWSURL}get_report_times.php | cat
+	echo -n "Enter a device name: "
+	read DEVICE_NAME
+	echo -n "Enter a device report time (MM HH): "
+	read REPORT_TIME
+	EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
+	# url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+	url="${AWSURL}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+	echo $url
+	response=$(curl -i -s $url)
+	DEVICE_ID=${response##*=}
+	DEVICE_ID=${DEVICE_ID%%;*}
+	FS="Failed to setup device.\nPrinting response and exiting."
+	SS="Successfully setup device. Device id=$DEVICE_ID."
+	if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
+	echo "DEVICE_ID=${DEVICE_ID}" >> $INFO
+	echo "DEVICE_NAME=${DEVICE_NAME}" >> $INFO
+	echo "REPORT_TIME=${REPORT_TIME}" >> $INFO
+	# echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
+	# echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
+	# echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
+	echo "DEVICE_ID=${DEVICE_ID}" >> /etc/environment
+	echo "DEVICE_NAME=${DEVICE_NAME}" >> /etc/environment
+	echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
+fi
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
 sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --depth=1 --single-branch --branch simplify https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
+sudo git clone --depth=1 --single-branch --branch development https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
 sudo cp -rp Trainspotting/scripts /home/trainspotting
 sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting
@@ -84,6 +94,7 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
 MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
 MOUNTUNIT=$(echo ${MOUNTUNIT} | sed --expression="s/-/\x2d/g")
+MOUNTUNIT=$(echo ${MOUNTUNIT} | sed --expression="s/\/\\/g")
 echo "SSDPATH=${SSDPATH}" >> $INFO
 echo "MOUNTUNIT=${MOUNTUNIT}" >> $INFO
 # echo "SSDPATH=${SSDPATH}" >> ~/.profile
@@ -94,9 +105,13 @@ sudo mkdir ${SSDPATH}/trainspotting
 ##############################################################
 
 # 6. Setup MySQL
-cd /home/trainspotting/setup
-sudo chmod u+x setup_mysql.sh
-sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
+if [ $setup_mysql -eq 0 ];then
+	echo "Skipping MySQL setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_mysql.sh
+	sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
+fi
 ##############################################################
 
 # 7. Setup WeeWX
@@ -110,9 +125,13 @@ fi
 ##############################################################
 
 # 8. Setup utils for run_camera
-cd /home/trainspotting/setup
-sudo chmod u+x setup_camera.sh
-sudo ./setup_camera.sh $SSDPATH
+if [ $setup_camera -eq 0 ];then
+	echo "Skipping Camera setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_camera.sh
+	sudo ./setup_camera.sh $SSDPATH
+fi
 ##############################################################
 
 # 9. Setup utils for run_purple_air

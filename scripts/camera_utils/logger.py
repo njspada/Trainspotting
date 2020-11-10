@@ -7,6 +7,7 @@ from collections import deque
 from enum import Enum, auto
 from tthreading import threaded
 import local_database_connector as database
+import time
 
 class LoggerState(Enum):
     train_event_on = 0
@@ -23,9 +24,9 @@ class LoggerInput:
 def SaveImage(image,path,fullpathname):
 
     try:
-        makedirs(path)
+        makedirs(path, exist_ok=True)
     except:
-        print('Makedirs error.')
+        # print('Makedirs error.')
     try:
         image.save(fullpathname)
     except:
@@ -72,11 +73,12 @@ class Logger:
         self.frame_count = 0
         self.frame_threshold = ARGS.frame_threshold_train_event_off
         self.event_id = -1
+        self.train_event_start_time = -1
 
     def G(self, is_train_p):
 
         '''
-            This is the activation function for a LoggerState transitions.
+            This is the activation function for LoggerState transitions.
             Input: X.is_train_p: value between 0.0-1.0 - from the main camera script.
             Output: Destination LoggerState
         '''
@@ -89,9 +91,9 @@ class Logger:
         classify_history_p_avg = self.classify_history_sum / len(self.classify_history_deque)
 
         if classify_history_p_avg >= self.ARGS.classify_history_p_threshold:
-            if time.time() <= self.train_event_start_time + self.ARGS.max_train_event_time:
+            if self.train_event_start_time == -1 or
+             time.time() <= self.train_event_start_time + self.ARGS.max_train_event_time:
                 return LoggerState.train_event_on
-
             else:
                 return LoggerState.stationary
         else:
@@ -102,15 +104,18 @@ class Logger:
         if self.state != dest_state:
             # reset frame_count and frame_threshold for all transitions
             self.frame_count = 0
+            # while len(self.classify_history_deque) > 1:
+            #     self.classify_history_sum -= self.classify_history_deque.popleft()
+            self.classify_history_sum = 0
+            self.classify_history_deque.clear()
             if dest_state == LoggerState.train_event_on:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_on
                 self.train_event_start_time = time.time()
             elif dest_state == LoggerState.train_event_off:
-                self.frame_threshold = self.ARGS.frame_threshold_train_event_ff
+                self.frame_threshold = self.ARGS.frame_threshold_train_event_off
                 self.train_event_start_time = -1
             else:
                 self.frame_threshold = self.ARGS.frame_threshold_train_event_stationary
-                self.train_event_start_time = -1
 
         # reset event_id when event completes
         if self.state == LoggerState.train_event_on and dest_state != LoggerState.train_event_on:
