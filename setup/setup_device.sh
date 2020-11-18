@@ -74,7 +74,7 @@ echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
 # 4. git clone from production branch and copy project directories out of git directory
 sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --depth=1 --single-branch --branch production https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
+sudo git clone --depth=1 --single-branch --branch simplify https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
 sudo cp -rp Trainspotting/scripts /home/trainspotting
 sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting

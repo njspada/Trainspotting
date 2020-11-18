@@ -10,7 +10,7 @@ $device_stats = array();
 foreach($devices as $device){
 	$id = $device['id'];
 	//echo $id;
-	$query = "select * from new_device_stats where device_id=$id order by dateTime desc limit 1;";
+	$query = "select * from device_stats where device_id=$id order by dateTime desc limit 1;";
 	list($result,$mysqli) = run_query($query);
 	$row = $result->fetch_assoc();
 	if($row){
@@ -30,11 +30,7 @@ foreach($device_stats as $stat){
 	$device_id = strval($stat['id']);
 	$table->addRowName($device_id);
 	foreach($cols as $col){
-		$text = $stat[$col];
-		if($mem=$stat[$col.'_mem']){
-			$text = $text.'<br>'.$mem;
-		}
-		$table->td($device_id,$col,$text);
+		$table->td($device_id,$col,$stat[$col]);
 	}
 }
 
