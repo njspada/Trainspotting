@@ -30,25 +30,19 @@ USE `trainspotting`;
 
 CREATE TABLE `purple_air` (
   `dateTime` int(11) NOT NULL,
-  `pm1` float NOT NULL,
-  `pm2.5` float NOT NULL,
-  `pm10` float NOT NULL,
-  `p0.3` float NOT NULL,
-  `p0.5` float NOT NULL,
-  `p1` float NOT NULL,
-  `p2.5` float NOT NULL,
-  `p5` float NOT NULL,
-  `p10` float NOT NULL,
-  `pm1_b` float NOT NULL,
-  `pm2.5_b` float NOT NULL,
-  `pm10_b` float NOT NULL,
-  `p0.3_b` float NOT NULL,
-  `p0.5_b` float NOT NULL,
-  `p1_b` float NOT NULL,
-  `p2.5_b` float NOT NULL,
-  `p5_b` float NOT NULL,
-  `p10_b` float NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Two channel data from purple air';
+  `p03_avg` float NOT NULL,
+  `p03_sd` float NOT NULL,
+  `p10_avg` float NOT NULL,
+  `p10_sd` float NOT NULL,
+  `p25_avg` float NOT NULL,
+  `p25_sd` float NOT NULL,
+  `p50_avg` float NOT NULL,
+  `p50_sd` float NOT NULL,
+  `p100_avg` float NOT NULL,
+  `p100_sd` float NOT NULL,
+  `pm25_avg` float NOT NULL,
+  `pm25_sd` float NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='One channel data from purple air';
 
 -- --------------------------------------------------------
 
