@@ -25,11 +25,11 @@ save_da <- function(da, day) {
     	return(list(fpath=fpath, fname=fname))
 	}
   # print(nrow(da$da))
-	da_file <- save_df(da$da, "daily_aggregate")
+	da_file <- save_df(da$da, "daily_aggregate_v2")
 	train_detects_file <- save_df(da$train_detect, "train_detects")
 	train_images_file <- save_df(da$train_images, "train_images")
 
-	post_df(da$da, da_file$fpath, da_file$fname, "daily_aggregate")
+	post_df(da$da, da_file$fpath, da_file$fname, "daily_aggregate_v2")
 	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
 	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images_simple")
 	
