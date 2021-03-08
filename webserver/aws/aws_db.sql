@@ -49,6 +49,39 @@ CREATE TABLE `daily_aggregate` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Daily aggregated seconds data';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `daily_aggregate_v2`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `daily_aggregate` (
+  `device_id` int NOT NULL,
+  `dateTime` int NOT NULL,
+  `outTemp` float NOT NULL,
+  `outHumidity` float NOT NULL,
+  `rain` float NOT NULL,
+  `windSpeed` float NOT NULL,
+  `windDir` float NOT NULL,
+  `windGust` float NOT NULL,
+  `windGustDir` float NOT NULL,
+  `inTemp` float NOT NULL,
+  `p03_avg` float NOT NULL,
+  `p03_sd` float NOT NULL,
+  `p10_avg` float NOT NULL,
+  `p10_sd` float NOT NULL,
+  `p25_avg` float NOT NULL,
+  `p25_sd` float NOT NULL,
+  `p50_avg` float NOT NULL,
+  `p50_sd` float NOT NULL,
+  `p100_avg` float NOT NULL,
+  `p100_sd` float NOT NULL,
+  `pm25_avg` float NOT NULL,
+  `pm25_sd` float NOT NULL,
+  `event_id` int NOT NULL,
+  `is_moving` tinyint(1) NOT NULL,
+  `is_stat` tinyint(1) NOT NULL,
+  PRIMARY KEY (`device_id`,`dateTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Daily aggregated seconds data';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
 -- Table structure for table `device_stats`
 --
