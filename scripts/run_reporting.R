@@ -238,36 +238,14 @@ get_pa <- function(day) {
           "ORDER BY dateTime ;")
 
   res <- dbSendQuery(pa_db_con, query)
-  pa <- dbFetch(res) %>%
-    # Wrangle the data into a long form we can use to compare the two channels
-    gather(Tmp, Value, pm1:p10_b) %>%
-    separate(Tmp, c('Type', 'Channel'), sep = '_', fill = 'right') %>%
-    mutate(Channel = ifelse(is.na(Channel), 'a', Channel)) %>%
-    spread(Channel, Value) %>%
-    # Calculate the mean value between the two sensors and 
-    # the scaled relative difference
-    mutate(Mean = (a + b) / 2,
-           SRD = ( (a - b) / sqrt(2) ) / Mean)
-  
-  # We will only accept results where the PM2.5 estimate is within +/- 0.5
-  # for he SRD
-  good <- select(pa, dateTime, SRD) %>%
-    filter(SRD >= -0.5 | SRD <= 0.5) %>%
-    .$dateTime
-  
-  # Prepare dataset for return
-  pa.abr <- pa %>%
-    filter(dateTime %in% good) %>%
-    select(dateTime, Type, Mean) %>%
-    spread(Type, Mean) %>%
-    select(dateTime, pm1, pm2.5, pm10, p0.3, p0.5, p1, p2.5, p5, p10)
+  pa <- dbFetch(res)
   
   # Initialize one second data frame, join with met, then fill down
   pa.out <- data.frame(
     dateTime = seq(startTime, endTime)) %>%
-    left_join(pa.abr, 'dateTime') %>%
-    fill(pm1:p10, .direction = 'down') %>%
-    fill(pm1:p10, .direction = 'up')
+    left_join(pa, 'dateTime') %>%
+    fill(p03_avg:pm25_sd, .direction = 'down') %>%
+    fill(p03_avg:pm25_sd, .direction = 'up')
   
   dbClearResult(res)
   dbDisconnect(pa_db_con)
