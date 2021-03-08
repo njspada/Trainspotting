@@ -2,40 +2,22 @@ import mysql.connector
 import sys
 from mysql.connector import errorcode
 
-s_names = ['datetime', 'pm2.5', 'pm1', 'pm10', 'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10', 
-            'pm2.5_b', 'pm1_b', 'pm10_b', 'p0.3_b', 'p0.5_b', 'p1_b', 'p2.5_b', 'p5_b', 'p10_b']
-name_dict = {pair for pair in enumerate(s_names)}
-
 #cnx.close()
 
 def write_to_db(timestamp, dataline, database_config):
     # timestamp must be "Y-m-d H:i:s"
     cnx = database_config.connection()
-    # timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-    names = ['datetime', 'datetime2', 'mac', 'firmware', 'hardware',
-                  'tempF', 'rh', 'dewptF', 'pres', 'adc', 'mem', 'rssi',
-                  'uptime',
-                  'pm1', 'pm2.5', 'pm10',
-                  'pm1_cf', 'pm2.5_cf', 'pm10_cf', # V19
-                  'junk1', 'junk2', # V21
-                  'p0.3', 'p0.5', 'p1', 'p2.5', 'p5', 'p10', # V27
-                  'pm1_b', 'pm2.5_b', 'pm10_b',
-                  'pm1_cf_b', 'pm2.5_cf_b', 'pm10_cf_b', # V33
-                  'junk3', 'junk4',
-                  'p0.3_b', 'p0.5_b', 'p1_b', 'p2.5_b', 'p5_b', 'p10_b',
-                  'junk5']
     values = dataline.split(',')
     values.insert(0, timestamp)
-    pa = dict(zip(names,values))
     
-    selected = [pa[s_name] for s_name in s_names]
     query = """INSERT INTO purple_air  
-            (dateTime, `pm2.5`, `pm1`, `pm10`, `p0.3`, `p0.5`, `p1`, `p2.5`, `p5`, `p10`,
-             `pm2.5_b`, `pm1_b`, `pm10_b`, `p0.3_b`, `p0.5_b`, `p1_b`, `p2.5_b`, `p5_b`, `p10_b`) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+            (`dateTime`,`p03_avg`,`p03_sd`,`p10_avg`,`p10_sd`
+            ,`p25_avg,`p25_sd,`p50_avg`,`p50_sd`,`p100_avg`
+            ,`p100_sd`,`pm25_avg`,`pm25_sd`) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     try:
       cursor = cnx.cursor()
-      cursor.execute(query, selected)
+      cursor.execute(query, values)
     except mysql.connector.Error as err:
       print(err)
     else:

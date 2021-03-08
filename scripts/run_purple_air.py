@@ -128,7 +128,7 @@ class PurpleAir(object):
     @staticmethod
     def find_purpleairs():
         ''' Looks for devices that use the same driver as the purple air serial to usb chip. '''
-        usb_module_path = '/sys/bus/usb/drivers/ch341/'
+        usb_module_path = '/sys/bus/usb/drivers/cp210x/'
         #/sys/bus/usb/drivers/ch341/1-1.4:1.0/ttyUSB0
         wildcard_path = '1-*/tty*'
         paths = glob(usb_module_path + wildcard_path)
@@ -156,22 +156,7 @@ def loop(purpleair, output_folder_path, upload_data):
         dataline = purpleair.read()
         # now = datetime.now()
         now = int(time.time())
-        if PurpleAir.dataline_is_minute_data(dataline):
-            # print('+ ' + dataline)
-            # write data out to file
-            # filename = 'purpleair_{}.log'.format((datetime.now()).strftime('%Y-%m-%d'))
-            # fullpath = os.path.join(output_folder_path, filename)
-            # with open(fullpath, "a") as fh:
-            # print('trying to push to db')
-                # fh.write('{},{}\n'.format(now, dataline))
-            database.write_to_db(now, dataline, database_config)
-            # print() # add extra space
-        elif PurpleAir.dataline_is_url(dataline) and upload_data:
-            purpleair.upload_url_dataline(dataline)
-            # print()
-        # else:
-            # print('- ' + dataline)
-            # print() # add extra blankspace, makes things easier to read
+        database.write_to_db(now, dataline, database_config)
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Log readings from a purple air sensor')
@@ -185,7 +170,8 @@ if __name__ == "__main__":
     PARSER.add_argument('-u', '--uploaddata', action='store_true', default=False, help="Not implemented")
     ARGS = PARSER.parse_args()
     # Find the available devices
-    DEVICES = PurpleAir.find_purpleairs()
+    # DEVICES = PurpleAir.find_purpleairs()
+    DEVICES = []
     if not DEVICES and not ARGS.device:
         print("Failed to find any Purple Air devices.")
         exit()
