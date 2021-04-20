@@ -3,6 +3,8 @@
 #	- unplug coral usb
 #	- plug in purple air usb
 #	- plug in weewx usb
+#	- we need to make sure auto mount is enabled for usb. run the following line and uncomment the auto mount and unmount.
+#	- sudo vi /etc/udev/rules.d/99-nv-ufs-mount.rules
 #	- plug in ssd usb
 #	- reboot
 # 	- sudo mkdir /home/trainspotting
@@ -72,9 +74,9 @@ echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
-sudo mkdir /home/trainspotting
+#sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --depth=1 --single-branch --branch simplify https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
+sudo git clone --depth=1 --single-branch --branch replace-purple-air https://github.com/njspada/Trainspotting.git
 sudo cp -rp Trainspotting/scripts /home/trainspotting
 sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting
