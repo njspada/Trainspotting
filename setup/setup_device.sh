@@ -21,12 +21,16 @@
 setup_weewx=1
 setup_purple_air=1
 setup_reporting=1
+setup_camera=1
+setup_ngrok=1
 for service in "$@"
 do
 	case "${service}" in
 		weewx) setup_weewx=0;;
 		purple_air) setup_purple_air=0;;
 		reporting) setup_reporting=0;;
+		camera) setup_camera=0;;
+		ngrok) setup_ngrok=0;;
 	esac
 done
 
@@ -77,7 +81,7 @@ echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
 # 4. git clone from production branch and copy project directories out of git directory
 #sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --depth=1 --single-branch --branch replace-purple-air https://github.com/njspada/Trainspotting.git
+#sudo git clone --depth=1 --single-branch --branch replace-purple-air https://github.com/njspada/Trainspotting.git
 sudo cp -rp Trainspotting/scripts /home/trainspotting
 sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting
@@ -113,9 +117,13 @@ fi
 ##############################################################
 
 # 8. Setup utils for run_camera
-cd /home/trainspotting/setup
-sudo chmod u+x setup_camera.sh
-sudo ./setup_camera.sh $SSDPATH
+if [$setup_camera -eq 0 ]
+	then echo "Skipping camera"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_camera.sh
+	sudo ./setup_camera.sh $SSDPATH
+fi
 ##############################################################
 
 # 9. Setup utils for run_purple_air
@@ -139,9 +147,13 @@ fi
 ##############################################################
 
 # 11. Setup Ngrok
-cd /home/trainspotting/setup
-sudo chmod u+x setup_ngrok.sh
-sudo ./setup_ngrok.sh $SSDPATH
+if [ $setup_ngrok -eq 0 ]
+	then echo "Skipping Ngrok setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_ngrok.sh
+	sudo ./setup_ngrok.sh $SSDPATH
+fi
 ##############################################################
 
 # 12. Setup status checker
