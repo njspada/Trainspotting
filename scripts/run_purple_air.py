@@ -160,7 +160,7 @@ def loop(purpleair, output_folder_path, upload_data):
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='Log readings from a purple air sensor')
-    PARSER.add_argument('-d', '--device', action='store', default="purple-air-usb", help="Device to read, if not set, defaults to first found device.")
+    PARSER.add_argument('-d', '--device', action='store', default="ttyACM0", help="Device to read, if not set, defaults to first found device.")
     PARSER.add_argument('-p', '--path', action='store', default='', help="Path for saving the log file.  Defaults to local directory.")
     PARSER.add_argument('-l', '--listonly', action='store_true', default=False, help="List the available Purple Air sensors")
     PARSER.add_argument('-x', '--latitude', action='store', default=38.54, help="Default set to Davis")

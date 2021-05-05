@@ -12,10 +12,11 @@ sudo cp /home/trainspotting/services/run_purple_air.service /etc/systemd/system
 
 # 3. update device usb location
 # DRIVER="ch341"
-PRODUC="Ruggeduino"
+#PRODUCT="Ruggeduino"
+PRODUCT="Arduino Nano Every"
 PA_DEVICE_NAME="purple-air-usb"
 # echo "DRIVERS==\"${DRIVER}\",SYMLINK+=\"${PA_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
-echo "ATTRS{product}\"${PRODUCT}\",SYMLINK+=\"${PA_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
+echo "SUBSYSTEM==\"usb\"ATTR{product}==\"${PRODUCT}\",SYMLINK+=\"${PA_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
 udevadm trigger
 echo "WEATHER_DEVICE_NAME=${PA_DEVICE_NAME}" >> /home/trainspotting/info.txt
 

@@ -3,6 +3,7 @@
 #	- unplug coral usb
 #	- plug in purple air usb
 #	- plug in weewx usb
+#	- format ssd beforehand on macbookpro - erase, msdos fat, master boot ...
 #	- we need to make sure auto mount is enabled for usb. run the following line and uncomment the auto mount and unmount.
 #	- also, change ID_FS_UUID to ID_FS_LABEL for both lines.
 #	- sudo vi /etc/udev/rules.d/99-nv-ufs-mount.rules
