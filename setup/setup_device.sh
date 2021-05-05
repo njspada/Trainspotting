@@ -24,6 +24,9 @@ setup_purple_air=1
 setup_reporting=1
 setup_camera=1
 setup_ngrok=1
+setup_ssd=1
+setup_mysql=1
+setup_device=1
 for service in "$@"
 do
 	case "${service}" in
@@ -32,6 +35,9 @@ do
 		reporting) setup_reporting=0;;
 		camera) setup_camera=0;;
 		ngrok) setup_ngrok=0;;
+		ssd) setup_ssd=0;;
+		device) setup_device=0;;
+		mysql) setup_mysql=0;;
 	esac
 done
 
@@ -51,32 +57,36 @@ echo "AWSURL=${AWSURL}" >> /etc/environment
 ##############################################################
 
 # 3. Set device name and report_time.
-echo "Printing device names and report times:"
-# curl -s http://54.188.2.207/get_report_times.php | cat
-curl -s ${AWSURL}get_report_times.php | cat
-echo -n "Enter a device name: "
-read DEVICE_NAME
-echo -n "Enter a device report time (MM HH): "
-read REPORT_TIME
-EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
-# url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
-url="${AWSURL}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
-echo $url
-response=$(curl -i -s $url)
-DEVICE_ID=${response##*=}
-DEVICE_ID=${DEVICE_ID%%;*}
-FS="Failed to setup device.\nPrinting response and exiting."
-SS="Successfully setup device. Device id=$DEVICE_ID."
-if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
-echo "DEVICE_ID=${DEVICE_ID}" >> $INFO
-echo "DEVICE_NAME=${DEVICE_NAME}" >> $INFO
-echo "REPORT_TIME=${REPORT_TIME}" >> $INFO
-# echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
-# echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
-# echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
-echo "DEVICE_ID=${DEVICE_ID}" >> /etc/environment
-echo "DEVICE_NAME=${DEVICE_NAME}" >> /etc/environment
-echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
+if [$setup_device -eq 0 ]; then
+	echo "Skipping Device setup."
+else
+	echo "Printing device names and report times:"
+	# curl -s http://54.188.2.207/get_report_times.php | cat
+	curl -s ${AWSURL}get_report_times.php | cat
+	echo -n "Enter a device name: "
+	read DEVICE_NAME
+	echo -n "Enter a device report time (MM HH): "
+	read REPORT_TIME
+	EREPORT_TIME=$(echo $REPORT_TIME | sed 's/ /%20/g')
+	# url="http://54.188.2.207/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+	url="${AWSURL}/setup_device.php?name=$DEVICE_NAME&report_time=$EREPORT_TIME"
+	echo $url
+	response=$(curl -i -s $url)
+	DEVICE_ID=${response##*=}
+	DEVICE_ID=${DEVICE_ID%%;*}
+	FS="Failed to setup device.\nPrinting response and exiting."
+	SS="Successfully setup device. Device id=$DEVICE_ID."
+	if [[ -z $( echo "$response" | grep "200 OK" ) ]]; then echo 'Failed'; exit; else echo "$SS"; fi
+	echo "DEVICE_ID=${DEVICE_ID}" >> $INFO
+	echo "DEVICE_NAME=${DEVICE_NAME}" >> $INFO
+	echo "REPORT_TIME=${REPORT_TIME}" >> $INFO
+	# echo "DEVICE_ID=${DEVICE_ID}" >> ~/.profile
+	# echo "DEVICE_NAME=${DEVICE_NAME}" >> ~/.profile
+	# echo "REPORT_TIME=${REPORT_TIME}" >> ~/.profile
+	echo "DEVICE_ID=${DEVICE_ID}" >> /etc/environment
+	echo "DEVICE_NAME=${DEVICE_NAME}" >> /etc/environment
+	echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
+fi
 ##############################################################
 
 # 4. git clone from production branch and copy project directories out of git directory
@@ -89,22 +99,30 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 ##############################################################
 
 # 5. Find external ssd path and mount unit name
-SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
-MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
-MOUNTUNIT=$(echo ${MOUNTUNIT} | sed --expression="s/-/\x2d/g")
-echo "SSDPATH=${SSDPATH}" >> $INFO
-echo "MOUNTUNIT=${MOUNTUNIT}" >> $INFO
-# echo "SSDPATH=${SSDPATH}" >> ~/.profile
-# echo "MOUNTUNIT=${MOUNTUNIT}" >> ~/.profile
-echo "SSDPATH=${SSDPATH}" >> /etc/environment
-echo "MOUNTUNIT=${MOUNTUNIT}" >> /etc/environment
-sudo mkdir ${SSDPATH}/trainspotting
+if [$setup_ssd -eq 0 ]; then
+	echo "Skipping SSD setup."
+else
+	SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
+	MOUNTUNIT=(`systemctl list-units --type=mount | grep ${SSDPATH}`)
+	MOUNTUNIT=$(echo ${MOUNTUNIT} | sed --expression="s/-/\x2d/g")
+	echo "SSDPATH=${SSDPATH}" >> $INFO
+	echo "MOUNTUNIT=${MOUNTUNIT}" >> $INFO
+	# echo "SSDPATH=${SSDPATH}" >> ~/.profile
+	# echo "MOUNTUNIT=${MOUNTUNIT}" >> ~/.profile
+	echo "SSDPATH=${SSDPATH}" >> /etc/environment
+	echo "MOUNTUNIT=${MOUNTUNIT}" >> /etc/environment
+	sudo mkdir ${SSDPATH}/trainspotting
+fi
 ##############################################################
 
 # 6. Setup MySQL
-cd /home/trainspotting/setup
-sudo chmod u+x setup_mysql.sh
-sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
+if [$setup_mysql -eq 0 ]; then
+	echo "Skipping MySQL setup"
+else
+	cd /home/trainspotting/setup
+	sudo chmod u+x setup_mysql.sh
+	sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
+fi
 ##############################################################
 
 # 7. Setup WeeWX
