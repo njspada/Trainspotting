@@ -20,3 +20,9 @@ chmod u+x ngrok
 sudo cp /home/trainspotting/services/run_ngrok.service /etc/systemd/system
 # sudo chmod u+x /etc/systemd/system/run_ngrok.service
 ##############################################################
+
+#4. setup ngrok checker
+sudo crontab -l > tabs
+echo "* * * * * sudo /home/trainspotting/services/ngrok_checker.sh ${DEVICE_ID}" >> tabs
+sudo crontab tabs
+sudo rm tabs
