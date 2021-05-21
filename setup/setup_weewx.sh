@@ -12,7 +12,7 @@ sudo apt install -yq python3-mysqldb
 
 # 2. download archive, unzip, run setup
 cd /home/trainspotting
-sudo curl http://weewx.com/downloads/weewx-4.1.1.tar.gz -o weewx_archive.tgz
+sudo curl http://weewx.com/downloads/released_versions/weewx-4.1.1.tar.gz -o weewx_archive.tgz
 sudo tar -xvzf weewx_archive.tgz
 cd weewx-*
 sudo python3 ./setup.py build

@@ -3,7 +3,9 @@
 #	- unplug coral usb
 #	- plug in purple air usb
 #	- plug in weewx usb
+#	- to format usb drive - sudo mkntfs --fast --label myUsbDrive /dev/sdb1 . use lsblk -f / df -h to find drive. sudo apt-get install ntfs-3g
 #	- format ssd beforehand on macbookpro - erase, msdos fat, master boot ...
+#		- make sure ssd drive name does not have non-alphabet chars!!
 #	- we need to make sure auto mount is enabled for usb. run the following line and uncomment the auto mount and unmount.
 #	- also, change ID_FS_UUID to ID_FS_LABEL for both lines.
 #	- sudo vi /etc/udev/rules.d/99-nv-ufs-mount.rules
@@ -57,7 +59,7 @@ echo "AWSURL=${AWSURL}" >> /etc/environment
 ##############################################################
 
 # 3. Set device name and report_time.
-if [$setup_device -eq 0 ]; then
+if [ $setup_device -eq 0 ];then
 	echo "Skipping Device setup."
 else
 	echo "Printing device names and report times:"
@@ -99,7 +101,7 @@ sudo cp -rp Trainspotting/services /home/trainspotting
 ##############################################################
 
 # 5. Find external ssd path and mount unit name
-if [$setup_ssd -eq 0 ]; then
+if [ $setup_ssd -eq 0 ];then
 	echo "Skipping SSD setup."
 else
 	SSDPATH=(`sudo lsblk -o MOUNTPOINT | grep /media*`)
@@ -116,7 +118,7 @@ fi
 ##############################################################
 
 # 6. Setup MySQL
-if [$setup_mysql -eq 0 ]; then
+if [ $setup_mysql -eq 0 ];then
 	echo "Skipping MySQL setup"
 else
 	cd /home/trainspotting/setup
