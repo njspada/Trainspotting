@@ -12,7 +12,7 @@ sudo apt install -yq python3-mysqldb
 
 # 2. download archive, unzip, run setup
 cd /home/trainspotting
-sudo curl http://weewx.com/downloads/weewx-4.1.1.tar.gz -o weewx_archive.tgz
+sudo curl http://weewx.com/downloads/weewx-4.5.1.tar.gz -o weewx_archive.tgz
 sudo tar -xvzf weewx_archive.tgz
 cd weewx-*
 sudo python3 ./setup.py build
@@ -27,7 +27,7 @@ sudo cp /home/trainspotting/scripts/config/weewx.conf /home/weewx
 # 4. update device usb location
 DRIVER="cp210x"
 WEATHER_DEVICE_NAME="vantage-usb"
-echo "DRIVERS==\"${DRIVER}\",SYMLINK+=\"${WEATHER_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
+echo "DRIVERS==\"${DRIVER}\",ATTRS{interface}==\"CP2102 USB to UART Bridge Controller\",SYMLINK+=\"${WEATHER_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
 udevadm trigger
 echo "WEATHER_DEVICE_NAME=${WEATHER_DEVICE_NAME}" >> /home/trainspotting/info.txt
 
