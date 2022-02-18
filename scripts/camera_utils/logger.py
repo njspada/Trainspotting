@@ -42,7 +42,7 @@ def save_frame(image,args,cnx):
     except:
         # print('6')
         print('pillow image error')
-    query = """INSERT INTO train_images_simple
+    query = """INSERT INTO train_images
             (filename, dateTime)
             VALUES (%s,%s);
     """

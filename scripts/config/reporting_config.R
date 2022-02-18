@@ -4,7 +4,7 @@ mysql_db_trainspotting = "trainspotting"
 mysql_db_weewx = "weewx"
 mysql_host = "localhost"
 
-output_path="/media/coal/sickboyT5/post_covid/"
+output_path="/media/jetsonssd/trainspotting/"
 post_url="http://100.22.13.192/daily_reporting.php"
 dir_logs=paste0(output_path,"logs/")
 dir_images=paste0(output_path,"images/")
