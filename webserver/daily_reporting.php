@@ -33,7 +33,7 @@ function save_da(){
     // save_file($file, "logs/".$device_id.$filename);
     $destination = $output_dir."logs/".strval($device_id).'/';
     save_file($file, $destination.$filename.'.tgz');
-    shell_exec("cd $destination && tar -xvzf $filename".".tgz");
+    shell_exec("cd $destination && tar --strip-components=4 -xvzf $filename".".tgz");
     $file = $destination.$filename;
 
     // create field list from file header

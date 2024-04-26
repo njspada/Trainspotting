@@ -31,7 +31,7 @@ save_da <- function(da, day) {
 
 	post_df(da$da, da_file$fpath, da_file$fname, "daily_aggregate")
 	post_df(da$train_detect, train_detects_file$fpath, train_detects_file$fname, "train_detects")
-	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images_simple")
+	post_df(da$train_images, train_images_file$fpath, train_images_file$fname, "train_images)
 	
 	post_image <- function(filename) {
 		body = list(type="image", file=upload_file(paste0(dir_images,filename)), device_id=device_id, filename=filename)
@@ -201,7 +201,7 @@ get_camera <- function(day) {
   	# 		"AND event_id <= ", end_event_id, ";")
 
     query <- paste("SELECT *
-        FROM train_images_simple
+        FROM train_images
         WHERE dateTime >= ", startTime, 
         "AND dateTime <= ", endTime, ";")
 

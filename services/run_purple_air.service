@@ -3,7 +3,7 @@ Description=Trainspotting-Run-Purple-Air
 After=mysql.service
 
 [Service]
-ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_purple_air.py
+ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_rugged_air.py
 
 Restart=always
 

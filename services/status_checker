@@ -2,7 +2,7 @@
 
 DSTR=$(date +%s)
 DEVICE_ID=$1
-logfile="/home/trainspotting/service_logs/ngrok.log"
+logfile="/media/jetsonssd/trainspotting/service_logs/ngrok.log"
 URL=$(grep "started tunnel" ${logfile} | tail -1 | rev | cut -d'=' -f 1 | rev)
 
 post_url="${AWSURL}new_status_update.php"

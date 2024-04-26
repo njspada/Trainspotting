@@ -11,11 +11,11 @@ sudo cp /home/trainspotting/services/run_purple_air.service /etc/systemd/system
 ##############################################################
 
 # 3. update device usb location
-DRIVER="ch341"
+DRIVER="cp210x"
 PA_DEVICE_NAME="purple-air-usb"
-echo "DRIVERS==\"${DRIVER}\",SYMLINK+=\"${PA_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
+echo "DRIVERS==\"${DRIVER}\",ATTRS{interface}==\"Ruggeduino\",SYMLINK+=\"${PA_DEVICE_NAME}\"" >> /etc/udev/rules.d/99-usb-serial.rules
 udevadm trigger
-echo "WEATHER_DEVICE_NAME=${PA_DEVICE_NAME}" >> /home/trainspotting/info.txt
+echo "SENSOR_DEVICE_NAME=${PA_DEVICE_NAME}" >> /home/trainspotting/info.txt
 
 # LOC=$(ls /sys/bus/usb/drivers/cp210x/1-*/tty*/tty)
 # LOC="${WEATHER_DEVICE_NAME}"

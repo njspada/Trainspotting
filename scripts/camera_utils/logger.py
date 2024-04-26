@@ -38,11 +38,11 @@ def save_frame(image,args,cnx):
         print('Error with makedir!')
     try:
         # print('5')
-        Image.fromarray(image).save(f"{filepath}/{filename}")
+        Image.fromarray(image).save(f"{filepath}{filename}")
     except:
         # print('6')
         print('pillow image error')
-    query = """INSERT INTO train_images_simple
+    query = """INSERT INTO train_images
             (filename, dateTime)
             VALUES (%s,%s);
     """

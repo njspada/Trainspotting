@@ -34,9 +34,11 @@ sudo sed -i "s~${search}~${replace}~g" $REPCONF
 ##############################################################
 
 # 4. Setup cron job/tab
+cd /home/trainspotting/services/
+dos2unix run_reporting.service
 chmod u+x /home/trainspotting/services/run_reporting.service
 sudo crontab -l > tabs
-sudo echo "$REPORT_TIME * * * /home/trainspotting/services/run_reporting.service >> ${SSDPATH}/trainspotting/service_logs/run_reporting_service.log 2>&1" >> tabs
+sudo echo "$REPORT_TIME 0 * * * /home/trainspotting/services/run_reporting.service >> ${SSDPATH}/trainspotting/service_logs/run_reporting_service.log 2>&1" >> tabs
 sudo crontab tabs
 sudo rm tabs
 #############################################################

@@ -53,6 +53,20 @@ CREATE TABLE `purple_air` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rugged_air`
+--
+
+CREATE TABLE `rugged_air` (
+  `dateTime` int(11) NOT NULL,
+  `pm25_a` float NOT NULL,
+  `pm25_b` float NOT NULL,
+  `pm25_c` float NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Three channel data from rugged air';
+
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `train_detects`
 --
 
@@ -113,6 +127,12 @@ CREATE TABLE `train_types` (
 -- Indexes for table `purple_air`
 --
 ALTER TABLE `purple_air`
+  ADD PRIMARY KEY (`dateTime`),
+  ADD KEY `dateTime` (`dateTime`);
+
+-- Indexes for table `rugged_air`
+--
+ALTER TABLE `rugged_air`
   ADD PRIMARY KEY (`dateTime`),
   ADD KEY `dateTime` (`dateTime`);
 

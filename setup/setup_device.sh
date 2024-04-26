@@ -8,7 +8,7 @@
 # 	- sudo mkdir /home/trainspotting
 # 	- cd /home/trainspotting
 # 	- sudo vi setup_device.sh (and paste this file in)
-# 	- sudo chmod u+x setup_device.sh
+# 	- sudo chmod +x setup_device.sh
 # 	- sudo ./setup_device.sh 2>&1 | tee /home/coal/output.txt
 
 # 0. add excludes
@@ -32,11 +32,12 @@ sudo apt-get update
 sudo apt-get upgrade -yq
 sudo apt-get install -yq curl
 sudo apt-get install -yq python3-pip
+sudo apt-get install dos2unix
 ##############################################################
 
 # 2. set noninteractive frontend, AWSURL, [device]INFO
 export DEBIAN_FRONTEND=noninteractive
-AWSURL="http://35.162.211.43/"
+AWSURL="http://100.22.13.192/"
 INFO="/home/trainspotting/info.txt"
 echo "AWSURL=${AWSURL}" >> $INFO
 echo "AWSURL=${AWSURL}" >> /etc/environment
@@ -74,7 +75,7 @@ echo "REPORT_TIME=${REPORT_TIME}" >> /etc/environment
 # 4. git clone from production branch and copy project directories out of git directory
 sudo mkdir /home/trainspotting
 cd /home/trainspotting
-sudo git clone --depth=1 --single-branch --branch simplify https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
+#sudo git clone --depth=1 --single-branch --branch simplify https://dmmajithia:3e4eda1c57ad3c97950c9fb2e02da56a1110b0dc@github.com/njspada/Trainspotting.git
 sudo cp -rp Trainspotting/scripts /home/trainspotting
 sudo cp -rp Trainspotting/setup /home/trainspotting
 sudo cp -rp Trainspotting/services /home/trainspotting
@@ -95,6 +96,7 @@ sudo mkdir ${SSDPATH}/trainspotting
 
 # 6. Setup MySQL
 cd /home/trainspotting/setup
+dos2unix setup_mysql.sh
 sudo chmod u+x setup_mysql.sh
 sudo ./setup_mysql.sh $SSDPATH $MOUNTUNIT
 ##############################################################
@@ -104,6 +106,7 @@ if [ $setup_weewx -eq 0 ];then
 	echo "Skipping WeeWX setup"
 else
 	cd /home/trainspotting/setup
+	dos2unix setup_weewx.sh
 	sudo chmod u+x setup_weewx.sh
 	sudo ./setup_weewx.sh
 fi
@@ -111,6 +114,7 @@ fi
 
 # 8. Setup utils for run_camera
 cd /home/trainspotting/setup
+dos2unix setup_camera.sh
 sudo chmod u+x setup_camera.sh
 sudo ./setup_camera.sh $SSDPATH
 ##############################################################
@@ -120,6 +124,7 @@ if [ $setup_purple_air -eq 0 ]
 	then echo "Skipping Purple Air setup"
 else
 	cd /home/trainspotting/setup
+	dos2unix setup_purple_air.sh
 	sudo chmod u+x setup_purple_air.sh
 	sudo ./setup_purple_air.sh
 fi
@@ -130,6 +135,7 @@ if [ $setup_reporting -eq 0 ]
 	then echo "Skipping Reporting setup"
 else
 	cd /home/trainspotting/setup
+	dos2unix setup_reporting.sh
 	sudo chmod u+x setup_reporting.sh
 	sudo ./setup_reporting.sh $SSDPATH $DEVICE_ID $DEVICE_NAME $REPORT_TIME
 fi
@@ -137,6 +143,7 @@ fi
 
 # 11. Setup Ngrok
 cd /home/trainspotting/setup
+dos2unix setup_ngrok.sh
 sudo chmod u+x setup_ngrok.sh
 sudo ./setup_ngrok.sh $SSDPATH
 ##############################################################
@@ -152,10 +159,10 @@ sed -i "s~${search}~${replace}~g" $SERVICE
 search="device-id-here"
 replace="${DEVICE_ID}"
 sed -i "s~${search}~${replace}~g" $SERVICE
-sudo chmod u+x status_checker
+sudo chmod u+x status_checker2
 sudo cp $SERVICE /etc/systemd/system
 sudo crontab -l > tabs
-echo "00 * * * * systemctl start run_status_checker" >> tabs
+echo "*/15 * * * * systemctl start run_status_checker" >> tabs
 # echo "00 * * * * ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
 # echo "@reboot root sleep 60 && ${STATCHECKER} ${DEVICE_ID} >> ${SSDPATH}/trainspotting/service_logs/status_checker.log 2>&1" >> tabs
 sudo crontab tabs

@@ -1,4 +1,4 @@
-default_output_path='/media/coal/sickboyT5/post_covid/images/'
+default_output_path='/media/jetsonssd/trainspotting/images/'
 import argparse
 import configparser
 
