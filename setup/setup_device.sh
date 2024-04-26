@@ -150,7 +150,7 @@ sudo ./setup_ngrok.sh $SSDPATH
 
 # 12. Setup status checker
 cd /home/trainspotting/services
-STATCHECKER="/home/trainspotting/services/status_checker"
+STATCHECKER="/home/trainspotting/services/status_checker2"
 SERVICE="/home/trainspotting/services/run_status_checker.service"
 search="ssd-path-here"
 replace="${SSDPATH}"

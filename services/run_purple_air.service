@@ -12,4 +12,19 @@ WorkingDirectory=/home/trainspotting/scripts
 KillSignal=SIGINT
 
 [Install]
+
+[Unit]
+Description=Trainspotting-Run-Purple-Air
+After=mysql.service
+
+[Service]
+ExecStart=/usr/bin/python3 /home/trainspotting/scripts/run_rugged_air.py
+
+Restart=always
+
+WorkingDirectory=/home/trainspotting/scripts
+
+KillSignal=SIGINT
+
+[Install]
 WantedBy=multi-user.target
