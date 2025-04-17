@@ -1,4 +1,4 @@
-authtoken: 1SfXtgDwi90Hk73hFaAXUSYl3q7_DGt7aHvZbfRUWBZG7p8E
+authtoken: 
 json_resolver_url: ""
 dns_resolver_ips: []
 console_ui: false
@@ -12,7 +12,7 @@ tunnels:
     addr: 22
     inspect: false
 
-authtoken: 1gOH50HUSlthsui4SzrVPqFupv5_5k5uMxHqNXWBiudtocoKj
+authtoken: 
 json_resolver_url: ""
 dns_resolver_ips: []
 console_ui: false
