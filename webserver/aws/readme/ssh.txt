@@ -1,2 +1,0 @@
-ip - 54.188.2.207
-username - bitnami

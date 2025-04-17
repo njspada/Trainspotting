@@ -1,3 +1,0 @@
-- This readme is for daily_reporting.php.
-- chmod 777 the output directory specified in daily_reporting.php.
-- chmod 777 the "logs" and "images" subdirectories too.
