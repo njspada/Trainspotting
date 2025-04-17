@@ -1,3 +1,3 @@
-user     = 'dhawal'
-password = 'april+1Hitmonlee'
+user     = 'johndoe'
+password = 'password'
 host     = '127.0.0.1'
