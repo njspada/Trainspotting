@@ -23,6 +23,50 @@ sudo Rscript /home/trainspotting/scripts/run_reportingV2.R
 #OUTPUT=$(sudo git status -uno | grep "Your branch is up to date")
 #if [ -z "$OUTPUT" ]
 #then
+	#sudo git pull
+	#(sudo chmod -f u+x update.sh && sudo ./update.sh) || true
+#else
+	#echo "No updates."
+#fi
+##############################################################
+
+# 4. stop mysql service and enable all services
+sudo systemctl stop mysql
+sudo systemctl enable mysql
+sudo systemctl enable run_camera
+sudo systemctl enable run_purple_air
+sudo systemctl enable run_ngrok
+sudo systemctl enable run_weewx
+#sudo systemctl enable run_status_checker
+
+# 5. reboot
+sudo systemctl reboot
+
+#!/bin/bash
+# 1. stop all scripts/services
+sudo systemctl stop run_camera.service
+sudo systemctl stop run_purple_air.service
+sudo systemctl stop run_weewx
+##############################################################
+
+# 2. run reporting R script
+cd /home/trainspotting/scripts
+REPCONF="config/reporting_config.R"
+if [ -z $(grep "post_url='${AWSURL}daily_reporting.php'" $REPCONF) ]
+then
+	search="post_url="
+	replace="post_url='${AWSURL}daily_reporting.php'\n# post_url="
+	sudo sed -i "s~${search}~${replace}~g" $REPCONF
+fi
+sudo Rscript /home/trainspotting/scripts/run_reportingV2.R
+##############################################################
+
+# 3. git pull
+#cd /home/trainspotting/Trainspotting
+#sudo git fetch
+#OUTPUT=$(sudo git status -uno | grep "Your branch is up to date")
+#if [ -z "$OUTPUT" ]
+#then
 #	sudo git pull
 #	(sudo chmod -f u+x update.sh && sudo ./update.sh) || true
 #else

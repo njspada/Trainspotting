@@ -1,4 +1,0 @@
-1. We need to enable load local infile in php.ini
-	- go to `stack/php/etc`
-	- open `php.ini`, find mysqli_local_infile and set it to On
-	- reboot instance 

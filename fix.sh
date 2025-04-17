@@ -29,7 +29,7 @@ sudo sed -i "s~${search}~${replace}~g" $CAMERACONF
 
 # 5. add train_images_simple table to mysql
 systemctl start mysql
-mysql -u dhawal -papril+1Hitmonlee < "fix.sql"
+mysql -u johndoe -ppassword < "fix.sql"
 systemctl stop mysql
 
 #6 update ngrok config

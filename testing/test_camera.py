@@ -96,3 +96,5 @@ def run_test(conf=30):
 		print("Program killed")
 		STREAM.release()
 		cv2.destroyAllWindows()
+
+run_test()
